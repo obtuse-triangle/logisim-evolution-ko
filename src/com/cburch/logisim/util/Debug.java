@@ -71,6 +71,23 @@ public class Debug {
       Runtime.getRuntime().addShutdownHook(new Thread(() -> log.flush()));
   }
 
+  public static int verbose = 0;
+
+  public static void printf(int lvl, String fmt, Object... args) {
+    if (verbose >= lvl)
+      System.out.printf(fmt, args);
+  }
+  
+  public static void println(int lvl, String msg) {
+    if (verbose >= lvl)
+      System.out.println(msg);
+  }
+
+  public static void print(int lvl, String msg) {
+    if (verbose >= lvl)
+      System.out.print(msg);
+  }
+
   static void doCmd(String cmd) {
     System.out.printf("got %s\n", cmd);
   }

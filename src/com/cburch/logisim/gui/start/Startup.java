@@ -95,6 +95,13 @@ public class Startup {
     options.put("-circuit", HEADLESS | ONEPARAM);
     options.put("-load", HEADLESS | ONEPARAM);
 
+    options.put("-verbose", 0);
+    options.put("-v", 0);
+    options.put("-vv", 0);
+    options.put("-vvv", 0);
+    options.put("-vvvv", 0);
+    options.put("-vvvvv", 0);
+
     options.put("-?", HEADLESS); // undocumented synonym for -help
     options.put("-clearprops", 0); // obsolete synonym for -clearprefs
     options.put("-noupdate", 0); // obsolte like auto-updates
@@ -130,6 +137,16 @@ public class Startup {
         setLocale(args[i]);
       if (arg.equals("-debug"))
         Debug.enable();
+      if (arg.equals("-verbose") || arg.equals("-v"))
+        Debug.verbose++;
+      if (arg.equals("-vv"))
+        Debug.verbose += 2;
+      if (arg.equals("-vvv"))
+        Debug.verbose += 3;
+      if (arg.equals("-vvvv"))
+        Debug.verbose += 4;
+      if (arg.equals("-vvvvv"))
+        Debug.verbose += 5;
     }
 
     if (GraphicsEnvironment.isHeadless() && !Main.headless)
@@ -388,7 +405,7 @@ public class Startup {
 
     try {
       if (!Desktop.isDesktopSupported()) {
-        System.out.println("Note [0]: no desktop support");
+        Debug.println(1, "Note [0]: no desktop support");
         return;
       }
       desktop = Desktop.getDesktop();
@@ -397,7 +414,7 @@ public class Startup {
         Main.SupportsSuddenTerminationHandling = true;
         desktop.enableSuddenTermination();
       } else {
-        System.out.println("Note [1]: no support to prevent sudden termination");
+        Debug.println(1, "Note [1]: no support to prevent sudden termination");
       }
 
       if (desktop.isSupported(Desktop.Action.APP_QUIT_STRATEGY)
@@ -415,7 +432,7 @@ public class Startup {
           }
         });
       } else {
-        System.out.println("Note [2]: no support to control quit strategy and handler");
+        Debug.println(1, "Note [2]: no support to control quit strategy and handler");
       }
 
       if (desktop.isSupported(Desktop.Action.APP_OPEN_FILE))
@@ -424,7 +441,7 @@ public class Startup {
             doOpenFile(file);
         });
       else
-        System.out.println("Note [3]: no support for desktop file opening");
+        Debug.println(1, "Note [3]: no support for desktop file opening");
 
       if (desktop.isSupported(Desktop.Action.APP_PRINT_FILE))
         desktop.setPrintFileHandler(e -> { 
@@ -432,20 +449,20 @@ public class Startup {
             doPrintFile(file);
         });
       else
-        System.out.println("Note [4]: no support for desktop file printing");
+        Debug.println(1, "Note [4]: no support for desktop file printing");
 
       if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
         desktop.setPreferencesHandler(e -> PreferencesFrame.showPreferences());
         Main.PreferencesMenuAutomaticallyPresent = true;
       } else {
-        System.out.println("Note [5]: no support for desktop preferences");
+        Debug.println(1, "Note [5]: no support for desktop preferences");
       }
 
       if (desktop.isSupported(Desktop.Action.APP_ABOUT)) {
         desktop.setAboutHandler(e -> About.showAboutDialog(null));
         Main.AboutMenuAutomaticallyPresent = true;
       } else {
-        System.out.println("Note [6]: no support for desktop about screen");
+        Debug.println(1, "Note [6]: no support for desktop about screen");
       }
 
     } catch (Exception e) {
@@ -601,7 +618,7 @@ public class Startup {
         e.printStackTrace();
       }
     } else {
-      System.out.println("Note [7]: no desktop menubar support");
+      Debug.println(1, "Note [7]: no desktop menubar support");
       new LogisimMenuBar(null, null, null, null);
       // most of the time occupied here will be in loading menus, which
       // will occur eventually anyway; we might as well do it when the

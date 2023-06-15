@@ -214,7 +214,7 @@ public class XmlCircuitReader extends CircuitTransaction {
             if (!bds.isEmpty())
               componentsAt.put(bds, comp);
             else
-              System.out.println("Note: empty bounds for " + comp);
+              System.out.println("Note: Within " + circData.circuit.getName() +", ignoring component with empty bounds: " + comp);
             mutator.add(dest, comp);
           }
         } catch (XmlReaderException e) {

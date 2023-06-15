@@ -102,13 +102,18 @@ class PaperData implements InstanceData, Cloneable, TtyInterface.PaperTape {
     left.clear();
     cur = null;
     right.clear();
+    int leftmoves = 0;
     for (int i = 0; i < initial.length(); ) {
       int utf32 = initial.codePointAt(i);
-      if (printUtf32Symbol(utf32))
+      if (utf32 == '^') { // hack for positioning tape head from tty
+        leftmoves = 0;
+      } else if (printUtf32Symbol(utf32)) {
         moveRight();
+        leftmoves++;
+      }
       i += Character.charCount(utf32);
     }
-    while (pos > 0)
+    while (leftmoves-- > 0)
       moveLeft();
   }
 

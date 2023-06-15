@@ -573,6 +573,65 @@ public final class Value {
     }
   }
 
+  private static final int[] U_DECIMAL_WIDTH = {
+    1, 1, 1, 1, // 0 bits, 1 bits, 2 bits, 3 bits
+    2, 2, 2, // 4 bits, 5 bits, 6 bits
+    3, 3, 3, // 7 bits, 8 bits, 9 bits
+    4, 4, 4, 4, // 10 bits, 11 bits, 12 bits, 13 bits
+    5, 5, 5, // 14 bits, 15 bits, 16 bits
+    6, 6, 6, // 17 bits, 18 bits, 19 bits
+    7, 7, 7, 7, // 20 bits, 21 bits, 22 bits, 23 bits
+    8, 8, 8, // 24 bits, 25 bits, 26 bits
+    9, 9, 9, // 27 bits, 28 bits, 29 bits
+    10, 10, 10, // 30 bits, 31 bits, 32 bits
+  };
+
+  private static final int[] S_DECIMAL_WIDTH = {
+    1, // 0 bits
+    2, 2, 2, 2, // 1 bits, 2 bits, 3 bits, 4 bits
+    3, 3, 3, // 5 bits, 6 bits, 7 bits
+    4, 4, 4, // 8 bits, 9 bits, 10 bits
+    5, 5, 5, 5, // 11 bits, 12 bits, 13 bits, 14 bits
+    6, 6, 6, // 15 bits, 16 bits, 17 bits
+    7, 7, 7, // 18 bits, 19 bits, 20 bits
+    8, 8, 8, 8, // 21 bits, 22 bits, 23 bits, 24 bits
+    9, 9, 9, // 25 bits, 26 bits, 27 bits
+    10, 10, 10, // 28 bits, 29 bits, 30 bits
+    11, 11, // 31 bits, 32 bits
+  };
+
+  public String toFixedWidthDecimalString(boolean signed) {
+    if (width == 0)
+      return "-";
+    int strwidth = signed ? S_DECIMAL_WIDTH[width] : U_DECIMAL_WIDTH[width];
+    if (isErrorValue()) {
+      String a = S.get("valueError");
+      if (a.length() > strwidth)
+        a = S.get("valueErrorSymbol");
+      return widenString(strwidth, a);
+    }
+    if (!isFullyDefined()) {
+      String a = S.get("valueUnknown");
+      if (a.length() > strwidth)
+        a = S.get("valueUnknownSymbol");
+      return widenString(strwidth, a);
+    }
+
+    int value = toIntValue();
+    if (signed) {
+      if (width < 32 && (value >> (width - 1)) != 0) {
+        value |= (-1) << width;
+      }
+      return widenString(strwidth, "" + value);
+    } else {
+      return widenString(strwidth, "" + ((long) value & 0xFFFFFFFFL));
+    }
+  }
+
+  private static String widenString(int w, String s) {
+    return String.format("%"+w+"s", s);
+  }
+
   public String toDisplayString() {
     switch (width) {
     case 0:

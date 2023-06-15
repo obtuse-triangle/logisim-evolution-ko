@@ -203,6 +203,10 @@ public class Startup {
             ret.ttyFormat |= TtyInterface.FORMAT_TABLE_BIN;
           else if (fmt.equals("hex"))
             ret.ttyFormat |= TtyInterface.FORMAT_TABLE_HEX;
+          else if (fmt.equals("dec") || fmt.equals("decimal") || fmt.equals("signed"))
+            ret.ttyFormat |= TtyInterface.FORMAT_TABLE_SDEC;
+          else if (fmt.equals("udec") || fmt.equals("udecimal") || fmt.equals("unsigned"))
+            ret.ttyFormat |= TtyInterface.FORMAT_TABLE_UDEC;
           else if (fmt.equals("csv"))
             ret.ttyFormat |= TtyInterface.FORMAT_TABLE_CSV;
           else if (fmt.equals("tabs"))

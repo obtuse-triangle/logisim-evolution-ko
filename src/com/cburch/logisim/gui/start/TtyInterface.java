@@ -248,6 +248,10 @@ public class TtyInterface {
     } else if ((format & FORMAT_TABLE_HEX) != 0) {
       // everything thing in hex, no prefixes
       return v.toHexString();
+    } else if ((format & FORMAT_TABLE_SDEC) != 0) {
+      return v.toFixedWidthDecimalString(true);
+    } else if ((format & FORMAT_TABLE_UDEC) != 0) {
+      return v.toFixedWidthDecimalString(false);
     } else {
       // under 6 bits or less in binary, no spaces
       // otherwise in hex, with prefix
@@ -395,6 +399,10 @@ public class TtyInterface {
       circuit = file.file.getMainCircuit();
     } else {
       circuit = file.file.getCircuit(circuitToTest);
+    }
+    if (circuit == null) {
+        System.out.println("Could not find circuit '" + circuitToTest+"'");
+        System.exit(1);
     }
     Map<Instance, String> pinNames = Analyze.getPinLabels(circuit);
     ArrayList<Instance> outputPins = new ArrayList<Instance>();
@@ -799,18 +807,20 @@ public class TtyInterface {
     System.out.print(c); // OK
   }
 
-  public static final int FORMAT_TABLE = 1;
-  public static final int FORMAT_SPEED = 2;
-  public static final int FORMAT_TTY = 4;
-  public static final int FORMAT_HALT = 8;
-  public static final int FORMAT_STATISTICS = 16;
-  public static final int FORMAT_TABLE_TABBED = 32;
-  public static final int FORMAT_TABLE_CSV = 64;
-  public static final int FORMAT_TABLE_BIN = 128;
-  public static final int FORMAT_TABLE_HEX = 256;
-  public static final int FORMAT_RANDOMIZE = 256;
+  public static final int FORMAT_TABLE = 1 << 0;
+  public static final int FORMAT_SPEED = 1 << 1;
+  public static final int FORMAT_TTY =   1 << 2;
+  public static final int FORMAT_HALT =  1 << 3;
+  public static final int FORMAT_STATISTICS =   1 << 4;
+  public static final int FORMAT_TABLE_TABBED = 1 << 5;
+  public static final int FORMAT_TABLE_CSV =    1 << 6;
+  public static final int FORMAT_TABLE_BIN =    1 << 7;
+  public static final int FORMAT_TABLE_HEX =    1 << 8;
+  public static final int FORMAT_TABLE_SDEC =   1 << 9;
+  public static final int FORMAT_TABLE_UDEC =   1 << 10;
+  public static final int FORMAT_RANDOMIZE =    1 << 11;
 
-  public static final int FORMAT_TURING = 1 << 9;
+  public static final int FORMAT_TURING =       1 << 12;
   public static String turingInitialTape = "";
   public static int turingMaxSteps = -1;
 

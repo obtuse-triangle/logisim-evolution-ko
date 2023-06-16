@@ -220,13 +220,13 @@ class CanvasPainter implements PropertyChangeListener {
   // painting methods
   //
   void paintContents(Graphics g, Project proj) {
-    Rectangle clip = g.getClipBounds();
     Dimension size = canvas.getSize();
     double zoomFactor = canvas.getZoomFactor();
-    if (canvas.ifPaintDirtyReset() || clip == null) {
-      clip = new Rectangle(0, 0, size.width, size.height);
-    }
-    // YSY removed to don't overwrite background image
+    // Debugging
+    // Rectangle clip = g.getClipBounds();
+    // if (clip == null) {
+    //   clip = new Rectangle(0, 0, size.width, size.height);
+    // }
     // g.setColor(Color.magenta);
     // g.fillRect(clip.x, clip.y, clip.width, clip.height);
 

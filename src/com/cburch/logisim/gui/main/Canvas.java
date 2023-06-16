@@ -678,8 +678,6 @@ public class Canvas extends JPanel
 
   private CanvasPainter painter;
 
-  private volatile boolean paintDirty = false; // only for within paintComponent
-
   private volatile boolean inPaint = false; // only for within paintComponent
 
   private Object repaintLock = new Object(); // for waitForRepaintDone
@@ -935,15 +933,6 @@ public class Canvas extends JPanel
     return pane == null ? 1.0 : pane.getZoomFactor();
   }
 
-  boolean ifPaintDirtyReset() {
-    if (paintDirty) {
-      paintDirty = false;
-      return false;
-    } else {
-      return true;
-    }
-  }
-
   boolean isPopupMenuUp() {
     return myListener.menu_on;
   }
@@ -969,32 +958,15 @@ public class Canvas extends JPanel
     // g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
     //    RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-    inPaint = true;
+    inPaint = true; // volatile
     try {
       super.paintComponent(g);
-      boolean clear = false;
-      int paintedDirty = 0;
-      // do {
-        if (clear) {
-          paintedDirty++;
-          // Clear the screen so we don't get
-          // artifacts due to aliasing (e.g. where
-          // semi-transparent (gray) pixels on the
-          // edges of a line turn woudl darker if
-          // painted a second time.
-          g.setColor(Color.WHITE);
-          g.fillRect(0, 0, getWidth(), getHeight());
-        }
-        painter.paintContents(g, proj);
-        clear = true;
-      // } while (paintDirty);
-      if (paintedDirty > 0)
-        Debug.printf(1, "Warning: paintComponent repainted %d extra times\n", paintedDirty);
+      painter.paintContents(g, proj);
       if (canvasPane == null)
         viewport.paintContents(g);
     } finally {
-      inPaint = false;
       synchronized (repaintLock) {
+        inPaint = false;
         repaintLock.notifyAll();
       }
       paintCoordinator.repaintCompleted();
@@ -1016,16 +988,6 @@ public class Canvas extends JPanel
   @Override
   public void recomputeSize() {
     computeSize(true);
-  }
-
-  @Override
-  public void repaint() {
-    if (inPaint) {
-      Debug.printf(1, "WARNING: reentrant Canvas.repaint() invocation!\n");
-      paintDirty = true;
-    } else {
-      super.repaint();
-    }
   }
 
   @Override

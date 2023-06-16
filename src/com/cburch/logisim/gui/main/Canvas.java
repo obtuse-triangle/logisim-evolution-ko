@@ -96,6 +96,7 @@ import com.cburch.logisim.tools.EditTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.tools.ToolTipMaker;
+import com.cburch.logisim.util.Debug;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
@@ -263,7 +264,7 @@ public class Canvas extends JPanel
     public void propertyChange(PropertyChangeEvent event) {
       if (AppPreferences.GATE_SHAPE.isSource(event)
           || AppPreferences.SHOW_TICK_RATE.isSource(event)) {
-        paintThread.requestRepaint();
+        paintCoordinator.requestRepaint();
       } else if (AppPreferences.COMPONENT_TIPS.isSource(event)) {
         boolean showTips = AppPreferences.COMPONENT_TIPS.get();
         setToolTipText(showTips ? "" : null);
@@ -430,7 +431,7 @@ public class Canvas extends JPanel
 
     @Override
     public void propagationCompleted(Simulator.Event e) {
-      paintThread.requestRepaint();
+      paintCoordinator.requestRepaint();
       // if (e.didTick())
       //   waitForRepaintDone();
     }
@@ -570,7 +571,7 @@ public class Canvas extends JPanel
       if (errorMessage != msg) {
         errorMessage = msg;
         errorColor = color == null ? DEFAULT_ERROR_COLOR : color;
-        paintThread.requestRepaint();
+        paintCoordinator.requestRepaint();
       }
     }
 
@@ -673,7 +674,7 @@ public class Canvas extends JPanel
 
   private TickCounter tickCounter;
 
-  private CanvasPaintThread paintThread;
+  private CanvasPaintCoordinator paintCoordinator;
 
   private CanvasPainter painter;
 
@@ -689,7 +690,7 @@ public class Canvas extends JPanel
     this.selection = new Selection(proj, this);
     this.painter = new CanvasPainter(this);
     this.oldPreferredSize = null;
-    this.paintThread = new CanvasPaintThread(this);
+    this.paintCoordinator = new CanvasPaintCoordinator(this);
     this.mappings = proj.getOptions().getMouseMappings();
     this.canvasPane = null;
     this.tickCounter = new TickCounter();
@@ -714,11 +715,10 @@ public class Canvas extends JPanel
     AppPreferences.GATE_SHAPE.addPropertyChangeListener(myListener);
     AppPreferences.SHOW_TICK_RATE.addPropertyChangeListener(myListener);
     loadOptions(options);
-    paintThread.start();
   }
 
   public void closeCanvas() {
-    paintThread.requestStop();
+    // paintCoordinator.requestStop();
   }
 
   private void completeAction() {
@@ -730,7 +730,7 @@ public class Canvas extends JPanel
     // cause a repaint. If not in autoPropagate mode, do the repaint here
     // instead.
     if (!proj.getSimulator().nudge())
-      paintThread.requestRepaint();
+      paintCoordinator.requestRepaint();
   }
 
   public void computeSize(boolean immediate) {
@@ -958,7 +958,7 @@ public class Canvas extends JPanel
 
   @Override
   public void localeChanged() {
-    paintThread.requestRepaint();
+    paintCoordinator.requestRepaint();
   }
 
   @Override
@@ -973,8 +973,10 @@ public class Canvas extends JPanel
     try {
       super.paintComponent(g);
       boolean clear = false;
-      do {
+      int paintedDirty = 0;
+      // do {
         if (clear) {
+          paintedDirty++;
           // Clear the screen so we don't get
           // artifacts due to aliasing (e.g. where
           // semi-transparent (gray) pixels on the
@@ -985,7 +987,9 @@ public class Canvas extends JPanel
         }
         painter.paintContents(g, proj);
         clear = true;
-      } while (paintDirty);
+      // } while (paintDirty);
+      if (paintedDirty > 0)
+        Debug.printf(1, "Warning: paintComponent repainted %d extra times\n", paintedDirty);
       if (canvasPane == null)
         viewport.paintContents(g);
     } finally {
@@ -993,6 +997,7 @@ public class Canvas extends JPanel
       synchronized (repaintLock) {
         repaintLock.notifyAll();
       }
+      paintCoordinator.repaintCompleted();
     }
   }
 
@@ -1016,6 +1021,7 @@ public class Canvas extends JPanel
   @Override
   public void repaint() {
     if (inPaint) {
+      Debug.printf(1, "WARNING: reentrant Canvas.repaint() invocation!\n");
       paintDirty = true;
     } else {
       super.repaint();

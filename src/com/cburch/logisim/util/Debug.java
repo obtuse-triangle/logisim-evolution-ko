@@ -38,6 +38,9 @@ import java.io.PrintStream;
 import java.util.Date;
 import java.util.Scanner;
 
+import com.cburch.logisim.proj.Project;
+import com.cburch.logisim.proj.Projects;
+
 public class Debug {
 
   static final String LOG_FILE = System.getProperty("user.home") + "/logisim_debug.log";
@@ -75,21 +78,40 @@ public class Debug {
 
   public static void printf(int lvl, String fmt, Object... args) {
     if (verbose >= lvl)
-      System.out.printf(fmt, args);
+      System.out.printf(Thread.currentThread().getName() + ": " + fmt, args);
   }
   
   public static void println(int lvl, String msg) {
     if (verbose >= lvl)
-      System.out.println(msg);
+      System.out.println(Thread.currentThread().getName() + ": " + msg);
   }
 
-  public static void print(int lvl, String msg) {
-    if (verbose >= lvl)
-      System.out.print(msg);
-  }
+  // public static void print(int lvl, String msg) {
+  //   if (verbose >= lvl)
+  //     System.out.print(Thread.currentThread().getName() + ": " + msg);
+  // }
 
-  static void doCmd(String cmd) {
-    System.out.printf("got %s\n", cmd);
+  static void doCmd(String cmd, String... args) {
+    if (cmd.equals("verbose")) {
+      verbose++;
+      System.out.printf("verbosity is now %d\n", verbose);
+    } else if (cmd.equals("quiet")) {
+      verbose--;
+      System.out.printf("verbosity is now %d\n", verbose);
+    } else if (cmd.equals("rate")) {
+      Project proj = Projects.getTopFrame().getProject();
+      String name = proj.getLogisimFile().getName();
+      if (args.length < 2) {
+        double hz = proj.getSimulator().getTickFrequency();
+        System.out.printf("tick rate for %s is %f Hz\n", name, hz);
+      } else {
+        double hz = Double.parseDouble(args[1]);
+        proj.getSimulator().setTickFrequency(hz);
+        System.out.printf("tick rate for %s is now %f Hz\n", name, hz);
+      }
+    } else {
+      System.out.printf("unrecognized debug command: %s\n", cmd);
+    }
   }
 
   private static class DebugThread extends UniquelyNamedThread {
@@ -98,14 +120,19 @@ public class Debug {
     }
     @Override
     public void run() {
-      while (stdin.hasNext()) {
+      System.out.printf("$ ");
+      System.out.flush();
+      while (stdin.hasNextLine()) {
         try {
-          String cmd = stdin.next();
-          doCmd(cmd);
-          stdin.nextLine();
+          String line = stdin.nextLine();
+          String[] args = line.trim().split("\\s+");
+          if (args.length > 0)
+            doCmd(args[0], args);
         } catch (Throwable t) {
           t.printStackTrace();
         }
+        System.out.printf("$ ");
+        System.out.flush();
       }
     }
   }

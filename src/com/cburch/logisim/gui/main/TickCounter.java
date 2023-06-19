@@ -43,7 +43,7 @@ class TickCounter implements Simulator.Listener {
   private volatile int bucketCount;
 
   private long tick;
-  private double tickFrequency;
+  private double tickFrequency = -1;
 
   private volatile double rate = -1;
 
@@ -57,7 +57,9 @@ class TickCounter implements Simulator.Listener {
   public String getTickRate() {
     double r = rate / 2; // report full-cycle rate instead of half-cycle rate
     if (r <= 0)
-      return "";
+      r = tickFrequency; // no data yet, use nominal frequency instead
+    if (r <= 0)
+        return "";
     else if (r >= 1000.0)
       return S.fmt("tickRateKHz", roundString(r / 1000.0));
     else

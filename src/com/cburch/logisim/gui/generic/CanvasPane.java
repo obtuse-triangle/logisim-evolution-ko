@@ -177,32 +177,32 @@ public class CanvasPane extends JScrollPane {
   private Listener listener;
   private ZoomModel zoomModel;
 
-  public static class SmartScrollModel extends DefaultBoundedRangeModel {
-    public SmartScrollModel(BoundedRangeModel m) {
-      super(m.getValue(), m.getExtent(), m.getMinimum(), m.getMaximum());
-    }
-    public void setExtent(int n) {
-      System.out.println(this + " setExtent " + n);
-      super.setExtent(n);
-    }
-    public void setMaximum(int n) {
-      System.out.println(this + " setMaximum " + n);
-      super.setMaximum(n);
-    }
-    public void setMinimum(int n) {
-      System.out.println(this + " setMinimum " + n);
-      super.setMinimum(n);
-    }
-    public void setValue(int n) {
-      System.out.println(this + " setValue " + n);
-      super.setValue(n);
-    }
-    public void setRangeProperties(int v, int e, int m, int x, boolean a) {
-      System.out.println(this + " setRange " + v + " " + e + " " + m + " " + x + " " + a);
-      // Thread.dumpStack();
-      super.setRangeProperties(v, e, m, x, a);
-    }
-  }
+  // public static class SmartScrollModel extends DefaultBoundedRangeModel {
+  //   public SmartScrollModel(BoundedRangeModel m) {
+  //     super(m.getValue(), m.getExtent(), m.getMinimum(), m.getMaximum());
+  //   }
+  //   public void setExtent(int n) {
+  //     System.out.println(this + " setExtent " + n);
+  //     super.setExtent(n);
+  //   }
+  //   public void setMaximum(int n) {
+  //     System.out.println(this + " setMaximum " + n);
+  //     super.setMaximum(n);
+  //   }
+  //   public void setMinimum(int n) {
+  //     System.out.println(this + " setMinimum " + n);
+  //     super.setMinimum(n);
+  //   }
+  //   public void setValue(int n) {
+  //     System.out.println(this + " setValue " + n);
+  //     super.setValue(n);
+  //   }
+  //   public void setRangeProperties(int v, int e, int m, int x, boolean a) {
+  //     System.out.println(this + " setRange " + v + " " + e + " " + m + " " + x + " " + a);
+  //     Thread.dumpStack();
+  //     super.setRangeProperties(v, e, m, x, a);
+  //   }
+  // }
 
   public CanvasPane(CanvasPaneContents contents) {
     super((Component) contents);

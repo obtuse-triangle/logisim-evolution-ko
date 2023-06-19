@@ -139,6 +139,7 @@ public class Random extends InstanceFactory {
         return;
       if (e.getKeyCode() == KeyEvent.VK_DELETE ||
           e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+        e.consume();
         if (data.reset(state.getAttributeValue(ATTR_SEED)))
           state.fireInvalidated();
       }

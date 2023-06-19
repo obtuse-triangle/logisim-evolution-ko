@@ -121,6 +121,7 @@ abstract class AbstractFlipFlop extends InstanceFactory {
       StateData myState = (StateData) state.getData();
       if (myState == null)
         return;
+      e.consume();
       if (val == 0 && myState.curValue != Value.FALSE) {
         myState.curValue = Value.FALSE;
         state.fireInvalidated();
@@ -135,10 +136,12 @@ abstract class AbstractFlipFlop extends InstanceFactory {
       StateData myState = (StateData) state.getData();
       if (myState == null)
         return;
-      if (e.getKeyCode() == KeyEvent.VK_DOWN && myState.curValue != Value.FALSE) {
+      if ((e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_LEFT) && myState.curValue != Value.FALSE) {
+        e.consume();
         myState.curValue = Value.FALSE;
         state.fireInvalidated();
-      } else if (e.getKeyCode() == KeyEvent.VK_UP && myState.curValue != Value.TRUE) {
+      } else if ((e.getKeyCode() == KeyEvent.VK_UP ||e.getKeyCode() == KeyEvent.VK_RIGHT) && myState.curValue != Value.TRUE) {
+        e.consume();
         myState.curValue = Value.TRUE;
         state.fireInvalidated();
       }

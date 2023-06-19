@@ -249,6 +249,7 @@ public final class WiringTool extends Tool {
     case KeyEvent.VK_SPACE:
       if (!pending || direction == AIMLESS)
         return;
+      event.consume();
       hintWorked();
       candidates.clear();
       extraWireFromSplitting = null;
@@ -267,11 +268,13 @@ public final class WiringTool extends Tool {
     case KeyEvent.VK_BACK_SPACE:
       if (!pending || wires.isEmpty())
         return;
+      event.consume();
       hintWorked();
       backup(canvas);
       break;
     case KeyEvent.VK_ESCAPE:
       if (pending) {
+        event.consume();
         reset();
         canvas.getProject().repaintCanvas();
       }

@@ -63,7 +63,7 @@ public class RegisterPoker extends InstancePoker {
     int val = Character.digit(e.getKeyChar(), 16);
     if (val < 0)
       return;
-
+    e.consume();
     BitWidth dataWidth = state.getAttributeValue(StdAttr.WIDTH);
     if (dataWidth == null)
       dataWidth = BitWidth.create(8);
@@ -79,7 +79,7 @@ public class RegisterPoker extends InstancePoker {
     BitWidth dataWidth = state.getAttributeValue(StdAttr.WIDTH);
     if (dataWidth == null)
       dataWidth = BitWidth.create(8);
-    if (e.getKeyCode() == KeyEvent.VK_UP) {
+    if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_RIGHT) {
       int maxVal = dataWidth.getMask();
       if (curValue != maxVal) {
         curValue = curValue + 1;
@@ -87,13 +87,15 @@ public class RegisterPoker extends InstancePoker {
         data.value = curValue;
         state.fireInvalidated();
       }
-    } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+      e.consume();
+    } else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_LEFT) {
       if (curValue != 0) {
         curValue = curValue - 1;
         RegisterData data = (RegisterData) state.getData();
         data.value = curValue;
         state.fireInvalidated();
       }
+      e.consume();
     }
   }
 

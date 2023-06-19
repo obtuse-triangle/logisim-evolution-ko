@@ -91,12 +91,14 @@ public class ShiftRegisterPoker extends InstancePoker {
       return;
     char c = e.getKeyChar();
     if (c == ' ' || c == '\t') {
+      e.consume();
       Integer lenObj = state.getAttributeValue(ShiftRegister.ATTR_LENGTH);
       if (loc < lenObj.intValue() - 1) {
         this.loc = loc + 1;
         state.fireInvalidated();
       }
     } else if (c == '\u0008') {
+      e.consume();
       if (loc > 0) {
         this.loc = loc - 1;
         state.fireInvalidated();
@@ -104,6 +106,7 @@ public class ShiftRegisterPoker extends InstancePoker {
     } else {
       try {
         int val = Integer.parseInt("" + e.getKeyChar(), 16);
+        e.consume();
         BitWidth widObj = state.getAttributeValue(StdAttr.WIDTH);
         ShiftRegisterData data = (ShiftRegisterData) state.getData();
         int i = data.getLength() - 1 - loc;
@@ -129,14 +132,16 @@ public class ShiftRegisterPoker extends InstancePoker {
     ShiftRegisterData data = (ShiftRegisterData) state.getData();
     int i = data.getLength() - 1 - loc;
     int curValue = data.get(i).toIntValue();
-    if (e.getKeyCode() == KeyEvent.VK_UP) {
+    if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_RIGHT) {
+      e.consume();
       int maxVal = dataWidth.getMask();
       if (curValue != maxVal) {
         curValue = curValue + 1;
         data.set(i, Value.createKnown(dataWidth, curValue));
         state.fireInvalidated();
       }
-    } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+    } else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_LEFT) {
+      e.consume();
       if (curValue != 0) {
         curValue = curValue - 1;
         data.set(i, Value.createKnown(dataWidth, curValue));

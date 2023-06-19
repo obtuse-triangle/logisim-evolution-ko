@@ -343,18 +343,23 @@ public class AddTool extends Tool {
         Library base = proj.getLogisimFile().getLibrary("Base");
         if (base != null)
           proj.setTool(base.getTool("Edit Tool"));
+        event.consume();
         break;
       case KeyEvent.VK_UP:
-        setFacing(canvas, Direction.NORTH);
+        if (setFacing(canvas, Direction.NORTH))
+          event.consume();
         break;
       case KeyEvent.VK_DOWN:
-        setFacing(canvas, Direction.SOUTH);
+        if (setFacing(canvas, Direction.SOUTH))
+          event.consume();
         break;
       case KeyEvent.VK_LEFT:
-        setFacing(canvas, Direction.WEST);
+        if (setFacing(canvas, Direction.WEST))
+          event.consume();
         break;
       case KeyEvent.VK_RIGHT:
-        setFacing(canvas, Direction.EAST);
+        if (setFacing(canvas, Direction.EAST))
+          event.consume();
         break;
       case KeyEvent.VK_DELETE:
       case KeyEvent.VK_BACK_SPACE:
@@ -363,6 +368,7 @@ public class AddTool extends Tool {
           canvas.getProject().undoAction();
           lastAddition = null;
         }
+        event.consume();
       }
     }
   }
@@ -591,10 +597,10 @@ public class AddTool extends Tool {
     bounds = null;
   }
 
-  private void setFacing(Canvas canvas, Direction facing) {
+  private boolean setFacing(Canvas canvas, Direction facing) {
     ComponentFactory source = getFactory();
     if (source == null)
-      return;
+      return false;
     AttributeSet base = getBaseAttributes();
     Object feature = source.getFeature(
         ComponentFactory.FACING_ATTRIBUTE_KEY, base);
@@ -603,7 +609,9 @@ public class AddTool extends Tool {
     if (attr != null) {
       Action act = ToolAttributeAction.create(this, attr, facing);
       canvas.getProject().doAction(act);
+      return true;
     }
+    return false;
   }
 
   private void setState(Canvas canvas, int value) {

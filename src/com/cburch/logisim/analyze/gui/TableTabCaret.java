@@ -105,33 +105,41 @@ class TableTabCaret {
       switch (e.getKeyCode()) {
       case KeyEvent.VK_UP:
         move(p.row - 1, p.col, shift);
+        e.consume();
         break;
       case KeyEvent.VK_LEFT:
         move(p.row, p.col - 1, shift);
+        e.consume();
         break;
       case KeyEvent.VK_DOWN:
         move(p.row + 1, p.col, shift);
+        e.consume();
         break;
       case KeyEvent.VK_RIGHT:
         move(p.row, p.col + 1, shift);
+        e.consume();
         break;
       case KeyEvent.VK_HOME:
         if (p.col == 0) move(0, 0, shift);
         else move(p.row, 0, shift);
+        e.consume();
         break;
       case KeyEvent.VK_END:
         if (p.col == cols - 1) move(rows - 1, cols - 1, shift);
         else move(p.row, cols - 1, shift);
+        e.consume();
         break;
       case KeyEvent.VK_PAGE_DOWN:
         rows = table.getBody().getVisibleRect().height / table.getCellHeight();
         if (rows > 2) rows--;
         move(p.row + rows, p.col, shift);
+        e.consume();
         break;
       case KeyEvent.VK_PAGE_UP:
         rows = table.getBody().getVisibleRect().height / table.getCellHeight();
         if (rows > 2) rows--;
         move(cursor.row - rows, cursor.col, shift);
+        e.consume();
         break;
       }
     }
@@ -139,6 +147,7 @@ class TableTabCaret {
     public void keyReleased(KeyEvent e) { }
 
     public void keyTyped(KeyEvent e) {
+      e.consume();
       int mask = e.getModifiers();
       if ((mask & ~InputEvent.SHIFT_MASK) != 0)
         return;

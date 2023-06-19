@@ -304,13 +304,16 @@ class TextFieldCaret implements Caret, TextFieldListener {
     case KeyEvent.VK_ESCAPE:
     case KeyEvent.VK_CANCEL:
       cancelEditing();
+      e.consume();
       break;
     case KeyEvent.VK_CLEAR:
       curText = "";
       end = pos = 0;
+      e.consume();
       break;
     case KeyEvent.VK_ENTER:
       stopEditing();
+      e.consume();
       break;
     case KeyEvent.VK_BACK_SPACE:
       normalizeSelection();
@@ -323,6 +326,7 @@ class TextFieldCaret implements Caret, TextFieldListener {
         --pos;
         end = pos;
       }
+      e.consume();
       break;
     case KeyEvent.VK_DELETE:
       normalizeSelection();
@@ -333,20 +337,21 @@ class TextFieldCaret implements Caret, TextFieldListener {
         curText = curText.substring(0, pos)
             + curText.substring(pos + 1);
       }
+      e.consume();
       break;
     default:
       ; // ignore
     }
   }
 
-  public void keyReleased(KeyEvent e) {
-  }
+  public void keyReleased(KeyEvent e) { }
 
   public void keyTyped(KeyEvent e) {
     int ign = InputEvent.ALT_MASK | InputEvent.CTRL_MASK | InputEvent.META_MASK;
     if ((e.getModifiers() & ign) != 0)
       return;
 
+    e.consume();
     char c = e.getKeyChar();
     if (allowedCharacter(c)) {
       normalizeSelection();

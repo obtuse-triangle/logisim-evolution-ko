@@ -223,8 +223,10 @@ public class Pin extends InstanceFactory {
     @Override
     public void keyPressed(KeyEvent e) {
       if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+        e.consume();
         accept();
       } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        e.consume();
         setVisible(false);
       }
     }

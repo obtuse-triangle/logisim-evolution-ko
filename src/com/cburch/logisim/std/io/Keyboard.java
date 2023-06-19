@@ -101,6 +101,10 @@ public class Keyboard extends InstanceFactory {
         case KeyEvent.VK_DELETE:
           changed = data.delete();
           break;
+        case KeyEvent.VK_UP:
+        case KeyEvent.VK_DOWN:
+          // do nothing, but consume event
+          break;
         case KeyEvent.VK_LEFT:
           data.moveCursorBy(-1);
           break;

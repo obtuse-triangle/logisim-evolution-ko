@@ -66,6 +66,13 @@ class SimulateOptions extends OptionsPanel {
         getProject().doAction(
             OptionsActions.setAttribute(attrs,
               Options.ATTR_SIM_RAND, val));
+      } else if (source == simSmoothing) {
+        AttributeSet attrs = getOptions().getAttributeSet();
+        Object val = simSmoothing.isSelected() ? Options.sim_smoothing_dflt
+            : Integer.valueOf(1);
+        getProject().doAction(
+            OptionsActions.setAttribute(attrs,
+              Options.ATTR_SIM_SMOOTHING, val));
       } else if (source == gateUndefined) {
         ComboOption opt = (ComboOption) gateUndefined.getSelectedItem();
         if (opt != null) {
@@ -87,6 +94,8 @@ class SimulateOptions extends OptionsPanel {
         loadSimLimit((Integer) val);
       } else if (attr == Options.ATTR_SIM_RAND) {
         loadSimRandomness((Integer) val);
+      } else if (attr == Options.ATTR_SIM_SMOOTHING) {
+        loadSimSmoothing((Integer) val);
       } else if (attr == Options.ATTR_GATE_UNDEFINED) {
         loadGateUndefined(val);
       }
@@ -111,6 +120,10 @@ class SimulateOptions extends OptionsPanel {
     private void loadSimRandomness(Integer val) {
       simRandomness.setSelected(val.intValue() > 0);
     }
+
+    private void loadSimSmoothing(Integer val) {
+      simSmoothing.setSelected(val.intValue() > 1);
+    }
   }
 
   private static final long serialVersionUID = 1L;
@@ -125,6 +138,7 @@ class SimulateOptions extends OptionsPanel {
         Integer.valueOf(10000), Integer.valueOf(20000),
         Integer.valueOf(50000), });
   private JCheckBox simRandomness = new JCheckBox();
+  private JCheckBox simSmoothing = new JCheckBox();
   private JLabel gateUndefinedLabel = new JLabel();
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private JComboBox gateUndefined = new JComboBox(new Object[] {
@@ -145,17 +159,20 @@ class SimulateOptions extends OptionsPanel {
     gateUndefined.addActionListener(myListener);
 
     simRandomness.addActionListener(myListener);
+    simSmoothing.addActionListener(myListener);
 
     setLayout(new TableLayout(1));
     add(simLimitPanel);
     add(gateUndefinedPanel);
     add(simRandomness);
+    add(simSmoothing);
 
     window.getOptions().getAttributeSet().addAttributeWeakListener(null, myListener);
     AttributeSet attrs = getOptions().getAttributeSet();
     myListener.loadSimLimit(attrs.getValue(Options.ATTR_SIM_LIMIT));
     myListener.loadGateUndefined(attrs.getValue(Options.ATTR_GATE_UNDEFINED));
     myListener.loadSimRandomness(attrs.getValue(Options.ATTR_SIM_RAND));
+    myListener.loadSimSmoothing(attrs.getValue(Options.ATTR_SIM_SMOOTHING));
   }
 
   @Override
@@ -173,5 +190,6 @@ class SimulateOptions extends OptionsPanel {
     simLimitLabel.setText(S.get("simulateLimit"));
     gateUndefinedLabel.setText(S.get("gateUndefined"));
     simRandomness.setText(S.get("simulateRandomness"));
+    simSmoothing.setText(S.get("simulateSmoothing"));
   }
 }

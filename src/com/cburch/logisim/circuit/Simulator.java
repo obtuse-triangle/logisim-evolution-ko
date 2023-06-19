@@ -30,12 +30,16 @@
 package com.cburch.logisim.circuit;
 
 import java.util.ArrayList;
+import java.lang.ref.WeakReference;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.data.AttributeEvent;
+import com.cburch.logisim.data.AttributeListener;
+import com.cburch.logisim.file.Options;
 import com.cburch.logisim.gui.log.ClockSource;
 import com.cburch.logisim.gui.log.ComponentSelector;
 import com.cburch.logisim.gui.log.SignalInfo;
@@ -75,6 +79,25 @@ public class Simulator {
     public void propagationInProgress(Event e);
   }
 
+  private static class OptionsListener implements AttributeListener {
+    // weak reference here, to allow prop to be garbage collected
+    WeakReference<Simulator> sim;
+
+    public OptionsListener(Simulator s) {
+      sim = new WeakReference<>(s);
+    }
+
+    public void attributeListChanged(AttributeEvent e) { }
+
+    public void attributeValueChanged(AttributeEvent e) {
+      Simulator s = sim.get();
+      if (s == null)
+        return;
+      if (e.getAttribute().equals(Options.ATTR_SIM_SMOOTHING))
+        s.updateSmoothingFactor();
+    }
+  }
+
   // This thread keeps track of the current stepPoints (when running in step
   // mode), and it invokes various Propagator methods:
   //
@@ -108,7 +131,8 @@ public class Simulator {
   private static class SimThread extends UniquelyNamedThread {
 
     private Simulator sim;
-    private long lastTick = System.nanoTime();
+    private volatile long lastTick = System.nanoTime(); // time of last propagation start
+    private volatile int smoothingFactor = 1; // for WEMA
 
     // NOTE: These variables must only be accessed with lock held.
     private Propagator _propagator = null;
@@ -122,6 +146,7 @@ public class Simulator {
     private boolean _resetRequested = false;
     private boolean _complete = false;
     private boolean _oops = false;
+    private double _avgTickNanos = -1.0; // nanoseconds, EWMA
 
     // This last one should be made thread-safe, but it isn't for now.
     private PropagationPoints stepPoints = new PropagationPoints();
@@ -162,6 +187,7 @@ public class Simulator {
       _propagator = value;
       _manualTicksRequested = 0;
       _manualStepsRequested = 0;
+      sim.updateSmoothingFactor();
       if (Thread.currentThread() != this)
         notifyAll();
       return true;
@@ -235,7 +261,7 @@ public class Simulator {
         notifyAll();
     }
 
-    int cnt;
+    // int cnt; // Debugging
     private boolean loop() {
 
       Propagator prop = null;
@@ -286,23 +312,85 @@ public class Simulator {
           }
          
           long delta = 0;
+          long deadline = now;
           if (_autoTicking && _autoPropagating && _autoTickNanos > 0) {
             // see if it is time to do an auto-tick
-            long deadline = lastTick + _autoTickNanos;
+            int k = smoothingFactor;
+            long lastNanos = now - lastTick;
+            double avg;
+            if (_avgTickNanos <= 0 || k <= 1) {
+              // System.out.println("initialize avg to " + lastNanos);
+              avg = lastNanos;
+              deadline = lastTick + _autoTickNanos;
+            } else {
+              // EWMA with factors 1/k and (k-1)k
+              avg = ((k - 1.0)/k) * _avgTickNanos + (1.0/k) * lastNanos;
+              // Assume last k-1 ticks took about _avgTickNanos each,
+              // so set deadline to make this tick bring the average over k
+              // ticks be in line with target.
+              deadline = lastTick + _autoTickNanos -
+                  (long)((k-1)*(_avgTickNanos - _autoTickNanos));
+            }
             delta = deadline - now;
-            if (delta <= 0) {
+            // if (delta > 0 && _autoTickFreq >= 20.0) {
+            //   // for fast simulation (faster than human visible animation),
+            //   // wait here then tick+propagate below, without checking all
+            //   // the variables for possible user-initiated changes.
+            //   System.out.println("fast ahead by " + delta + ", last = " + lastNanos + ", avg = " + _avgTickNanos + ", goal = " + _autoTickNanos);
+            //   try {
+            //     if (delta > 1000000) {
+            //       long t;
+            //       do {
+            //         t = System.nanoTime();
+            //       } while (t < deadline);
+            //       System.out.println("fast busy overshot by " + (t) - delta));
+            //     } else if (delta > 0) {
+            //       long ta = System.nanoTime();
+            //       do {
+            //         wait(delta/1000000, (int)(delta%1000000));
+            //         long tb = System.nanoTime();
+            //         System.out.println("fast wrong by " + ((tb - ta) - delta));
+            //       } else
+            //         wait();
+            //     }
+            //     catch (InterruptedException e) { } // yes, we swallow the interrupt
+            //   }
+            //   now = System.nanoTime();
+            //   doTick = true;
+            //   doProp = true;
+            //   ready = true;
+            // } else
+            if (delta <= 1000) { // within 1 usec, close enough
+              _avgTickNanos = avg;
               doTick = true;
               doProp = true;
               ready = true;
+            //   System.out.printf("missed by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
+            //       delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
+            // } else {
+            //   System.out.printf("ahead  by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
+            //       delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
             }
+          } else {
+            _avgTickNanos = -1.0; // reset
           }
          
           if (!ready) {
             // LockSupport.parkNanos(delta);
             try {
-              if (delta > 0)
+              if (delta > 0 && delta < 1000000) {
+                // less than 1 ms, busy wait
+                long t;
+                do {
+                  t = System.nanoTime();
+                } while (t < deadline);
+                // System.out.println("busy overshot by " + (t - deadline));
+              } else if (delta > 0) {
+                long ta = System.nanoTime();
                 wait(delta/1000000, (int)(delta%1000000));
-              else
+                long tb = System.nanoTime();
+                // System.out.println("wrong by " + ((tb - ta) - delta));
+              } else
                 wait();
             }
             catch (InterruptedException e) { } // yes, we swallow the interrupt
@@ -702,6 +790,20 @@ public class Simulator {
       return false;
     fireSimulatorStateChanged();
     return true;
+  }
+
+  private void updateSmoothingFactor() {
+    Propagator prop = simThread.getPropagator();
+    if (prop == null) {
+      simThread.smoothingFactor = 1;
+    } else {
+      Options opts = prop.getRootState().getProject().getOptions();
+      Object limit = opts.getAttributeSet().getValue(Options.ATTR_SIM_SMOOTHING);
+      int val = ((Integer) limit).intValue();
+      if (val < 1)
+        val = 1;
+      simThread.smoothingFactor = val;
+    }
   }
 
 }

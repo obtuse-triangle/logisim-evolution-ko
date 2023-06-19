@@ -47,6 +47,8 @@ public class Options {
       .forInteger("simlimit", S.getter("simLimitOption"));
   public static final Attribute<Integer> ATTR_SIM_RAND = Attributes
       .forInteger("simrand", S.getter("simRandomOption"));
+  public static final Attribute<Integer> ATTR_SIM_SMOOTHING = Attributes
+      .forInteger("simsmooth", S.getter("simSmoothingOption"));
   public static final Attribute<AttributeOption> ATTR_GATE_UNDEFINED = Attributes
       .forOption("gateUndefined", S.getter("gateUndefinedOption"),
           new AttributeOption[] { GATE_UNDEFINED_IGNORE,
@@ -54,10 +56,12 @@ public class Options {
 
   public static final Integer sim_rand_dflt = Integer.valueOf(32);
 
+  public static final Integer sim_smoothing_dflt = Integer.valueOf(50);
+
   private static final Attribute<?>[] ATTRIBUTES = { ATTR_GATE_UNDEFINED,
-    ATTR_SIM_LIMIT, ATTR_SIM_RAND, };
+    ATTR_SIM_LIMIT, ATTR_SIM_RAND, ATTR_SIM_SMOOTHING };
   private static final Object[] DEFAULTS = { GATE_UNDEFINED_IGNORE,
-    Integer.valueOf(1000), Integer.valueOf(0), };
+    Integer.valueOf(1000), Integer.valueOf(0), sim_smoothing_dflt };
 
   private AttributeSet attrs;
   private MouseMappings mmappings;

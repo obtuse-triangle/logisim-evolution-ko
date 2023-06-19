@@ -86,6 +86,7 @@ import com.cburch.logisim.gui.generic.CanvasPane;
 import com.cburch.logisim.gui.generic.CanvasPaneContents;
 import com.cburch.logisim.gui.generic.GridPainter;
 import com.cburch.logisim.gui.generic.ZoomModel;
+import com.cburch.logisim.gui.menu.MenuSimulate;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.proj.ProjectEvent;
@@ -96,7 +97,6 @@ import com.cburch.logisim.tools.EditTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.tools.ToolTipMaker;
-import com.cburch.logisim.util.Debug;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
@@ -147,6 +147,17 @@ public class Canvas extends JPanel
       Tool tool = proj.getTool();
       if (tool != null) {
         tool.keyTyped(Canvas.this, e);
+      }
+      if (!e.isConsumed()) {
+        if (e.getKeyChar() == '<' && e.getModifiers() == KeyEvent.SHIFT_MASK) {
+          // like YouTube accelerator for slower 
+          MenuSimulate.decreaseTickFrequency(proj.getSimulator());
+          e.consume();
+        } else if (e.getKeyChar() == '>' && e.getModifiers() == KeyEvent.SHIFT_MASK) {
+          // like YouTube accelerator for faster 
+          MenuSimulate.increaseTickFrequency(proj.getSimulator());
+          e.consume();
+        }
       }
     }
 

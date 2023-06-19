@@ -171,10 +171,9 @@ public class MenuSimulate extends Menu {
       computeEnabled();
       runToggle.setSelected(sim.isAutoPropagating());
       ticksEnabled.setSelected(sim.isAutoTicking());
-      double freq = sim.getTickFrequency();
+      int index = closestTickFreqIndex(sim.getTickFrequency());
       for (int i = 0; i < tickFreqs.length; i++) {
-        TickFrequencyChoice item = tickFreqs[i];
-        item.setSelected(freq == item.freq);
+        tickFreqs[i].setSelected(i == index);
       }
     }
 
@@ -182,6 +181,37 @@ public class MenuSimulate extends Menu {
     public void stateChanged(ChangeEvent e) {
     }
 
+  }
+
+  private static int closestTickFreqIndex(double freq) {
+    int index = 0;
+    double delta = Math.abs(SupportedTickFrequencies[0] - freq);
+    for (int i = 1; i < SupportedTickFrequencies.length; i++) {
+      double d = Math.abs(SupportedTickFrequencies[i] - freq);
+      if (d <= delta) {
+        delta = d;
+        index = i;
+      }
+    }
+    return index;
+  }
+
+  public static void decreaseTickFrequency(Simulator sim) {
+    double freq = sim.getTickFrequency();
+    int i = closestTickFreqIndex(freq);
+    if (freq > SupportedTickFrequencies[i])
+      sim.setTickFrequency(SupportedTickFrequencies[i]);
+    else if (i+1 < SupportedTickFrequencies.length)
+      sim.setTickFrequency(SupportedTickFrequencies[i+1]);
+  }
+
+  public static void increaseTickFrequency(Simulator sim) {
+    double freq = sim.getTickFrequency();
+    int i = closestTickFreqIndex(freq);
+    if (freq < SupportedTickFrequencies[i])
+      sim.setTickFrequency(SupportedTickFrequencies[i]);
+    else if (i-1 >= 0)
+      sim.setTickFrequency(SupportedTickFrequencies[i-1]);
   }
 
   private class TickFrequencyChoice extends JRadioButtonMenuItem
@@ -476,11 +506,10 @@ public class MenuSimulate extends Menu {
     }
 
     if (currentSim != oldSim) {
-      double freq = currentSim == null ? 1.0 : currentSim
-          .getTickFrequency();
+      double freq = currentSim == null ? 1.0 : currentSim.getTickFrequency();
+      int index = closestTickFreqIndex(freq);
       for (int i = 0; i < tickFreqs.length; i++) {
-        tickFreqs[i]
-            .setSelected(Math.abs(tickFreqs[i].freq - freq) < 0.001);
+        tickFreqs[i].setSelected(i == index);
       }
 
       if (oldSim != null) {

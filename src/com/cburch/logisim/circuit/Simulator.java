@@ -220,6 +220,7 @@ public class Simulator {
         return false;
       _autoTickFreq = freq;
       _autoTickNanos = freq <= 0 ? 0 : (long)Math.round(1e9 / (2*_autoTickFreq));
+      _avgTickNanos = -1.0; // reset
       if (Thread.currentThread() != this)
         notifyAll();
       return true;

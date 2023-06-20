@@ -112,7 +112,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     public String getDisplayName() { return S.get("rgbVideoComponent"); }
     public AttributeSet createAttributeSet() {
       return AttributeSets.fixedSet(ATTRIBUTES, new Object[] {
-        BLINK_OPTIONS[0], RESET_OPTIONS[0], COLOR_OPTIONS[0], new Integer(128), new Integer(128), new Integer(2) });
+        BLINK_OPTIONS[0], RESET_OPTIONS[0], COLOR_OPTIONS[0], Integer.valueOf(128), Integer.valueOf(128), Integer.valueOf(2) });
     }
     public Component createComponent(Location loc, AttributeSet attrs) { return new Video(loc, attrs); }
     public Bounds getOffsetBounds(AttributeSet attrs) {

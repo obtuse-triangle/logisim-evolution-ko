@@ -19,8 +19,9 @@ also available. After downloading it, extract the compressed contents to a direc
 extracted exe file.
 
 Windows and Mac versions will work only on Windows or Mac. The platform-independent JAR file should work on any
-platform, but requires that Java version 11 or above be installed separately (the AdoptOpenJDK version
-available [here](https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot) is one possible choice).
+platform, but requires that Java version 11 or above be installed separately
+(Java version 17 is recommended; the Adoptium project's Temurin OpenJDK 17
+available [here](https://adoptium.net/) is one possible choice).
 To run the JAR file, open a command line (or Mac Terminal or Windows CMD.exe
 prompt) and type `java -jar logisim-evolution-4.0.4hc.jar` from within the
 directory where you have downloaded the JAR file.

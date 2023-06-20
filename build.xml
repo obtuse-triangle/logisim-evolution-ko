@@ -34,6 +34,21 @@ In summary:
  - AdoptOpenJDK (or other third-party) OpenJDK 9 or 10 build: fine.
  - AdoptOpenJDK (or other third-party) OpenJDK 11 build: best, most recent.
 
+Updates on Java Versions [19 June 2023]:
+
+Java 17 is the most recent LTS release, with Java 21 for release September 2023.
+When it comes to AArch64 support, Java 17 appears to have better support than
+Java 11 In simple trials, there appears to be no performance improvement when
+compiling against version 17 versus version 11. Therefore, developmentwill now
+target Java 17, though the binaries will still be compiled using language
+version 11 to allow for some backwards compatibility when using the JAR release.
+
+AdoptOpenJDK has been renamed to Adoptium, with the JDK named temurin
+
+In summary:
+ - Adoptium's temurin OpenJDK 17 build: current recommended execution JDK.
+ - Any Java 11 or higher JDK: acceptable for executing JAR.
+
 -->
 
 <project name="logisim-evolution">

@@ -136,7 +136,7 @@ public class TestVector {
                 "Test Vector header format error: bad spec: " + t);
 
           columnName[i] = t.substring(0, s);
-          int w = new Integer(t.substring(s + 1, e)).intValue();
+          int w = Integer.valueOf(t.substring(s + 1, e)).intValue();
 
           if (w < 1 || w > 32)
             throw new IOException(

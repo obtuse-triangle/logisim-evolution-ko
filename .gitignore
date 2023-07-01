@@ -36,6 +36,7 @@ java-runtime-mac
 # Windows files
 *.exe
 *.zip
+*.pfx
 logisim-evolution-runtime
 module-deps.txt
 

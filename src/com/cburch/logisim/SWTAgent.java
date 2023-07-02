@@ -90,9 +90,10 @@ public class SWTAgent {
       Debug.println(1, "Loading platform-specific SWT library: " + dest.getPath());
     } else {
       Debug.println(1, "Installing platform-specific SWT library: " + dest.getPath());
-      try (InputStream inputStream = Main.class.getResourceAsStream("/"+jarname)) {
+      String rsrc = "/" + jarname;
+      try (InputStream inputStream = Main.class.getResourceAsStream(rsrc)) {
         if (inputStream == null) {
-          return "SWT library missing from logisim jar: " + jarname;
+          return "SWT library missing from logisim jar: " + rsrc;
         }
         Files.copy(inputStream, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
       } catch (Throwable e) {
@@ -108,7 +109,7 @@ public class SWTAgent {
   // Determine OS, and load appropriate SWT jar
   public static String loadPlatformSpecificSWTLibrary() {
     if (System.getProperty("os.name").toLowerCase().startsWith("mac"))
-      return loadSWT("swt-mac.jar");
+      return loadSWT("swt-macos.jar");
     else if (System.getProperty("os.name").toLowerCase().startsWith("windows"))
       return loadSWT("swt-windows.jar");
     else // linux

@@ -109,9 +109,12 @@ public class Startup {
     options.put("-debug", 0); // undocumented, enables debug console
   }
 
-  public static Startup parseArgs(String[] args) {
-    // first pass: check for headless, process locale, and make note of high priority items
-    boolean doClearPreferences = false;
+  private static boolean doClearPreferences;
+  private static int numPreprocessedArgs;
+
+  // first pass: check for headless, process locale, and make note of high priority items
+  public static void preprocessArgs(String[] args) {
+    doClearPreferences = false;
     int i;
     for (i = 0; i < args.length && args[i].startsWith("-"); i++) {
       String arg = args[i];
@@ -148,6 +151,11 @@ public class Startup {
       if (arg.equals("-vvvvv"))
         Debug.verbose += 5;
     }
+    numPreprocessedArgs = i;
+  }
+
+  public static Startup parseArgs(String[] args) {
+    // first pass preprocessing already completed by SWTAgent
 
     if (GraphicsEnvironment.isHeadless() && !Main.headless)
       fail(S.get("argHeadlessError"));
@@ -178,11 +186,11 @@ public class Startup {
     if (doClearPreferences)
       AppPreferences.clear();
 
-    for ( ; i < args.length; i++)
+    for (int i = numPreprocessedArgs ; i < args.length; i++)
       ret.filesToOpen.add(new File(args[i]));
 
     // second pass: parse arguments
-    for (i = 0; i < args.length && args[i].startsWith("-") && !args[i].equals("--"); i++) {
+    for (int i = 0; i < numPreprocessedArgs && !args[i].equals("--"); i++) {
       String arg = args[i];
       Integer o = options.get(arg);
       int n = o & NUMPARAMS;
@@ -685,7 +693,7 @@ public class Startup {
       System.exit(0);
   }
 
-  private static void fail(String msg) {
+  public static void fail(String msg) {
     System.out.println(msg);
     if (!GraphicsEnvironment.isHeadless() && !Main.headless) {
       try { Errors.title(S.get("startupFailTitle")).show(msg); }

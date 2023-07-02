@@ -30,17 +30,17 @@
 
 package com.cburch.logisim;
 
+import java.awt.Desktop;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.awt.Desktop;
-
-import javax.swing.JOptionPane;
 
 import com.cburch.logisim.gui.start.Startup;
 
 public class Main {
-  public static void main(String[] args) throws Exception {
+
+  public static void main(String[] args) {
+    Thread.currentThread().setName("Main");
     Startup startup = Startup.parseArgs(args);
     if (startup == null)
       System.exit(0);
@@ -54,7 +54,7 @@ public class Main {
         Writer result = new StringWriter();
         PrintWriter printWriter = new PrintWriter(result);
         e.printStackTrace(new PrintWriter(result));
-        JOptionPane.showMessageDialog(null, result.toString());
+        Startup.fail(result.toString());
       }
       System.exit(-1);
     }

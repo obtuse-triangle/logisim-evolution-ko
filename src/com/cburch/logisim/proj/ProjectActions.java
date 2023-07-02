@@ -57,6 +57,8 @@ import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.util.JFileChoosers;
 
+import org.kwalsh.BetterFileDialog;
+
 public class ProjectActions {
   private static class CreateFrame implements Runnable {
     private Loader loader;
@@ -208,22 +210,27 @@ public class ProjectActions {
   }
 
   public static Project doOpen(Component parent, Project baseProject) {
-    JFileChooser chooser;
-    if (baseProject != null) {
-      Loader oldLoader = baseProject.getLogisimFile().getLoader();
-      chooser = oldLoader.createChooser();
-      if (oldLoader.getMainFile() != null) {
-        chooser.setSelectedFile(oldLoader.getMainFile());
-      }
-    } else {
-      chooser = JFileChoosers.create();
-    }
-    chooser.setFileFilter(Loader.LOGISIM_FILTER);
+    // JFileChooser chooser;
+    // if (baseProject != null) {
+    //   Loader oldLoader = baseProject.getLogisimFile().getLoader();
+    //   chooser = oldLoader.createChooser();
+    //   if (oldLoader.getMainFile() != null) {
+    //     chooser.setSelectedFile(oldLoader.getMainFile());
+    //   }
+    // } else {
+    //   chooser = JFileChoosers.create();
+    // }
+    // chooser.setFileFilter(Loader.LOGISIM_FILTER);
 
-    int returnVal = chooser.showOpenDialog(parent);
-    if (returnVal != JFileChooser.APPROVE_OPTION)
-      return null;
-    File selected = chooser.getSelectedFile();
+    // int returnVal = chooser.showOpenDialog(parent);
+    // if (returnVal != JFileChooser.APPROVE_OPTION)
+    //   return null;
+    // File selected = chooser.getSelectedFile();
+    BetterFileDialog.Filter LOGISIM_FILTER =
+        new BetterFileDialog.Filter("Logisim Circuit", "circ", "circ.xml"); // FIXME: test double extension on all platforms
+    File selected = BetterFileDialog.openFile(parent,
+        "Better Open File",
+        (File)null, null, LOGISIM_FILTER);
     if (selected == null)
       return null;
     return doOpen(parent, baseProject, selected);

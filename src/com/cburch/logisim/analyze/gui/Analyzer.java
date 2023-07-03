@@ -171,9 +171,9 @@ public class Analyzer extends LFrame.SubWindow {
     truthTablePanel = new TableTab(model.getTruthTable());
     expressionPanel = new ExpressionTab(model, menubar);
     minimizedPanel = new MinimizedTab(model, menubar);
-    importTable = new ImportTableButton(this, model);
-    buildCircuit = new BuildCircuitButton(this, model);
     exportTable = new ExportTableButton(this, model);
+    importTable = new ImportTableButton(this, model, exportTable);
+    buildCircuit = new BuildCircuitButton(this, model);
 
     tabbedPane = new JTabbedPane();
     addTab(IO_TAB, ioPanel);

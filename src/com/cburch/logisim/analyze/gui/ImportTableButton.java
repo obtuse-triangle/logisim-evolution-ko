@@ -42,25 +42,25 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JFileChooser;
 
-import com.cburch.logisim.circuit.Circuit;
-import com.cburch.logisim.analyze.model.Var;
+import com.cburch.logisim.analyze.model.AnalyzerModel;
 import com.cburch.logisim.analyze.model.Entry;
 import com.cburch.logisim.analyze.model.TruthTable;
-import com.cburch.logisim.util.JFileChoosers;
-import com.cburch.logisim.analyze.model.AnalyzerModel;
+import com.cburch.logisim.analyze.model.Var;
 import com.cburch.logisim.analyze.model.VariableList;
+import com.cburch.logisim.util.Chooser;
 
 class ImportTableButton extends JButton {
   private static final long serialVersionUID = 1L;
 
   private JFrame parent;
   private AnalyzerModel model;
+  private ExportTableButton exportButton;
 
-  ImportTableButton(JFrame parent, AnalyzerModel model) {
+  ImportTableButton(JFrame parent, AnalyzerModel model, ExportTableButton exportButton) {
     this.parent = parent;
     this.model = model;
+    this.exportButton = exportButton;
     addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doLoad();
@@ -243,45 +243,13 @@ class ImportTableButton extends JButton {
     }
   }
 
-  private File lastFile = null;
   void doLoad() {
-    if (lastFile == null) {
-      Circuit c = model.getCurrentCircuit();
-      if (c != null)
-        lastFile = new File(c.getName() + ".txt");
-      else
-        lastFile = new File("truthtable.txt");
-    }
-    JFileChooser chooser = JFileChoosers.createSelected(lastFile);
-    chooser.setDialogTitle(S.get("openButton"));
-    chooser.addChoosableFileFilter(chooser.getAcceptAllFileFilter());
-    chooser.addChoosableFileFilter(ExportTableButton.FILE_FILTER);
-    chooser.setFileFilter(ExportTableButton.FILE_FILTER);
-    int choice = chooser.showOpenDialog(parent);
-    if (choice == JFileChooser.APPROVE_OPTION) {
-      File file = chooser.getSelectedFile();
-      if (file.isDirectory()) {
-        JOptionPane.showMessageDialog(parent,
-            S.fmt("notFileMessage", file.getName()),
-            S.get("openErrorTitle"), JOptionPane.OK_OPTION);
-        return;
-      }
-      if (!file.exists() || !file.canRead()) {
-        JOptionPane.showMessageDialog(parent,
-            S.fmt("cantReadMessage", file.getName()),
-            S.get("openErrorTitle"), JOptionPane.OK_OPTION);
-        return;
-      }
-      try {
-        doLoad(file);
-        lastFile = file;
-      } catch (IOException e) {
-        JOptionPane.showMessageDialog(parent,
-            e.getMessage(),
-            S.get("openErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-      }
-    }
+    File loadedFile = Chooser.loadPopup((f) -> doLoad(f),
+        parent, S.get("openButton"),
+        exportButton.getLastFile(), ExportTableButton.FILE_FILTER, Chooser.ANY_FILTER);
+
+    if (loadedFile != null)
+      exportButton.setLastFile(loadedFile);
   }
 
 }

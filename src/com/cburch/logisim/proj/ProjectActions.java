@@ -55,7 +55,6 @@ import com.cburch.logisim.gui.main.Frame;
 import com.cburch.logisim.gui.start.SplashScreen;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.tools.Tool;
-import com.cburch.logisim.util.JFileChoosers;
 
 import org.kwalsh.BetterFileDialog;
 

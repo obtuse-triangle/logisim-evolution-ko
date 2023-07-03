@@ -38,19 +38,16 @@ import java.io.IOException;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JFileChooser;
 
-import com.cburch.logisim.circuit.Circuit;
-import com.cburch.logisim.analyze.model.Var;
+import com.cburch.logisim.analyze.model.AnalyzerModel;
 import com.cburch.logisim.analyze.model.Entry;
 import com.cburch.logisim.analyze.model.TruthTable;
-import com.cburch.logisim.util.JFileChoosers;
-import com.cburch.logisim.analyze.model.AnalyzerModel;
+import com.cburch.logisim.analyze.model.Var;
 import com.cburch.logisim.analyze.model.VariableList;
+import com.cburch.logisim.circuit.Circuit;
+import com.cburch.logisim.util.Chooser;
 
 class ExportTableButton extends JButton {
   private static final long serialVersionUID = 1L;
@@ -162,8 +159,23 @@ class ExportTableButton extends JButton {
     }
   }
 
-  private File lastFile = null;
   void doSave() {
+    File savedFile = Chooser.savePopup((f) -> doSave(f), 
+        parent, S.get("saveButton"),
+        getLastFile(), FILE_FILTER, Chooser.ANY_FILTER);
+
+    if (savedFile != null)
+      setLastFile(savedFile);
+  }
+
+  public static final Chooser.LFilter FILE_FILTER =
+      new Chooser.LFilter("Logisim-evolution Truth Table", "txt");
+
+  private File lastFile = null; // used by both ImportTableButton and ExportTableButton
+
+  void setLastFile(File f) { lastFile = f; }
+
+  File getLastFile() {
     if (lastFile == null) {
       Circuit c = model.getCurrentCircuit();
       if (c != null)
@@ -171,52 +183,7 @@ class ExportTableButton extends JButton {
       else
         lastFile = new File("truthtable.txt");
     }
-    JFileChooser chooser = JFileChoosers.createSelected(lastFile);
-    chooser.setDialogTitle(S.get("saveButton"));
-    chooser.addChoosableFileFilter(chooser.getAcceptAllFileFilter());
-    chooser.addChoosableFileFilter(FILE_FILTER);
-    chooser.setFileFilter(FILE_FILTER);
-    int choice = chooser.showSaveDialog(parent);
-    if (choice == JFileChooser.APPROVE_OPTION) {
-      File file = chooser.getSelectedFile();
-      if (file.isDirectory()) {
-        JOptionPane.showMessageDialog(parent,
-            S.fmt("notFileMessage", file.getName()),
-            S.get("saveErrorTitle"), JOptionPane.OK_OPTION);
-        return;
-      }
-      if (file.exists() && !file.canWrite()) {
-        JOptionPane.showMessageDialog(parent,
-            S.fmt("cantWriteMessage", file.getName()),
-            S.get("saveErrorTitle"), JOptionPane.OK_OPTION);
-        return;
-      }
-      if (file.exists()) {
-        int confirm = JOptionPane.showConfirmDialog(parent,
-            S.fmt("confirmOverwriteMessage", file.getName()),
-            S.get("confirmOverwriteTitle"),
-            JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION)
-          return;
-      }
-      try {
-        doSave(file);
-        lastFile = file;
-      } catch (IOException e) {
-        JOptionPane.showMessageDialog(parent,
-            e.getMessage(),
-            S.get("saveErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-      }
-    }
+    return lastFile;
   }
 
-  public static final FileFilter FILE_FILTER = new FileFilter() {
-    public boolean accept(File f) {
-      return (!f.isFile() || f.getName().toLowerCase().endsWith(".txt"));
-    }
-    public String getDescription() {
-      return "Logisim-evolution Truth Table (*.txt)";
-    }
-  };
 }

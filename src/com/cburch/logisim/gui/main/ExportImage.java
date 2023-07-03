@@ -49,7 +49,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -61,7 +60,6 @@ import javax.swing.ProgressMonitor;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileFilter;
 
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitState;
@@ -69,6 +67,7 @@ import com.cburch.logisim.comp.ComponentDrawContext;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.proj.Project;
+import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.GifEncoder;
 import com.cburch.logisim.util.UniquelyNamedThread;
 
@@ -78,14 +77,14 @@ public class ExportImage {
     Frame frame;
     Canvas canvas;
     File dest;
-    FileFilter filter;
+    Chooser.LFilter filter;
     String ext;
     List<Circuit> circuits;
     double scale;
     boolean printerView;
     ProgressMonitor monitor;
 
-    ExportThread(Frame frame, Canvas canvas, File dest, FileFilter f,
+    ExportThread(Frame frame, Canvas canvas, File dest, Chooser.LFilter f,
         String ext, List<Circuit> circuits, double scale, boolean printerView,
         ProgressMonitor monitor) {
       super("ExportThread");
@@ -104,7 +103,7 @@ public class ExportImage {
       File filename;
       if (dest.isDirectory()) {
         filename = new File(dest, circuit.getName() + ext);
-      } else if (filter.accept(dest)) {
+      } else if (filter.get().accept(dest)) {
         filename = dest;
       } else {
         String newName = dest.getName() + ext;
@@ -284,15 +283,15 @@ public class ExportImage {
     }
   }
 
-  public static final FileFilter GIF_FILTER =
-      Loader.makeFileFilter(S.getter("exportGifFilter"), ".gif");
-  public static final FileFilter PNG_FILTER =
-      Loader.makeFileFilter(S.getter("exportPngFilter"), ".png");
-  public static final FileFilter JPG_FILTER =
-      Loader.makeFileFilter(S.getter("exportJpgFilter"),
+  public static final Chooser.LFilter GIF_FILTER =
+      new Chooser.LFilter(S.getter("exportGifFilter"), ".gif");
+  public static final Chooser.LFilter PNG_FILTER =
+      new Chooser.LFilter(S.getter("exportPngFilter"), ".png");
+  public static final Chooser.LFilter JPG_FILTER =
+      new Chooser.LFilter(S.getter("exportJpgFilter"),
           ".jpg", ".jpeg", ".jpe", ".jfi", ".jfif", ".jfi");
 
-  public static FileFilter getFilter(String fmt) {
+  public static Chooser.LFilter getFilter(String fmt) {
     switch (fmt) {
     case FORMAT_GIF: return GIF_FILTER;
     case FORMAT_PNG: return PNG_FILTER;
@@ -327,50 +326,21 @@ public class ExportImage {
       return;
 
     String fmt = options.getImageFormat();
-    FileFilter filter = getFilter(fmt);
+    Chooser.LFilter filter = getFilter(fmt);
     if (filter == null)
       return;
 
     // Then display file chooser
     Loader loader = proj.getLogisimFile().getLoader();
-    JFileChooser chooser = loader.createChooser();
-    chooser.setAcceptAllFileFilterUsed(false);
-    if (circuits.size() > 1) {
-      chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-      chooser.setDialogTitle(S.get("exportImageDirectorySelect"));
-    } else {
-      chooser.setFileFilter(filter);
-      chooser.setDialogTitle(S.get("exportImageFileSelect"));
-    }
-    int returnVal = chooser.showDialog(frame,
-        S.get("exportImageButton"));
-    if (returnVal != JFileChooser.APPROVE_OPTION)
+    File dest;
+    if (circuits.size() > 1)
+      dest = Chooser.dirPopup(frame, S.get("exportImageDirectorySelect"),
+          loader.getCurrentDirectory());
+    else
+      dest = Chooser.loadPopup(frame, S.get("exportImageFileSelect"),
+          loader.getCurrentDirectory(), filter);
+    if (dest == null)
       return;
-
-    // Determine whether destination is valid
-    File dest = chooser.getSelectedFile();
-    chooser.setCurrentDirectory(dest.isDirectory() ? dest : dest.getParentFile());
-    if (dest.exists()) {
-      if (!dest.isDirectory()) {
-        int confirm = JOptionPane.showConfirmDialog(proj.getFrame(),
-            S.get("confirmOverwriteMessage"),
-            S.get("confirmOverwriteTitle"),
-            JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION)
-          return;
-      }
-    } else {
-      if (circuits.size() > 1) {
-        boolean created = dest.mkdir();
-        if (!created) {
-          JOptionPane.showMessageDialog(proj.getFrame(),
-              S.get("exportNewDirectoryErrorMessage"),
-              S.get("exportNewDirectoryErrorTitle"),
-              JOptionPane.YES_NO_OPTION);
-          return;
-        }
-      }
-    }
 
     // Create the progress monitor
     ProgressMonitor monitor = new ProgressMonitor(frame,
@@ -380,11 +350,9 @@ public class ExportImage {
     monitor.setProgress(0);
 
     // And start a thread to actually perform the operation
-    // (This is run in a thread so that Swing will update the
-    // monitor.)
+    // (This is run in a thread so that Swing will update the monitor.)
     new ExportThread(frame, frame.getCanvas(), dest, filter, fmt, circuits,
         scale, printerView, monitor).start();
-
   }
 
   private static final int SLIDER_DIVISIONS = 6;

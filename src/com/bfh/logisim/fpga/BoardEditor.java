@@ -45,21 +45,22 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JFileChooser;
 
 import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.gui.generic.ComboBox;
+import com.cburch.logisim.gui.generic.LFrame;
 import com.cburch.logisim.gui.main.ExportImage;
 import com.cburch.logisim.proj.Projects;
+import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.Errors;
 import com.cburch.logisim.util.JDialogOk;
-import com.cburch.logisim.gui.generic.LFrame;
 
 public class BoardEditor extends JFrame {
 
@@ -179,16 +180,8 @@ public class BoardEditor extends JFrame {
   }
 
   private void doLoad() {
-    JFileChooser fc = new JFileChooser();
-    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-    fc.setDialogTitle("Choose XML board description");
-    fc.setFileFilter(Loader.XML_FILTER);
-    fc.setAcceptAllFileFilterUsed(false);
-    int retval = fc.showOpenDialog(null);
-    if (retval != JFileChooser.APPROVE_OPTION)
-      return;
-    String path = fc.getSelectedFile().getPath();
-    setBoard(BoardReader.read(path));
+    Chooser.loadPopup((f) -> setBoard(BoardReader.read(f.getPath())),
+        this, "Choose XML board description", null, Loader.XML_FILTER);
   }
 
   private void setBoard(Board board) {
@@ -454,14 +447,10 @@ public class BoardEditor extends JFrame {
 	}
 
   public void doChangeImage() {
-    JFileChooser fc = new JFileChooser();
-    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-    fc.setDialogTitle("Choose FPGA board picture to use");
-    fc.setFileFilter(ExportImage.PNG_FILTER);
-    fc.setAcceptAllFileFilterUsed(false);
-    int retval = fc.showOpenDialog(null);
-    if (retval == JFileChooser.APPROVE_OPTION) {
-      File file = fc.getSelectedFile();
+    File file = Chooser.loadPopup(this, 
+        "Choose FPGA board picture to use",
+        null, ExportImage.PNG_FILTER);
+    if (file != null) {
       try {
         image.setImage(file);
       } catch (IOException ex) {

@@ -47,7 +47,6 @@ import java.util.WeakHashMap;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
@@ -60,9 +59,10 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import com.cburch.hdl.HdlFile;
 import com.cburch.hdl.HdlModel;
 import com.cburch.hdl.HdlModelListener;
+import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.proj.Project;
+import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.FileUtil;
-import com.cburch.logisim.util.JFileChoosers;
 import com.cburch.logisim.util.JInputDialog;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
@@ -103,27 +103,16 @@ public class HdlContentEditor extends JDialog implements JInputDialog {
         if (vhdl != null)
           setText(vhdl);
       }
-      if (source == save) {
-        JFileChooser chooser = JFileChoosers
-            .createSelected(getDefaultExportFile(null));
-        chooser.setDialogTitle(S.get("hdlSaveButton"));
-        int choice = chooser.showSaveDialog(HdlContentEditor.this);
-        if (choice == JFileChooser.APPROVE_OPTION) {
-          File f = chooser.getSelectedFile();
-          try {
-            HdlFile.save(f, getText());
-          } catch (IOException e) {
-            JOptionPane.showMessageDialog(HdlContentEditor.this,
-                e.getMessage(),
-                S.get("hexSaveErrorTitle"),
-                JOptionPane.ERROR_MESSAGE);
-          }
-        }
+      else if (source == save) {
+        Chooser.savePopup((f) -> HdlFile.save(f, getText()),
+            HdlContentEditor.this, 
+            S.get("hdlSaveButton"), getDefaultExportFile(null),
+            Loader.VHDL_FILTER, Loader.ANY_FILTER);
       }
-      if (source == validate) {
+      else if (source == validate) {
         model.setContent(editor.getText());
       }
-      if (source == close) {
+      else if (source == close) {
         close();
       }
     }

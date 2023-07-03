@@ -180,8 +180,8 @@ import com.cburch.logisim.instance.Instance;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.std.memory.Mem;
 import com.cburch.logisim.std.memory.MemContents;
+import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.JDialogOk;
-import com.cburch.logisim.util.JFileChoosers;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.OutputStreamBinarySanitizer;
 import com.cburch.logisim.util.OutputStreamEscaper;
@@ -1383,6 +1383,7 @@ public class HexFile {
     int choice = chooser.showOpenDialog(parent);
     if (choice == JFileChooser.APPROVE_OPTION) {
       File f = chooser.getSelectedFile();
+      Chooser.setRecentDirectory(f.getParent());
       try {
         open(dst, f);
         mem.setCurrentImage(instance, f);
@@ -1823,6 +1824,7 @@ public class HexFile {
     int choice = chooser.showSaveDialog(parent);
     if (choice == JFileChooser.APPROVE_OPTION) {
       File f = chooser.getSelectedFile();
+      Chooser.setRecentDirectory(f.getParent());
       if (f.exists()) {
         int confirm = JOptionPane.showConfirmDialog(parent,
             S.fmt("confirmOverwriteMessage", f.getName()),
@@ -1855,7 +1857,7 @@ public class HexFile {
   }
 
   private static JFileChooser createFileChooser(File lastFile, boolean auto) {
-    JFileChooser chooser = JFileChoosers.createSelected(lastFile);
+    JFileChooser chooser = Chooser.createJFileChooser(lastFile);
     if (auto) {
       chooser.addChoosableFileFilter(getFilter(autoFormat));
     } else {

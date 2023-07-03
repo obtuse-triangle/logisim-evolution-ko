@@ -40,9 +40,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.regex.Pattern;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -55,8 +53,7 @@ import com.cburch.logisim.gui.main.Frame;
 import com.cburch.logisim.gui.start.SplashScreen;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.tools.Tool;
-
-import org.kwalsh.BetterFileDialog;
+import com.cburch.logisim.util.Chooser;
 
 public class ProjectActions {
   private static class CreateFrame implements Runnable {
@@ -89,16 +86,6 @@ public class ProjectActions {
       }
     }
   }
-
-  // /**
-  //  * Returns true if the filename contains valid characters only, that is,
-  //  * alphanumeric characters and underscores.
-  //  */
-  // private static boolean checkValidFilename(String filename) {
-  //   Pattern p = Pattern.compile("[^a-z0-9_.]", Pattern.CASE_INSENSITIVE);
-  //   Matcher m = p.matcher(filename);
-  //   return (!m.find());
-  // }
 
   private static Project completeProject(SplashScreen monitor, Loader loader,
       LogisimFile file, boolean isStartup) {
@@ -209,27 +196,15 @@ public class ProjectActions {
   }
 
   public static Project doOpen(Component parent, Project baseProject) {
-    // JFileChooser chooser;
-    // if (baseProject != null) {
-    //   Loader oldLoader = baseProject.getLogisimFile().getLoader();
-    //   chooser = oldLoader.createChooser();
-    //   if (oldLoader.getMainFile() != null) {
-    //     chooser.setSelectedFile(oldLoader.getMainFile());
-    //   }
-    // } else {
-    //   chooser = JFileChoosers.create();
-    // }
-    // chooser.setFileFilter(Loader.LOGISIM_FILTER);
-
-    // int returnVal = chooser.showOpenDialog(parent);
-    // if (returnVal != JFileChooser.APPROVE_OPTION)
-    //   return null;
-    // File selected = chooser.getSelectedFile();
-    BetterFileDialog.Filter LOGISIM_FILTER =
-        new BetterFileDialog.Filter("Logisim Circuit", "circ", "circ.xml"); // FIXME: test double extension on all platforms
-    File selected = BetterFileDialog.openFile(parent,
-        "Better Open File",
-        (File)null, null, LOGISIM_FILTER);
+    File suggest = null;
+    if (baseProject != null) {
+      Loader oldLoader = baseProject.getLogisimFile().getLoader();
+      suggest = oldLoader.getMainFile();
+      if (suggest == null)
+        suggest = oldLoader.getCurrentDirectory();
+    }
+    File selected = Chooser.loadPopup(parent, null /* default title */,
+        suggest, Loader.LOGISIM_FILTER, Loader.ANY_FILTER);
     if (selected == null)
       return null;
     return doOpen(parent, baseProject, selected);
@@ -354,6 +329,59 @@ public class ProjectActions {
     return ret;
   }
 
+  private static String ensureCircExtension(Project proj, String filename) {
+    // If ends with ".circ.xml", ask if replacing with ".circ" is okay
+    // If ends with extension other than ".circ", ask if replacing or adding ".circ" is okay
+    // If ends with no extension, just append ".circ" assuming it is okay
+    String dot_circ = LogisimFile.LOGISIM_EXTENSION; // lowercase
+    String dot_circ_xml = LogisimFile.LOGISIM_EXTENSION_ALT; // lowercase
+    int idx = filename.lastIndexOf('.');
+    if (idx > 0 && filename.toLowerCase().endsWith(dot_circ)) {
+      // leave alone
+      return null;
+    } else if (idx > 0 && filename.toLowerCase().endsWith(dot_circ_xml)) {
+      // ends with ".circ.xml" (happens on MacOS when downloading file from web)
+      String ext = filename.substring(idx);
+      String ttl = S.get("replaceExtensionTitle");
+      String msg = S.fmt("replaceExtensionMessage", ext);
+      Object[] options = {
+        S.fmt("replaceExtensionReplaceOpt", ext),
+        S.get("replaceExtensionKeepOpt") };
+      JOptionPane dlog = new JOptionPane(msg);
+      dlog.setMessageType(JOptionPane.QUESTION_MESSAGE);
+      dlog.setOptions(options);
+      dlog.createDialog(proj.getFrame(), ttl).setVisible(true);
+      Object result = dlog.getValue();
+      if (result == options[0]) // just remove ".xml"
+        return filename.substring(0, filename.length() - 4);
+      else // leave alone
+        return null;
+    } else if (idx > 0) {
+      // unexpected extension
+      String ext = filename.substring(idx);
+      String ttl = S.get("replaceExtensionTitle");
+      String msg = S.fmt("replaceExtensionMessage", ext);
+      Object[] options = {
+        S.fmt("replaceExtensionReplaceOpt", ext),
+        S.fmt("replaceExtensionAddOpt", dot_circ),
+        S.get("replaceExtensionKeepOpt") };
+      JOptionPane dlog = new JOptionPane(msg);
+      dlog.setMessageType(JOptionPane.QUESTION_MESSAGE);
+      dlog.setOptions(options);
+      dlog.createDialog(proj.getFrame(), ttl).setVisible(true);
+      Object result = dlog.getValue();
+      if (result == options[0]) // replace ".other" with ".circ"
+        return filename.substring(0, idx) + dot_circ;
+      else if (result == options[1]) // just append ".circ"
+        return filename + dot_circ;
+      else
+        return null; // leave alone
+    } else {
+      // no extension at all, just append ".circ"
+      return filename + dot_circ;
+    }
+  }
+
   /**
    * Saves a Logisim project in a .circ file.
    *
@@ -365,57 +393,12 @@ public class ProjectActions {
    */
   public static boolean doSaveAs(Project proj) {
     Loader loader = proj.getLogisimFile().getLoader();
-    JFileChooser chooser = loader.createChooser();
-    chooser.setFileFilter(Loader.LOGISIM_FILTER);
-    if (loader.getMainFile() != null) {
-      chooser.setSelectedFile(loader.getMainFile());
-    }
-
-    int returnVal = chooser.showSaveDialog(proj.getFrame());
-    if (returnVal != JFileChooser.APPROVE_OPTION)
-      return false;
-
-    File f = chooser.getSelectedFile();
-    String circExt = LogisimFile.LOGISIM_EXTENSION;
-    if (!f.getName().endsWith(circExt)) {
-      String old = f.getName();
-      int ext0 = old.lastIndexOf('.');
-      if (ext0 < 0
-          || !Pattern.matches("\\.\\p{L}{2,}[0-9]?",
-            old.substring(ext0))) {
-        f = new File(f.getParentFile(), old + circExt);
-      } else {
-        String ext = old.substring(ext0);
-        String ttl = S.get("replaceExtensionTitle");
-        String msg = S.fmt("replaceExtensionMessage", ext);
-        Object[] options = {
-          S.fmt("replaceExtensionReplaceOpt", ext),
-          S.fmt("replaceExtensionAddOpt", circExt),
-          S.get("replaceExtensionKeepOpt") };
-        JOptionPane dlog = new JOptionPane(msg);
-        dlog.setMessageType(JOptionPane.QUESTION_MESSAGE);
-        dlog.setOptions(options);
-        dlog.createDialog(proj.getFrame(), ttl).setVisible(true);
-
-        Object result = dlog.getValue();
-        if (result == options[0]) {
-          String name = old.substring(0, ext0) + circExt;
-          f = new File(f.getParentFile(), name);
-        } else if (result == options[1]) {
-          f = new File(f.getParentFile(), old + circExt);
-        }
-      }
-    }
-
-    if (f.exists()) {
-      int confirm = JOptionPane.showConfirmDialog(proj.getFrame(),
-          S.get("confirmOverwriteMessage"),
-          S.get("confirmOverwriteTitle"),
-          JOptionPane.YES_NO_OPTION);
-      if (confirm != JOptionPane.YES_OPTION)
-        return false;
-    }
-    return doSave(proj, f);
+    File suggest = loader.getMainFile(); // may be null
+    File f = Chooser.savePopup(proj.getFrame(),
+        null /* default title */, suggest,
+        (filename) -> ensureCircExtension(proj, filename),
+        Loader.LOGISIM_FILTER);
+    return f != null && doSave(proj, f);
   }
 
   private ProjectActions() {

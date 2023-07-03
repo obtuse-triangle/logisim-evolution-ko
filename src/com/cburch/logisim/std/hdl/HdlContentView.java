@@ -38,7 +38,6 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
@@ -46,17 +45,17 @@ import javax.swing.event.DocumentListener;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
-import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
+import com.cburch.draw.toolbar.ToolbarModel;
 import com.cburch.hdl.HdlFile;
 import com.cburch.hdl.HdlModel;
-import com.cburch.logisim.proj.Project;
-import com.cburch.logisim.util.FileUtil;
-import com.cburch.logisim.util.JFileChoosers;
-import com.cburch.draw.toolbar.ToolbarModel;
-import com.cburch.logisim.proj.Action;
 import com.cburch.hdl.HdlModelListener;
+import com.cburch.logisim.file.Loader;
+import com.cburch.logisim.proj.Action;
+import com.cburch.logisim.proj.Project;
+import com.cburch.logisim.util.Chooser;
+import com.cburch.logisim.util.FileUtil;
 
 import com.kwalsh.logisim.vhdl.VhdlSyntax;
 
@@ -123,20 +122,9 @@ public class HdlContentView extends JPanel implements DocumentListener, HdlModel
 
 
   void doExport() {
-    JFileChooser chooser = JFileChoosers.createSelected(getDefaultExportFile(null));
-    chooser.setDialogTitle(S.get("hdlSaveDialog"));
-    int choice = chooser.showSaveDialog(HdlContentView.this);
-    if (choice == JFileChooser.APPROVE_OPTION) {
-      File f = chooser.getSelectedFile();
-      try {
-        HdlFile.save(f, editor.getText());
-      } catch (IOException e) {
-        JOptionPane.showMessageDialog(HdlContentView.this,
-            e.getMessage(),
-            S.get("hexSaveErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-      }
-    }
+    Chooser.savePopup((f) -> HdlFile.save(f, editor.getText()),
+        HdlContentView.this,S.get("hdlSaveDialog"),
+        getDefaultExportFile(null), Loader.VHDL_FILTER, Loader.ANY_FILTER);
   }
 
   void doImport() {

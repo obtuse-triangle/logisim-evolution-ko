@@ -47,6 +47,7 @@ import com.cburch.logisim.analyze.model.TruthTable;
 import com.cburch.logisim.analyze.model.Var;
 import com.cburch.logisim.analyze.model.VariableList;
 import com.cburch.logisim.circuit.Circuit;
+import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.util.Chooser;
 
 class ExportTableButton extends JButton {
@@ -162,7 +163,7 @@ class ExportTableButton extends JButton {
   void doSave() {
     File savedFile = Chooser.savePopup((f) -> doSave(f), 
         parent, S.get("saveButton"),
-        getLastFile(), FILE_FILTER, Chooser.ANY_FILTER);
+        getLastFile(), FILE_FILTER, Loader.ANY_FILTER);
 
     if (savedFile != null)
       setLastFile(savedFile);

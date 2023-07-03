@@ -45,7 +45,6 @@ import java.io.InputStream;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -56,19 +55,16 @@ import com.cburch.logisim.file.LoadCanceledByUser;
 import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.prefs.Template;
-import com.cburch.logisim.util.JFileChoosers;
+import com.cburch.logisim.util.Chooser;
 
 class TemplateOptions extends OptionsPanel {
   private class MyListener implements ActionListener, PropertyChangeListener {
     public void actionPerformed(ActionEvent event) {
       Object src = event.getSource();
       if (src == templateButton) {
-        JFileChooser chooser = JFileChoosers.create();
-        chooser.setDialogTitle(S.get("selectDialogTitle"));
-        chooser.setApproveButtonText(S.get("selectDialogButton"));
-        int action = chooser.showOpenDialog(getPreferencesFrame());
-        if (action == JFileChooser.APPROVE_OPTION) {
-          File file = chooser.getSelectedFile();
+        File file = Chooser.loadPopup(getPreferencesFrame(),
+            S.get("selectDialogTitle"), null, Loader.LOGISIM_FILTER, Loader.ANY_FILTER);
+        if (file != null) {
           FileInputStream reader = null;
           InputStream reader2 = null;
           try {

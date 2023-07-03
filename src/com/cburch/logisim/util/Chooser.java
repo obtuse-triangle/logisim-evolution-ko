@@ -36,6 +36,7 @@ import java.io.IOException;
 
 import java.awt.Component;
 import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
 
 import org.kwalsh.BetterFileDialog;
 
@@ -109,20 +110,17 @@ public class Chooser {
     return filters;
   }
     
-  // FIXME: localize, and move to Loader
-  public static final LFilter LOGISIM_FILTER =
-        new LFilter("Logisim Circuit", "circ", "circ.xml"); // FIXME: test double extension on all platforms
+  // FIXME: test circ.xml double extension on all platforms
 
-  // FIXME: localize
-  public static final LFilter ANY_FILTER = new LFilter("All Files", "*");
-
-  
   private Chooser() { }
   
   private static String recentDirectory = null;
 
   public static String getRecentDirectory() {
     return recentDirectory != null ? recentDirectory : AppPreferences.DIALOG_DIRECTORY.get();
+  }
+  public static void setRecentDirectory(String dir) {
+    recentDirectory = dir;
   }
 
   private static File normalizeDirectory(File dir) {
@@ -166,11 +164,30 @@ public class Chooser {
   // Gives warning/cancellation popup if chosen path exists.
   public static File savePopup(Component parent, String title,
       File suggest, LFilter... filters) {
+    return savePopup(parent, title, suggest, null, filters);
+  }
+
+  @FunctionalInterface
+  public interface FileNameSanitizer {
+    public String sanitize(String filename);
+  }
+
+  public static File savePopup(Component parent, String title,
+      File suggest, FileNameSanitizer sanitizer, LFilter... filters) {
     File path = normalizePath(suggest);
     File file = BetterFileDialog.saveFile(parent, title, path, convert(filters));
 
     if (file == null) // cancelled
       return null;
+
+    recentDirectory = file.getParent();
+
+    if (sanitizer != null) {
+      String filename = file.getName();
+      String fixed = sanitizer.sanitize(filename);
+      if (fixed != null)
+        file = new File(file.getParentFile(), fixed);
+    }
 
     if (file.isDirectory()) {
       JOptionPane.showMessageDialog(parent,
@@ -237,6 +254,8 @@ public class Chooser {
     if (file == null) // cancelled
       return null;
 
+    recentDirectory = file.getParent();
+
     if (file.isDirectory()) {
       JOptionPane.showMessageDialog(parent,
           S.fmt("notFileMessage", file.getName()),
@@ -272,5 +291,26 @@ public class Chooser {
     return file;
   }
 
+  public static File dirPopup(Component parent, String title,
+      File suggest) {
+    File initialDir = normalizeDirectory(suggest);
+    File dir = BetterFileDialog.pickDir(parent, title, initialDir);
+    if (dir != null)
+      recentDirectory = dir.getPath();
+    return dir;
+  }
+
+  // gui.hex.HexFile relies on preview pane of JFileChooser
+  public static JFileChooser createJFileChooser(File suggest) {
+    File dir = normalizeDirectory(suggest);
+    JFileChooser chooser;
+    if (dir == null)
+      chooser = new JFileChooser();
+    else
+      chooser = new JFileChooser(dir);
+    if (suggest != null && !suggest.isDirectory())
+      chooser.setSelectedFile(suggest);
+    return chooser;
+  }
 
 }

@@ -362,8 +362,11 @@ public class AttrTable extends JPanel implements LocaleListener {
       p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
       // Hide the JFileChooser buttons, since we already have the
       // MyDialog ones
-      if (input instanceof JFileChooser)
+      if (input instanceof JFileChooser) {
+        System.out.println("NEVER HAPPENS?");
+        System.exit(1);
         ((JFileChooser) input).setControlButtonsAreShown(false);
+      }
       p.add((JComponent) input, BorderLayout.CENTER);
       getContentPane().add(p, BorderLayout.CENTER);
 

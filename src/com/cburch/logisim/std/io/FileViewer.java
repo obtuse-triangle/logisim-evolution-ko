@@ -44,9 +44,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
@@ -62,8 +59,8 @@ import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.tools.key.BitWidthConfigurator;
+import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.GraphicsUtil;
-import com.cburch.logisim.util.JFileChoosers;
 import com.cburch.logisim.util.JInputDialog;
 
 public class FileViewer extends InstanceFactory {
@@ -149,16 +146,12 @@ public class FileViewer extends InstanceFactory {
   }
 
   private static class FileChooser extends java.awt.Component implements JInputDialog {
-    JFileChooser chooser;
     Frame parent;
     List<String> result;
 
     FileChooser(Frame parent, List<String> r) {
       this.parent = parent;
       this.result = r;
-      chooser = JFileChoosers.create();
-      chooser.setDialogTitle(S.get("fileViewerLoadDialogTitle"));
-      chooser.setFileFilter(Loader.TXT_FILTER);
     }
 
     public void setValue(Object r) {
@@ -169,20 +162,16 @@ public class FileViewer extends InstanceFactory {
       return result;
     }
 
+    private void read(File f) throws IOException {
+      result = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+    }
+
     public void setVisible(boolean b) {
       if (!b)
         return;
-      int choice = chooser.showOpenDialog(parent);
-      if (choice == JFileChooser.APPROVE_OPTION) {
-        File f = chooser.getSelectedFile();
-        try {
-          result = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-          JOptionPane.showMessageDialog(parent, e.getMessage(),
-              S.get("fileViewerLoadErrorTitle"),
-              JOptionPane.ERROR_MESSAGE);
-        }
-      }
+      Chooser.loadPopup((f) -> read(f),
+          parent, S.get("fileViewerLoadDialogTitle"),
+          null, Loader.TXT_FILTER);
     }
   }
 

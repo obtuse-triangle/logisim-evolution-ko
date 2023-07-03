@@ -40,9 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
 
 import com.cburch.hdl.HdlFile;
 import com.cburch.logisim.Main;
@@ -51,41 +49,24 @@ import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.util.Errors;
-import com.cburch.logisim.util.JFileChoosers;
-import com.cburch.logisim.util.StringGetter;
 import com.cburch.logisim.util.ZipClassLoader;
+import com.cburch.logisim.util.Chooser;
 
 public class Loader implements LibraryLoader {
 
-  public static FileFilter makeFileFilter(StringGetter desc, String ...extensions) {
-    return new FileFilter() {
-      @Override
-      public boolean accept(File f) {
-        for (String ext : extensions)
-          if (f.getName().toLowerCase().endsWith(ext.toLowerCase()))
-            return true;
-        return f.isDirectory();
-      }
-
-      @Override
-      public String getDescription() {
-        return desc.toString();
-      }
-    };
-  }
-
-  public static final FileFilter LOGISIM_FILTER =
-      makeFileFilter(S.getter("logisimFileFilter"),
+  public static final Chooser.LFilter LOGISIM_FILTER =
+      new Chooser.LFilter(S.getter("logisimFileFilter"),
           LogisimFile.LOGISIM_EXTENSION, LogisimFile.LOGISIM_EXTENSION_ALT);
-
-  public static final FileFilter JAR_FILTER =
-      makeFileFilter(S.getter("jarFileFilter"), ".jar");
-  public static final FileFilter TXT_FILTER =
-      makeFileFilter(S.getter("txtFileFilter"), ".txt");
-  public static final FileFilter VHDL_FILTER =
-      makeFileFilter(S.getter("vhdlFileFilter"), ".vhd", ".vhdl");
-  public static final FileFilter XML_FILTER =
-      makeFileFilter(S.getter("xmlFileFilter"), ".xml");
+  public static final Chooser.LFilter JAR_FILTER =
+      new Chooser.LFilter(S.getter("jarFileFilter"), "jar");
+  public static final Chooser.LFilter TXT_FILTER =
+      new Chooser.LFilter(S.getter("txtFileFilter"), "txt");
+  public static final Chooser.LFilter VHDL_FILTER =
+      new Chooser.LFilter(S.getter("vhdlFileFilter"), "vhd", "vhdl");
+  public static final Chooser.LFilter XML_FILTER =
+      new Chooser.LFilter(S.getter("xmlFileFilter"), "xml");
+  public static final Chooser.LFilter ANY_FILTER =
+      new Chooser.LFilter(S.getter("allFileFilter"), "*");
 
   private Component parent;
   private Builtin builtin = new Builtin();
@@ -95,10 +76,6 @@ public class Loader implements LibraryLoader {
 
   public Loader(Component parent) {
     this.parent = parent;
-  }
-
-  public JFileChooser createChooser() {
-    return JFileChoosers.createAt(getCurrentDirectory());
   }
 
   public Builtin getBuiltin() {
@@ -126,7 +103,7 @@ public class Loader implements LibraryLoader {
   }
 
   // Used by LibraryManager.
-  private File getFileFor(String requestedName, FileFilter filter) throws LoadCanceledByUser {
+  private File getFileFor(String requestedName, Chooser.LFilter filter) throws LoadCanceledByUser {
     String name = substitutions.getOrDefault(requestedName, requestedName);
     if (name == null)
       return null;
@@ -176,12 +153,9 @@ public class Loader implements LibraryLoader {
         substitutions.put(requestedName, null); // record, so we don't ask again
         return null;
       } else if (choice == 2) { 
-        JFileChooser chooser = createChooser();
-        chooser.setFileFilter(filter);
-        chooser.setDialogTitle(S.get("fileLibraryMissingChoiceSelect") + ": " + name);
-        int action = chooser.showDialog(parent, S.get("fileLibraryMissingChoiceOk"));
-        if (action == JFileChooser.APPROVE_OPTION)
-          file = chooser.getSelectedFile();
+        file = Chooser.loadPopup(parent,
+            S.get("fileLibraryMissingChoiceSelect") + ": " + name,
+            getCurrentDirectory(), filter, ANY_FILTER);
       } else {
         throw new LoadCanceledByUser();
       }
@@ -351,13 +325,7 @@ public class Loader implements LibraryLoader {
   }
 
   public String vhdlImportChooser(Component window) {
-    JFileChooser chooser = createChooser();
-    chooser.setFileFilter(VHDL_FILTER);
-    chooser.setDialogTitle(S.get("hdlOpenDialog"));
-    int returnVal = chooser.showOpenDialog(window);
-    if (returnVal != JFileChooser.APPROVE_OPTION)
-      return null;
-    File selected = chooser.getSelectedFile();
+    File selected = Chooser.loadPopup(window, S.get("hdlOpenDialog"), null, VHDL_FILTER);
     if (selected == null)
       return null;
     try {

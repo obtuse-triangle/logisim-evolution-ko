@@ -40,7 +40,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import com.cburch.logisim.prefs.AppPreferences;
@@ -118,37 +117,29 @@ public final class Softwares {
   }
 
   public static String setQuestaPath(Component parent) {
+    File file = Chooser.dirPopup(parent, S.get("questaDialogTitle"), null);
+    if (file == null)
+      return null;
     String path = null;
-
-    JFileChooser chooser = JFileChoosers.create();
-    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-    chooser.setDialogTitle(S.get("questaDialogTitle"));
-    chooser.setApproveButtonText(S.get("questaDialogButton"));
-    int action = chooser.showOpenDialog(parent);
-    if (action == JFileChooser.APPROVE_OPTION) {
-      File file = chooser.getSelectedFile(); // todo: relativize ??
-
-      try {
-        path = file.getCanonicalPath();
-      } catch (IOException ex) {
-        JOptionPane.showMessageDialog(parent,
-            S.get("questaIoErrorMessage"),
-            S.get("questaErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-        return null;
-      }
-
-      if (validatePath(path, QUESTA)) {
-        AppPreferences.QUESTA_PATH.set(path);
-      } else {
-        JOptionPane.showMessageDialog(parent,
-            S.get("questaErrorMessage"),
-            S.get("questaErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-        return null;
-      }
+    try {
+      path = file.getCanonicalPath();
+    } catch (IOException ex) {
+      JOptionPane.showMessageDialog(parent,
+          S.get("questaIoErrorMessage"),
+          S.get("questaErrorTitle"),
+          JOptionPane.ERROR_MESSAGE);
+      return null;
     }
 
+    if (validatePath(path, QUESTA)) {
+      AppPreferences.QUESTA_PATH.set(path);
+    } else {
+      JOptionPane.showMessageDialog(parent,
+          S.get("questaErrorMessage"),
+          S.get("questaErrorTitle"),
+          JOptionPane.ERROR_MESSAGE);
+      return null;
+    }
     return path;
   }
 

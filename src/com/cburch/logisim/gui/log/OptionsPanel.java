@@ -70,7 +70,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 
-import com.cburch.logisim.std.wiring.Clock;
 import com.cburch.logisim.comp.Component;
 
 class OptionsPanel extends LogPanel

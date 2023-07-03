@@ -32,7 +32,6 @@ package com.cburch.logisim.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.StringWriter;
 import java.io.Writer;
 
 public class OutputStreamBinarySanitizer extends OutputStream {

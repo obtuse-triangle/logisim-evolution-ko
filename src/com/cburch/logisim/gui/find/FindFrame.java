@@ -76,7 +76,6 @@ import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentFactory;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
-import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.gui.generic.DetailPanel;
 import com.cburch.logisim.gui.generic.LFrame;
 import com.cburch.logisim.gui.generic.WrapLayout;

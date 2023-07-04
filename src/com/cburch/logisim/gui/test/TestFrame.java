@@ -76,6 +76,7 @@ public class TestFrame extends LFrame.SubWindowWithSimulation {
       if (src == close) {
         requestClose();
       } else if (src == load) {
+        System.out.println("Chooser case 17");
         File file = Chooser.loadPopup(TestFrame.this,
             null /* default title */, null /* default dir */,
             TestVector.FILE_FILTER, Loader.ANY_FILTER);

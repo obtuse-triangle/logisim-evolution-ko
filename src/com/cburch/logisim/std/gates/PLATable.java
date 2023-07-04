@@ -446,30 +446,21 @@ public class PLATable {
 
     void read() {
       File suggest = new File(normalizeName(oldTable.label));
-      File f = Chooser.loadPopup(this, S.get("plaLoadDialogTitle"),
-          suggest, Loader.TXT_FILTER, Loader.ANY_FILTER); 
-      try {
+      System.out.println("Chooser case 20 -- linux ok");
+      Chooser.loadPopup((f) -> {
         PLATable loaded = parse(f);
         newTable.copyFrom(loaded);
-        reset(false);
-      } catch (IOException e) {
-        JOptionPane.showMessageDialog(null, e.getMessage(),
-            S.get("plaLoadErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-      }
+        reset(false); },
+          this, S.get("plaLoadDialogTitle"),
+          suggest, Loader.TXT_FILTER, Loader.ANY_FILTER); 
     }
 
     void write() {
       File suggest = new File(normalizeName(oldTable.label));
-      File f = Chooser.savePopup(this, S.get("plaSaveDialogTitle"),
+      System.out.println("Chooser case 21 -- linux ok");
+      Chooser.savePopup((f) -> newTable.save(f),
+          this, S.get("plaSaveDialogTitle"),
           suggest, Loader.TXT_FILTER, Loader.ANY_FILTER); 
-      try {
-        newTable.save(f);
-      } catch (IOException e) {
-        JOptionPane.showMessageDialog(null, e.getMessage(),
-            S.get("plaSaveErrorTitle"),
-            JOptionPane.ERROR_MESSAGE);
-      }
     }
 
     class ButtonPanel extends JPanel {

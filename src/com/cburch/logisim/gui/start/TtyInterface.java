@@ -280,7 +280,7 @@ public class TtyInterface {
         Ram ramFactory = (Ram) comp.getFactory();
         InstanceState ramState = circState.getInstanceState(comp);
         MemContents m = ramFactory.getContents(ramState);
-        HexFile.open(m, loadFile);
+        HexFile.open(m, loadFile, null);
         found = true;
       }
     }

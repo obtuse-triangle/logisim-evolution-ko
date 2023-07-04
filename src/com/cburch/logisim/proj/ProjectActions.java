@@ -203,6 +203,7 @@ public class ProjectActions {
       if (suggest == null)
         suggest = oldLoader.getCurrentDirectory();
     }
+    System.out.println("Chooser case 18 -- linux ok");
     File selected = Chooser.loadPopup(parent, null /* default title */,
         suggest, Loader.LOGISIM_FILTER, Loader.ANY_FILTER);
     if (selected == null)
@@ -341,7 +342,7 @@ public class ProjectActions {
       return null;
     } else if (idx > 0 && filename.toLowerCase().endsWith(dot_circ_xml)) {
       // ends with ".circ.xml" (happens on MacOS when downloading file from web)
-      String ext = filename.substring(idx);
+      String ext = filename.substring(idx-5); // -5 to account for ".circ" before ".xml"
       String ttl = S.get("replaceExtensionTitle");
       String msg = S.fmt("replaceExtensionMessage", ext);
       Object[] options = {
@@ -356,26 +357,26 @@ public class ProjectActions {
         return filename.substring(0, filename.length() - 4);
       else // leave alone
         return null;
-    } else if (idx > 0) {
-      // unexpected extension
-      String ext = filename.substring(idx);
-      String ttl = S.get("replaceExtensionTitle");
-      String msg = S.fmt("replaceExtensionMessage", ext);
-      Object[] options = {
-        S.fmt("replaceExtensionReplaceOpt", ext),
-        S.fmt("replaceExtensionAddOpt", dot_circ),
-        S.get("replaceExtensionKeepOpt") };
-      JOptionPane dlog = new JOptionPane(msg);
-      dlog.setMessageType(JOptionPane.QUESTION_MESSAGE);
-      dlog.setOptions(options);
-      dlog.createDialog(proj.getFrame(), ttl).setVisible(true);
-      Object result = dlog.getValue();
-      if (result == options[0]) // replace ".other" with ".circ"
-        return filename.substring(0, idx) + dot_circ;
-      else if (result == options[1]) // just append ".circ"
-        return filename + dot_circ;
-      else
-        return null; // leave alone
+    // } else if (idx > 0) { // this case doesn't happen with BetterFileDialog with a single filter
+    //   // unexpected extension
+    //   String ext = filename.substring(idx);
+    //   String ttl = S.get("replaceExtensionTitle");
+    //   String msg = S.fmt("replaceExtensionMessage", ext);
+    //   Object[] options = {
+    //     S.fmt("replaceExtensionReplaceOpt", ext),
+    //     S.fmt("replaceExtensionAddOpt", dot_circ),
+    //     S.get("replaceExtensionKeepOpt") };
+    //   JOptionPane dlog = new JOptionPane(msg);
+    //   dlog.setMessageType(JOptionPane.QUESTION_MESSAGE);
+    //   dlog.setOptions(options);
+    //   dlog.createDialog(proj.getFrame(), ttl).setVisible(true);
+    //   Object result = dlog.getValue();
+    //   if (result == options[0]) // replace ".other" with ".circ"
+    //     return filename.substring(0, idx) + dot_circ;
+    //   else if (result == options[1]) // just append ".circ"
+    //     return filename + dot_circ;
+    //   else
+    //     return null; // leave alone
     } else {
       // no extension at all, just append ".circ"
       return filename + dot_circ;
@@ -394,6 +395,7 @@ public class ProjectActions {
   public static boolean doSaveAs(Project proj) {
     Loader loader = proj.getLogisimFile().getLoader();
     File suggest = loader.getMainFile(); // may be null
+    System.out.println("Chooser case 19 -- linux ok");
     File f = Chooser.savePopup(proj.getFrame(),
         null /* default title */, suggest,
         (filename) -> ensureCircExtension(proj, filename),

@@ -104,6 +104,7 @@ public class HdlContentEditor extends JDialog implements JInputDialog {
           setText(vhdl);
       }
       else if (source == save) {
+        System.out.println("Chooser case 22");
         Chooser.savePopup((f) -> HdlFile.save(f, getText()),
             HdlContentEditor.this, 
             S.get("hdlSaveButton"), getDefaultExportFile(null),

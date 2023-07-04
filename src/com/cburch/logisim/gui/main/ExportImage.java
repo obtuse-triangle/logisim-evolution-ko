@@ -172,6 +172,7 @@ public class ExportImage {
         break;
       }
     } catch (Exception e) {
+      e.printStackTrace();
       return S.get("couldNotCreateFile");
     } finally {
       g.dispose();
@@ -333,12 +334,16 @@ public class ExportImage {
     // Then display file chooser
     Loader loader = proj.getLogisimFile().getLoader();
     File dest;
-    if (circuits.size() > 1)
+    if (circuits.size() > 1) {
+      System.out.println("Chooser case 11 -- linux ok");
       dest = Chooser.dirPopup(frame, S.get("exportImageDirectorySelect"),
           loader.getCurrentDirectory());
-    else
-      dest = Chooser.loadPopup(frame, S.get("exportImageFileSelect"),
-          loader.getCurrentDirectory(), filter);
+    } else {
+      String name = circuits.get(0).getName() + "." + filter.get().getDefaultExtension();
+      File suggest = new File(loader.getCurrentDirectory(), name);
+      System.out.println("Chooser case 12 -- linux ok");
+      dest = Chooser.savePopup(frame, S.get("exportImageFileSelect"), suggest, filter);
+    }
     if (dest == null)
       return;
 

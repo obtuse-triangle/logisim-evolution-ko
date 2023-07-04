@@ -58,6 +58,7 @@ class FilePanel extends LogPanel {
       if (src == enableButton) {
         getModel().setFileEnabled(!getModel().isFileEnabled());
       } else if (src == selectButton) {
+        System.out.println("Chooser case 10");
         File file = Chooser.savePopup(getLogFrame(),
             null /* default title */, null /* default dir */, 
             TestVector.FILE_FILTER, Loader.ANY_FILTER);

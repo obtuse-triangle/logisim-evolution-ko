@@ -118,6 +118,7 @@ public class ProjectLibraryActions {
   public static void doLoadJarLibrary(Project proj) {
     Loader loader = proj.getLogisimFile().getLoader();
     File dir = loader.getCurrentDirectory();
+    System.out.println("Chooser case 14 -- linux ok");
     File f = Chooser.loadPopup(proj.getFrame(),
         S.get("loadJarDialogTitle"), dir, Loader.JAR_FILTER);
     if (f == null)
@@ -160,6 +161,7 @@ public class ProjectLibraryActions {
 
   public static void doLoadLogisimLibrary(Project proj) {
     Loader loader = proj.getLogisimFile().getLoader();
+    System.out.println("Chooser case 15 -- linux ok");
     File f = Chooser.loadPopup(proj.getFrame(),
       S.get("loadLogisimDialogTitle"), null, Loader.LOGISIM_FILTER);
     if (f == null)

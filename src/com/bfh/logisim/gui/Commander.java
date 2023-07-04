@@ -46,7 +46,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -56,7 +55,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.bfh.logisim.download.FPGADownload;
 import com.bfh.logisim.fpga.Board;
@@ -79,6 +77,7 @@ import com.cburch.logisim.gui.menu.MenuSimulate;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.proj.ProjectEvent;
 import com.cburch.logisim.proj.Projects;
+import com.cburch.logisim.util.Chooser;
 
 public class Commander extends JFrame
   implements LibraryListener, CircuitListener, Settings.Listener {
@@ -1157,19 +1156,13 @@ public class Commander extends JFrame
   }
 
   private String doBoardFileSelect() {
-    JFileChooser fc = new JFileChooser(workspacePath());
-    FileNameExtensionFilter filter = new FileNameExtensionFilter("Board files", "xml", "xml");
-    fc.setFileFilter(filter);
-    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-    File test = new File(workspacePath());
-    if (test.exists()) {
-      fc.setSelectedFile(test);
-    }
-    fc.setDialogTitle("Board description selection");
-    int retval = fc.showOpenDialog(null);
-    if (retval != JFileChooser.APPROVE_OPTION)
+    Chooser.LFilter filter = new Chooser.LFilter("Board files", "xml");
+    File suggest = new File(workspacePath());
+    System.out.println("Chooser case 4");
+    File file = Chooser.loadPopup(this, "Board description selection",
+        suggest, filter);
+    if (file == null)
       return null;
-    File file = fc.getSelectedFile();
     return file.getPath();
   }
 

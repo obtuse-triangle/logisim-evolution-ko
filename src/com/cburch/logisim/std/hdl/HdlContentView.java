@@ -122,6 +122,7 @@ public class HdlContentView extends JPanel implements DocumentListener, HdlModel
 
 
   void doExport() {
+    System.out.println("Chooser case 23");
     Chooser.savePopup((f) -> HdlFile.save(f, editor.getText()),
         HdlContentView.this,S.get("hdlSaveDialog"),
         getDefaultExportFile(null), Loader.VHDL_FILTER, Loader.ANY_FILTER);

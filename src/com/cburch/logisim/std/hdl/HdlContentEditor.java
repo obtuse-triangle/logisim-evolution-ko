@@ -108,7 +108,7 @@ public class HdlContentEditor extends JDialog implements JInputDialog {
         Chooser.savePopup((f) -> HdlFile.save(f, getText()),
             HdlContentEditor.this, 
             S.get("hdlSaveButton"), getDefaultExportFile(null),
-            Loader.VHDL_FILTER, Loader.ANY_FILTER);
+            Loader.VHDL_FILTER);
       }
       else if (source == validate) {
         model.setContent(editor.getText());

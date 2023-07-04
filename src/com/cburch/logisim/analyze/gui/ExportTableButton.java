@@ -161,17 +161,17 @@ class ExportTableButton extends JButton {
   }
 
   void doSave() {
-    System.out.println("Chooser case 6");
+    System.out.println("Chooser case 6 -- linux ok");
     File savedFile = Chooser.savePopup((f) -> doSave(f), 
         parent, S.get("saveButton"),
-        getLastFile(), FILE_FILTER, Loader.ANY_FILTER);
+        getLastFile(), FILE_FILTER);
 
     if (savedFile != null)
       setLastFile(savedFile);
   }
 
   public static final Chooser.LFilter FILE_FILTER =
-      new Chooser.LFilter("Logisim-evolution Truth Table", "txt");
+      new Chooser.LFilter("Logisim Truth Table", "txt");
 
   private File lastFile = null; // used by both ImportTableButton and ExportTableButton
 

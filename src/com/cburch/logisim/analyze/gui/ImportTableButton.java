@@ -48,7 +48,6 @@ import com.cburch.logisim.analyze.model.Entry;
 import com.cburch.logisim.analyze.model.TruthTable;
 import com.cburch.logisim.analyze.model.Var;
 import com.cburch.logisim.analyze.model.VariableList;
-import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.util.Chooser;
 
 class ImportTableButton extends JButton {
@@ -245,10 +244,10 @@ class ImportTableButton extends JButton {
   }
 
   void doLoad() {
-    System.out.println("Chooser case 7");
+    System.out.println("Chooser case 7 -- linux ok");
     File loadedFile = Chooser.loadPopup((f) -> doLoad(f),
         parent, S.get("openButton"),
-        exportButton.getLastFile(), ExportTableButton.FILE_FILTER, Loader.ANY_FILTER);
+        exportButton.getLastFile(), ExportTableButton.FILE_FILTER);
 
     if (loadedFile != null)
       exportButton.setLastFile(loadedFile);

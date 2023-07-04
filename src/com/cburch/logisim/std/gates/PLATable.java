@@ -460,7 +460,7 @@ public class PLATable {
       System.out.println("Chooser case 21 -- linux ok");
       Chooser.savePopup((f) -> newTable.save(f),
           this, S.get("plaSaveDialogTitle"),
-          suggest, Loader.TXT_FILTER, Loader.ANY_FILTER); 
+          suggest, Loader.TXT_FILTER);
     }
 
     class ButtonPanel extends JPanel {

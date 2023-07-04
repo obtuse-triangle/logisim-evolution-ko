@@ -153,10 +153,10 @@ public class Loader implements LibraryLoader {
         substitutions.put(requestedName, null); // record, so we don't ask again
         return null;
       } else if (choice == 2) { 
-        System.out.println("Chooser case 8");
+        System.out.println("Chooser case 8 -- linux ok");
         file = Chooser.loadPopup(parent,
             S.get("fileLibraryMissingChoiceSelect") + ": " + name,
-            getCurrentDirectory(), filter, ANY_FILTER);
+            getCurrentDirectory(), filter, JAR_FILTER); // FIXME? was ANY_FILTER
       } else {
         throw new LoadCanceledByUser();
       }
@@ -326,7 +326,7 @@ public class Loader implements LibraryLoader {
   }
 
   public String vhdlImportChooser(Component window) {
-    System.out.println("Chooser case 9");
+    System.out.println("Chooser case 9 -- linux ok");
     File selected = Chooser.loadPopup(window, S.get("hdlOpenDialog"), null, VHDL_FILTER);
     if (selected == null)
       return null;

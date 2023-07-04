@@ -48,7 +48,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import com.cburch.logisim.data.TestVector;
-import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.util.Chooser;
 
 class FilePanel extends LogPanel {
@@ -61,7 +60,7 @@ class FilePanel extends LogPanel {
         System.out.println("Chooser case 10");
         File file = Chooser.savePopup(getLogFrame(),
             null /* default title */, null /* default dir */, 
-            TestVector.FILE_FILTER, Loader.ANY_FILTER);
+            TestVector.FILE_FILTER);
         if (file == null)
           return;
         if (file.exists() && file.length() > 0) {

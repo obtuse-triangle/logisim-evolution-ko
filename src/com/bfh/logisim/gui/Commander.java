@@ -1158,7 +1158,7 @@ public class Commander extends JFrame
   private String doBoardFileSelect() {
     Chooser.LFilter filter = new Chooser.LFilter("Board files", "xml");
     File suggest = new File(workspacePath());
-    System.out.println("Chooser case 4");
+    System.out.println("Chooser case 4 -- linux ok");
     File file = Chooser.loadPopup(this, "Board description selection",
         suggest, filter);
     if (file == null)

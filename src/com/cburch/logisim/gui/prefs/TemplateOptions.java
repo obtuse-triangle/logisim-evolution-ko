@@ -64,7 +64,7 @@ class TemplateOptions extends OptionsPanel {
       if (src == templateButton) {
         System.out.println("Chooser case 16 -- linux ok");
         File file = Chooser.loadPopup(getPreferencesFrame(),
-            S.get("selectDialogTitle"), null, Loader.LOGISIM_FILTER, Loader.ANY_FILTER);
+            S.get("selectDialogTitle"), null, Loader.LOGISIM_FILTER);
         if (file != null) {
           FileInputStream reader = null;
           InputStream reader2 = null;

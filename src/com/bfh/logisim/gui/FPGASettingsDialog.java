@@ -244,14 +244,14 @@ public class FPGASettingsDialog implements ActionListener {
 			title = vendor + " Design Suite Path Selection";
 		else
 			title = "Temporary directory for compilation";
-    System.out.println("Chooser case 5");
+    System.out.println("Chooser case 5 -- linux ok");
     File dir = Chooser.dirPopup(panel, title, new File(path));
 		if (dir == null)
 			return;
 		path = dir.getPath();
-		if (vendor.equals("Altera")) {
+		if ("Altera".equals(vendor)) {
 			alteraPath.setText(path);
-		} else if (vendor.equals("Xilinx")) {
+		} else if ("Xilinx".equals(vendor)) {
 			xilinxPath.setText(path);
 		} else {
 			workPath.setText(path);

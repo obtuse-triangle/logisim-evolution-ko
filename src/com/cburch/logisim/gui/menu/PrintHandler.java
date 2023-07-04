@@ -51,7 +51,6 @@ import javax.swing.JOptionPane;
 
 import com.cburch.logisim.gui.main.ExportImage;
 import com.cburch.logisim.util.Chooser;
-import com.cburch.logisim.util.GifEncoder;
 
 public abstract class PrintHandler implements Printable {
 
@@ -100,7 +99,6 @@ public abstract class PrintHandler implements Printable {
   public void exportImage(Frame parent) {
     final Chooser.LFilter[] filters = {
       ExportImage.getFilter(ExportImage.FORMAT_PNG),
-      ExportImage.getFilter(ExportImage.FORMAT_GIF),
       ExportImage.getFilter(ExportImage.FORMAT_JPG)
     };
     System.out.println("Chooser case 13 -- linux ok");
@@ -111,10 +109,8 @@ public abstract class PrintHandler implements Printable {
       return;
     setLastExported(dest);
     String fmt;
-    if (filters[2].get().accept(dest))
+    if (filters[1].get().accept(dest))
       fmt = ExportImage.FORMAT_JPG;
-    else if (filters[1].get().accept(dest))
-      fmt = ExportImage.FORMAT_GIF;
     else
       fmt = ExportImage.FORMAT_PNG;
     exportImage(dest, fmt);
@@ -166,9 +162,6 @@ public abstract class PrintHandler implements Printable {
 
       try {
         switch (fmt) {
-        case ExportImage.FORMAT_GIF:
-          GifEncoder.toFile(img, dest, null);
-          break;
         case ExportImage.FORMAT_PNG:
           ImageIO.write(img, "PNG", dest);
           break;

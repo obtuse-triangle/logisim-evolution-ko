@@ -323,13 +323,13 @@ public class ExportImage {
     Loader loader = proj.getLogisimFile().getLoader();
     File dest;
     if (circuits.size() > 1) {
-      System.out.println("Chooser case 11 -- linux ok");
+      System.out.println("Chooser case 11 -- linux, mac ok");
       dest = Chooser.dirPopup(frame, S.get("exportImageDirectorySelect"),
           loader.getCurrentDirectory());
     } else {
       String name = circuits.get(0).getName() + "." + filter.get().getDefaultExtension();
       File suggest = new File(loader.getCurrentDirectory(), name);
-      System.out.println("Chooser case 12 -- linux ok");
+      System.out.println("Chooser case 12 -- linux, mac ok");
       dest = Chooser.savePopup(frame, S.get("exportImageFileSelect"), suggest, filter);
     }
     if (dest == null)

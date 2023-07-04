@@ -162,18 +162,10 @@ public class Chooser {
   // will be used.
   // Gives error popup if chosen path is a directory or not writable.
   // Gives warning/cancellation popup if chosen path exists.
+  // Typically a least one filter should be given, and no ANY filters, otherwise
+  // there is no guarantee the filename will have an appropriate extension.
   public static File savePopup(Component parent, String title,
       File suggest, LFilter... filters) {
-    return savePopup(parent, title, suggest, null, filters);
-  }
-
-  @FunctionalInterface
-  public interface FileNameSanitizer {
-    public String sanitize(String filename);
-  }
-
-  public static File savePopup(Component parent, String title,
-      File suggest, FileNameSanitizer sanitizer, LFilter... filters) {
     File path = normalizePath(suggest);
     File file = BetterFileDialog.saveFile(parent, title, path, convert(filters));
 
@@ -181,35 +173,6 @@ public class Chooser {
       return null;
 
     recentDirectory = file.getParent();
-
-    if (sanitizer != null) {
-      String filename = file.getName();
-      String fixed = sanitizer.sanitize(filename);
-      if (fixed != null)
-        file = new File(file.getParentFile(), fixed);
-    }
-
-    if (file.isDirectory()) {
-      JOptionPane.showMessageDialog(parent,
-          S.fmt("notFileMessage", file.getName()),
-          S.get("saveErrorTitle"), JOptionPane.OK_OPTION);
-      return null;
-    }
-    if (file.exists() && !file.canWrite()) {
-      JOptionPane.showMessageDialog(parent,
-          S.fmt("cantWriteMessage", file.getName()),
-          S.get("saveErrorTitle"), JOptionPane.OK_OPTION);
-      return null;
-    }
-    if (file.exists()) {
-      int confirm = JOptionPane.showConfirmDialog(parent,
-          S.fmt("confirmOverwriteMessage", file.getName()),
-          S.get("confirmOverwriteTitle"),
-          JOptionPane.YES_NO_OPTION);
-      if (confirm != JOptionPane.YES_OPTION)
-        return null;
-    }
-
     return file;
   }
 

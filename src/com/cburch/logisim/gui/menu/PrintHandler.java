@@ -88,14 +88,6 @@ public abstract class PrintHandler implements Printable {
     }
   }
 
-  private String ensureImageExtension(String filename, Chooser.LFilter[] filters) {
-    for (Chooser.LFilter ff : filters) {
-      if (ff.get().accept(filename))
-        return null; // leave alone
-    }
-    return filename + ".png"; // use PNG by default if no extension matches
-  }
-
   public void exportImage(Frame parent) {
     final Chooser.LFilter[] filters = {
       ExportImage.getFilter(ExportImage.FORMAT_PNG),
@@ -103,8 +95,7 @@ public abstract class PrintHandler implements Printable {
     };
     System.out.println("Chooser case 13 -- linux ok");
     File dest = Chooser.savePopup(parent, S.get("exportImageFileSelect"),
-        getLastExported(), (filename) -> ensureImageExtension(filename, filters),
-        filters);
+        getLastExported(), filters);
     if (dest == null)
       return;
     setLastExported(dest);

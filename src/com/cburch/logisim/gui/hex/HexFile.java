@@ -1965,7 +1965,7 @@ public class HexFile {
       System.out.println("Chooser case 28 -- linux ok");
       f = Chooser.savePopup((file) -> save(file, src, desc),
           parent, S.get("ramSaveDialogTitle"), recent.file,
-          Loader.TXT_FILTER, Loader.ANY_FILTER);
+          Loader.TXT_FILTER); // Allow Loader.ANY_FILTER?
     }
 
     if (f != null && mem != null) {

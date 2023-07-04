@@ -157,8 +157,8 @@ public class XmlWriter {
     int n = children.getLength();
     String name = top.getNodeName();
     // see: comments about sort() below
-    // Do not sort: top level, project, toolbar, lib
-    if (n > 1 && !name.equals("project") && !name.equals("lib") && !name.equals("toolbar")) {
+    // Do not sort: top level, project, toolbar, lib, appear
+    if (n > 1 && !name.equals("project") && !name.equals("lib") && !name.equals("toolbar") && !name.equals("appear")) {
       Node[] a = new Node[n];
       for (int i = 0; i < n; i++)
         a[i] = children.item(i);
@@ -436,6 +436,13 @@ public class XmlWriter {
   // - circuit*
   //   - simulation*
   //   - a*
+  //   - appear (contains ordered elements, do not sort)
+  //     - circ-anchor
+  //     - circ-port*
+  //     - path*
+  //     - rect*
+  //     - ellipse*
+  //     - ...
   //   - comp*
   //   - wire*
   // - vhdl*

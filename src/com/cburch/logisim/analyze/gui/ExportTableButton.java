@@ -47,7 +47,6 @@ import com.cburch.logisim.analyze.model.TruthTable;
 import com.cburch.logisim.analyze.model.Var;
 import com.cburch.logisim.analyze.model.VariableList;
 import com.cburch.logisim.circuit.Circuit;
-import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.util.Chooser;
 
 class ExportTableButton extends JButton {

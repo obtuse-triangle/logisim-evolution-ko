@@ -446,7 +446,6 @@ public class PLATable {
 
     void read() {
       File suggest = new File(normalizeName(oldTable.label));
-      System.out.println("Chooser case 20 -- linux ok");
       Chooser.loadPopup((f) -> {
         PLATable loaded = parse(f);
         newTable.copyFrom(loaded);
@@ -457,7 +456,6 @@ public class PLATable {
 
     void write() {
       File suggest = new File(normalizeName(oldTable.label));
-      System.out.println("Chooser case 21 -- linux ok");
       Chooser.savePopup((f) -> newTable.save(f),
           this, S.get("plaSaveDialogTitle"),
           suggest, Loader.TXT_FILTER);

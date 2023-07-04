@@ -179,7 +179,6 @@ public class BoardEditor extends JFrame {
   }
 
   private void doLoad() {
-    System.out.println("Chooser case 1 -- linux ok");
     Chooser.loadPopup((f) -> setBoard(BoardReader.read(f.getPath())),
         this, "Choose XML board description", null, Loader.XML_FILTER);
   }
@@ -216,7 +215,6 @@ public class BoardEditor extends JFrame {
 	}
 
 	private String getSaveDirectory() {
-    System.out.println("Chooser case 2 -- linux ok");
     File dir = Chooser.dirPopup(this, "Choose directory to save XML board description:", null);
 		if (dir == null)
       return null;
@@ -445,7 +443,6 @@ public class BoardEditor extends JFrame {
 	}
 
   public void doChangeImage() {
-    System.out.println("Chooser case 3 -- linux ok");
     File file = Chooser.loadPopup(this, 
         "Choose FPGA board picture to use",
         null, ExportImage.PNG_FILTER);

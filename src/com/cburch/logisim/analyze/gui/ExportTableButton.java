@@ -160,7 +160,6 @@ class ExportTableButton extends JButton {
   }
 
   void doSave() {
-    System.out.println("Chooser case 6 -- linux ok");
     File savedFile = Chooser.savePopup((f) -> doSave(f), 
         parent, S.get("saveButton"),
         getLastFile(), FILE_FILTER);

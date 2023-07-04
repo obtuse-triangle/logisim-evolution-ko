@@ -244,7 +244,6 @@ class ImportTableButton extends JButton {
   }
 
   void doLoad() {
-    System.out.println("Chooser case 7 -- linux ok");
     File loadedFile = Chooser.loadPopup((f) -> doLoad(f),
         parent, S.get("openButton"),
         exportButton.getLastFile(), ExportTableButton.FILE_FILTER);

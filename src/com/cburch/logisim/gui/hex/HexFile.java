@@ -1525,7 +1525,6 @@ public class HexFile {
     final Mem mem = instance == null ? null : (Mem)instance.getFactory();
     final FileWithFormat recent = getRecent(proj, mem, instance);
 
-    System.out.println("Chooser case 26 -- linux ok");
     Chooser.loadPopup((f) -> { 
         recent.file = f;
         FormatOptions fmt = open(dst, f, recent.format);
@@ -1958,11 +1957,9 @@ public class HexFile {
 
     File f;
     if (desc.startsWith("Binary")) {
-      System.out.println("Chooser case 27 -- linux ok");
       f = Chooser.savePopup((file) -> save(file, src, desc),
         parent, S.get("ramSaveDialogTitle"), recent.file);
     } else {
-      System.out.println("Chooser case 28 -- linux ok");
       f = Chooser.savePopup((file) -> save(file, src, desc),
           parent, S.get("ramSaveDialogTitle"), recent.file,
           Loader.TXT_FILTER); // Allow Loader.ANY_FILTER?

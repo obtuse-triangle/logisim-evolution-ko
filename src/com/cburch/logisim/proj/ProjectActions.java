@@ -203,7 +203,6 @@ public class ProjectActions {
       if (suggest == null)
         suggest = oldLoader.getCurrentDirectory();
     }
-    System.out.println("Chooser case 18 -- linux, mac ok");
     File selected = Chooser.loadPopup(parent, null /* default title */,
         suggest, Loader.LOGISIM_FILTER, Loader.ANY_FILTER);
     if (selected == null)
@@ -342,7 +341,6 @@ public class ProjectActions {
   public static boolean doSaveAs(final Project proj) {
     Loader loader = proj.getLogisimFile().getLoader();
     File suggest = loader.getMainFile(); // may be null
-    System.out.println("Chooser case 19 -- linux, mac ok");
     File saved = Chooser.savePopup((f) -> doSave(proj, f),
         proj.getFrame(), null /* default title */, suggest,
         Loader.LOGISIM_FILTER);

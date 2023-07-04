@@ -93,7 +93,6 @@ public abstract class PrintHandler implements Printable {
       ExportImage.getFilter(ExportImage.FORMAT_PNG),
       ExportImage.getFilter(ExportImage.FORMAT_JPG)
     };
-    System.out.println("Chooser case 13 -- linux ok");
     File dest = Chooser.savePopup(parent, S.get("exportImageFileSelect"),
         getLastExported(), filters);
     if (dest == null)

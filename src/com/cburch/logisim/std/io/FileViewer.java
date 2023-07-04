@@ -169,7 +169,6 @@ public class FileViewer extends InstanceFactory {
     public void setVisible(boolean b) {
       if (!b)
         return;
-      System.out.println("Chooser case 24 -- linux ok");
       Chooser.loadPopup((f) -> read(f),
           parent, S.get("fileViewerLoadDialogTitle"),
           null, Loader.TXT_FILTER);

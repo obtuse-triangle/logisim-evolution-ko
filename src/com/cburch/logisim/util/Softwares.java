@@ -117,7 +117,6 @@ public final class Softwares {
   }
 
   public static String setQuestaPath(Component parent) {
-    System.out.println("Chooser case 25 -- linux ok");
     File file = Chooser.dirPopup(parent, S.get("questaDialogTitle"), null);
     if (file == null)
       return null;

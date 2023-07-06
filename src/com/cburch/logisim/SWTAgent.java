@@ -90,6 +90,22 @@ public class SWTAgent {
       Debug.println(1, "Loading platform-specific SWT library: " + dest.getPath());
     } else {
       Debug.println(1, "Installing platform-specific SWT library: " + dest.getPath());
+      // Create the ~/.swt directory, if needed
+      if (!destdir.exists()) {
+        try {
+          destdir.mkdir();
+          if (!destdir.exists())
+            return "Can't create ~/.swt directory: mkdir failed";
+        }
+        catch (Exception e) {
+          e.printStackTrace();
+          return "Can't create ~/.swt directory: " + e.toString();
+        }
+      }
+      if (!destdir.isDirectory()) {
+        return "Can't create ~/.swt directory: path exists but is not a directory. Perhaps delete it and try again.";
+      }
+      // Extract the library to ~/.swt
       String rsrc = "/" + jarname;
       try (InputStream inputStream = Main.class.getResourceAsStream(rsrc)) {
         if (inputStream == null) {

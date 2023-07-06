@@ -45,30 +45,34 @@ import java.awt.image.DirectColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.Graphics;
 
+import com.bric.swing.ColorPicker;
+import com.bric.swing.IndexedColorPicker;
 import com.cburch.logisim.circuit.CircuitState;
-import com.cburch.logisim.comp.Component;
-import com.cburch.logisim.comp.ComponentEvent;
 import com.cburch.logisim.comp.AbstractComponentFactory;
-import com.cburch.logisim.comp.ComponentFactory;
+import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
+import com.cburch.logisim.comp.ComponentEvent;
+import com.cburch.logisim.comp.ComponentFactory;
 import com.cburch.logisim.comp.ComponentState;
 import com.cburch.logisim.comp.ComponentUserEvent;
 import com.cburch.logisim.comp.EndData;
 import com.cburch.logisim.comp.ManagedComponent;
 import com.cburch.logisim.data.Attribute;
-import com.cburch.logisim.data.Attributes;
+import com.cburch.logisim.data.AttributeEvent;
+import com.cburch.logisim.data.AttributeListener;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.AttributeSets;
-import com.cburch.logisim.data.AttributeListener;
-import com.cburch.logisim.data.AttributeEvent;
+import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.tools.ToolTipMaker;
+import com.cburch.logisim.util.JInputComponent;
+import com.cburch.logisim.util.StringGetter;
 
-// 128 x 128 pixel LCD display with 8bpp color (byte addressed)
+// N x N pixel LCD display with various color models
 class Video extends ManagedComponent implements ToolTipMaker, AttributeListener {
   public static final ComponentFactory factory = new Factory();
 
@@ -78,6 +82,9 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   static final String RESET_ASYNC = "Asynchronous";
   static final String RESET_SYNC = "Synchronous";
   static final String[] RESET_OPTIONS = { RESET_ASYNC, RESET_SYNC };
+  static final String BLANK_FIXED = "Fixed Color";
+  static final String BLANK_INPUT  = "Input Color";
+  static final String[] BLANK_OPTIONS = { BLANK_FIXED, BLANK_INPUT };
 
   static final String COLOR_RGB = "888 RGB (24 bit)";
   static final String COLOR_555_RGB = "555 RGB (15 bit)";
@@ -95,6 +102,10 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       S.getter("rgbVideoCursor"), BLINK_OPTIONS);
   public static final Attribute RESET_OPTION = Attributes.forOption("reset",
       S.getter("rgbVideoReset"), RESET_OPTIONS);
+  public static final Attribute BLANK_OPTION = Attributes.forOption("blank",
+      S.getter("rgbVideoBlank"), BLANK_OPTIONS);
+  public static final Attribute<ColorModelColor> FIXED_OPTION = forColor("fixed",
+      S.getter("rgbVideoFixed"));
   public static final Attribute COLOR_OPTION = Attributes.forOption("color",
       S.getter("rgbVideoColor"), COLOR_OPTIONS);
   public static final Attribute<Integer> WIDTH_OPTION = Attributes.forOption("width",
@@ -104,7 +115,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   public static final Attribute<Integer> SCALE_OPTION = Attributes.forIntegerRange("scale",
       S.getter("rgbVideoScale"), 1, 8);
 
-  private static final Attribute[] ATTRIBUTES = { BLINK_OPTION, RESET_OPTION, COLOR_OPTION, WIDTH_OPTION, HEIGHT_OPTION, SCALE_OPTION };
+  private static final Attribute[] ATTRIBUTES = { BLINK_OPTION, RESET_OPTION, BLANK_OPTION, FIXED_OPTION, COLOR_OPTION, WIDTH_OPTION, HEIGHT_OPTION, SCALE_OPTION };
 
   private static class Factory extends AbstractComponentFactory {
     private Factory() { }
@@ -112,7 +123,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     public String getDisplayName() { return S.get("rgbVideoComponent"); }
     public AttributeSet createAttributeSet() {
       return AttributeSets.fixedSet(ATTRIBUTES, new Object[] {
-        BLINK_OPTIONS[0], RESET_OPTIONS[0], COLOR_OPTIONS[0], Integer.valueOf(128), Integer.valueOf(128), Integer.valueOf(2) });
+        BLINK_OPTIONS[0], RESET_OPTIONS[0], BLANK_OPTIONS[0], Integer.valueOf(0) /* black */, COLOR_OPTIONS[0], Integer.valueOf(128), Integer.valueOf(128), Integer.valueOf(2) });
     }
     public Component createComponent(Location loc, AttributeSet attrs) { return new Video(loc, attrs); }
     public Bounds getOffsetBounds(AttributeSet attrs) {
@@ -151,8 +162,8 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   int addr(CircuitState s, int pin) { return val(s, pin).toIntValue(); }
 
   public void propagate(CircuitState circuitState) {
-    State state = getState(circuitState);
     AttributeSet attrs = getAttributeSet();
+    State state = getState(circuitState, attrs);
     int x = addr(circuitState, P_X);
     int y = addr(circuitState, P_Y);
     int color = addr(circuitState, P_DATA);
@@ -162,6 +173,8 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
 
     Object reset_option = attrs.getValue(RESET_OPTION);
     if (reset_option == null) reset_option = RESET_OPTIONS[0];
+    Object blank_option = attrs.getValue(BLANK_OPTION);
+    if (blank_option == null) blank_option = BLANK_OPTIONS[0];
     ColorModel cm = getColorModel(attrs.getValue(COLOR_OPTION));
     int w = attrs.getValue(WIDTH_OPTION);
     int h = attrs.getValue(HEIGHT_OPTION);
@@ -171,14 +184,26 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       g.setColor(new Color(cm.getRGB(color)));
       g.fillRect(x, y, 1, 1);
       if (RESET_SYNC.equals(reset_option) && val(circuitState, P_RST) == Value.TRUE) {
-        g.setColor(Color.BLACK);
+        if (BLANK_FIXED.equals(blank_option)) {
+          ColorModelColor cmc = attrs.getValue(FIXED_OPTION);
+          color = cmc == null ? 0 : ((ColorModelColor)cmc).color;
+          g.setColor(new Color(cm.getRGB(color)));
+        } else {
+          // input color already calculated
+        }
         g.fillRect(0, 0, w, h);
       }
     }
 
     if (!RESET_SYNC.equals(reset_option) && val(circuitState, P_RST) == Value.TRUE) {
       Graphics g = state.img.getGraphics();
-      g.setColor(Color.BLACK);
+      if (BLANK_FIXED.equals(blank_option)) {
+        ColorModelColor cmc = attrs.getValue(FIXED_OPTION);
+        color = cmc == null ? 0 : ((ColorModelColor)cmc).color;
+      } else {
+        // input color already calculated
+      }
+      g.setColor(new Color(cm.getRGB(color)));
       g.fillRect(0, 0, w, h);
     }
   }
@@ -186,8 +211,9 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   public void draw(ComponentDrawContext context) {
     Location loc = getLocation();
     int size = getBounds().getWidth();
-    State s = getState(context.getCircuitState());
-    drawVideo(context, loc.getX(), loc.getY(), s);
+    AttributeSet attrs = getAttributeSet();
+    State state = getState(context.getCircuitState(), attrs);
+    drawVideo(context, loc.getX(), loc.getY(), state);
   }
 
   static void drawVideoIcon(ComponentDrawContext context, int x, int y) {
@@ -220,7 +246,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       new int[] {
         0x000000, 0x111111, 0x222222, 0x333333, 0x444444, 0x555555, 0x666666, 0x777777,
         0x888888, 0x999999, 0xaaaaaa, 0xbbbbbb, 0xcccccc, 0xdddddd, 0xeeeeee, 0xffffff,
-      }, 0, 0, null);
+      }, 0, false, -1, 0);
   static IndexColorModel atari = new IndexColorModel(7, 128,
       new int[] {
         0x000000, 0x0a0a0a, 0x373737, 0x5f5f5f, 0x7a7a7a, 0xa1a1a1, 0xc5c5c5, 0xededed,
@@ -239,12 +265,12 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
         0x002200, 0x004a00, 0x036e00, 0x2b9500, 0x45b000, 0x6dd812, 0x91fc36, 0xb9ff5d,
         0x000a00, 0x073a00, 0x2b5f00, 0x528600, 0x6da100, 0x95c800, 0xb9ed1c, 0xe0ff43,
         0x000000, 0x352100, 0x5a4500, 0x816c00, 0x9c8700, 0xc3af01, 0xe8d326, 0xfffa4d,
-      }, 0, 0, null);
+      }, 0, false, -1, 0);
   static IndexColorModel xterm16 = new IndexColorModel(4, 16,
       new int[] {
         0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xc0c0c0,
         0x808080, 0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff,
-      }, 0, 0, null);
+      }, 0, false, -1, 0);
   static IndexColorModel xterm256 = new IndexColorModel(8, 256,
       new int[] {
         0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xc0c0c0,
@@ -279,18 +305,18 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
         0x080808, 0x121212, 0x1c1c1c, 0x262626, 0x303030, 0x3a3a3a, 0x444444, 0x4e4e4e,
         0x585858, 0x626262, 0x6c6c6c, 0x767676, 0x808080, 0x8a8a8a, 0x949494, 0x9e9e9e,
         0xa8a8a8, 0xb2b2b2, 0xbcbcbc, 0xc6c6c6, 0xd0d0d0, 0xdadada, 0xe4e4e4, 0xeeeeee,
-      }, 0, 0, null);
+      }, 0, false, -1, 0);
 
   static ColorModel getColorModel(Object model) {
-    if (model == COLOR_RGB) return rgb;
-    else if (model == COLOR_555_RGB) return rgb555;
-    else if (model == COLOR_565_RGB) return rgb565;
-    else if (model == COLOR_111_RGB) return rgb111;
-    else if (model == COLOR_ATARI) return atari;
-    else if (model == COLOR_XTERM16) return xterm16;
-    else if (model == COLOR_XTERM256) return xterm256;
-    else if (model == COLOR_GRAY4) return gray4;
-    else return rgb555;
+    if (model.equals(COLOR_RGB)) return rgb;
+    else if (model.equals(COLOR_555_RGB)) return rgb555;
+    else if (model.equals(COLOR_565_RGB)) return rgb565;
+    else if (model.equals(COLOR_111_RGB)) return rgb111;
+    else if (model.equals(COLOR_ATARI)) return atari;
+    else if (model.equals(COLOR_XTERM16)) return xterm16;
+    else if (model.equals(COLOR_XTERM256)) return xterm256;
+    else if (model.equals(COLOR_GRAY4)) return gray4;
+    else return gray4; // ???
   }
 
   void drawVideo(ComponentDrawContext context, int x, int y, State state) {
@@ -328,10 +354,15 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     }
   }
 
-  private State getState(CircuitState circuitState) {
+  private State getState(CircuitState circuitState, AttributeSet attrs) {
     State state = (State) circuitState.getData(this);
     if (state == null) {
-      state = new State(new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB));
+      ColorModel cm = getColorModel(attrs.getValue(COLOR_OPTION));
+      Object blank_option = attrs.getValue(BLANK_OPTION);
+      ColorModelColor cmc = attrs.getValue(FIXED_OPTION);
+      int color = cmc == null ? 0 : ((ColorModelColor)cmc).color;
+      Color bg = new Color(cm.getRGB(color));
+      state = new State(bg, new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB));
       circuitState.setData(this, state);
     }
     return state;
@@ -342,14 +373,14 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     public BufferedImage img;
     public int last_x, last_y, color;
 
-    State(BufferedImage img) {
+    State(Color bg, BufferedImage img) {
       this.img = img;
-      reset();
+      reset(bg);
     }
 
-    public void reset() {
+    public void reset(Color bg) {
       Graphics g = img.getGraphics();
-      g.setColor(Color.YELLOW);
+      g.setColor(bg);
       g.fillRect(0, 0, img.getWidth(), img.getHeight());
     }
 
@@ -400,13 +431,166 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
 
   void configureComponent() {
     AttributeSet attrs = getAttributeSet();
-    int bpp = getColorModel(attrs.getValue(COLOR_OPTION)).getPixelSize();
+    String model = (String)attrs.getValue(COLOR_OPTION);
+    int bpp = getColorModel(model).getPixelSize();
     int xs = 31 - Integer.numberOfLeadingZeros(attrs.getValue(WIDTH_OPTION));
     int ys = 31 - Integer.numberOfLeadingZeros(attrs.getValue(HEIGHT_OPTION));
     setEnd(P_X, getLocation().translate(40, 0), BitWidth.create(xs), EndData.INPUT_ONLY);
     setEnd(P_Y, getLocation().translate(50, 0), BitWidth.create(ys), EndData.INPUT_ONLY);
     setEnd(P_DATA, getLocation().translate(60, 0), BitWidth.create(bpp), EndData.INPUT_ONLY);
+    ColorModelColor cmc = attrs.getValue(FIXED_OPTION);
+    if (!cmc.model.equals(model)) {
+      cmc = cmc.transferTo(model);
+      attrs.setAttr(FIXED_OPTION, cmc);
+    }
     recomputeBounds();
     fireComponentInvalidated(new ComponentEvent(this));
   }
+  
+  private static Attribute<ColorModelColor> forColor(String name, StringGetter disp) {
+    return new ColorAttribute(name, disp);
+  }
+
+  private static class ColorAttribute extends Attribute<ColorModelColor> {
+    public ColorAttribute(String name, StringGetter desc) {
+      super(name, desc);
+    }
+
+    @Override
+    public java.awt.Component getCellEditor(ColorModelColor cmc) {
+      if (cmc != null && cmc.indexed)
+        return new IndexColorChooser(cmc);
+      else
+        return new ColorChooser(cmc);
+    }
+
+    @Override
+    public ColorModelColor parse(String value) {
+      int idx = value.indexOf('#');
+      int color = Integer.parseInt(value.substring(0, idx), 16) & 0xffffff;
+      String model = value.substring(idx+1);
+      return new ColorModelColor(model, color);
+    }
+
+    @Override
+    public String toDisplayString(ColorModelColor value) {
+      if (value == null)
+        return "0x0";
+      int digits = (value.bits+3)/4;
+      int mask = (1 << value.bits) - 1;
+      return String.format("0x%"+digits+"x", value.color & mask);
+    }
+
+    @Override
+    public String toStandardString(ColorModelColor value) {
+      return value == null ? "000000#" + COLOR_RGB : String.format("%x#%s", value.color & 0xffffff, value.model);
+    }
+  }
+
+  private static class ColorChooser extends ColorPicker
+    implements JInputComponent {
+    private static final long serialVersionUID = 1L;
+    String model;
+
+    ColorChooser(ColorModelColor initial) {
+      super(initial == null ? "888" : initial.depth, true, false);
+      if (initial != null) {
+        model = initial.model;
+        ColorModel cm = Video.getColorModel(model);
+        setColor(new Color(cm.getRGB(initial.color)));
+      } else {
+        model = COLOR_RGB;
+        setColor(Color.GRAY);
+      }
+      setOpacityVisible(false);
+    }
+
+    public Object getValue() {
+      return new ColorModelColor(model, getUnscaledColor());
+    }
+
+    public void setValue(Object value) {
+      ColorModelColor cmc = (ColorModelColor)value;
+      model = cmc.model;
+      setColor(new Color(Video.getColorModel(model).getRGB(cmc.color)));
+    }
+  }
+
+  private static class IndexColorChooser extends IndexedColorPicker
+    implements JInputComponent {
+    private static final long serialVersionUID = 1L;
+    String model;
+
+    IndexColorChooser(ColorModelColor initial) {
+      super((IndexColorModel)Video.getColorModel(initial.model), true);
+      model = initial.model;
+      setColorIndex(initial.color);
+    }
+
+    public Object getValue() {
+      return new ColorModelColor(model, getColorIndex());
+    }
+
+    public void setValue(Object value) {
+      ColorModelColor cmc = (ColorModelColor)value;
+      if (!model.equals(cmc.model))
+        throw new IllegalArgumentException("can't change color models here");
+      // model = cmc.model;
+      setColorIndex(cmc.color);
+    }
+  }
+
+  private static class ColorModelColor {
+    final String model;
+    final int color;
+    final String depth;
+    final int bits;
+    final boolean indexed;
+
+    ColorModelColor(String model, int color) {
+      this.model = model;
+      this.color = color;
+      if (model.equals(COLOR_RGB)) {
+        depth="888"; bits = 24; indexed = false;
+      } else if (model.equals(COLOR_555_RGB)) {
+        depth="555"; bits = 15; indexed = false;
+      } else if (model.equals(COLOR_565_RGB)) {
+        depth="565"; bits = 16; indexed = false;
+      } else if (model.equals(COLOR_111_RGB)) {
+        depth="111"; bits = 3; indexed = false;
+      } else if (model.equals(COLOR_ATARI)) {
+        depth = null; bits = 7; indexed = true;
+      } else if (model.equals(COLOR_XTERM16)) {
+        depth = null; bits = 4; indexed = true;
+      } else if (model.equals(COLOR_XTERM256)) {
+        depth = null; bits = 8; indexed = true;
+      } else if (model.equals(COLOR_GRAY4)) {
+        depth = null; bits = 4; indexed = true;
+      } else {
+        throw new IllegalArgumentException("invalid color model: " + model);
+      }
+    }
+
+    ColorModelColor transferTo(String destModel) {
+      ColorModel src = Video.getColorModel(model);
+      ColorModel dst = Video.getColorModel(destModel);
+
+      Color c = new Color(src.getRGB(color));
+      float[] rgb0 = new float[] { c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f };
+      float[] xyz1 = src.getColorSpace().toCIEXYZ(rgb0);
+      float[] rgb2 = dst.getColorSpace().fromCIEXYZ(xyz1);
+      int destColor = dst.getDataElement(rgb2, 0);
+      return new ColorModelColor(destModel, destColor);
+    }
+
+    static String tostr(float[] a) {
+      String s = "[";
+      for (float f : a) {
+        s += " " + f;
+      }
+      return s + " ]";
+    }
+
+  }
+
 }

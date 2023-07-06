@@ -139,8 +139,9 @@ to draw.</a>
       <a name="mode" val="twosComplement"/>
     </comp>
     <comp lib="6" loc="(430,290)" name="RGB Video">
-      <a name="color" val="Atari 2600 (7 bit)"/>
+      <a name="color" val="XTerm256 (8 bit)"/>
       <a name="cursor" val="No Cursor"/>
+      <a name="fixed" val="7f#XTerm256 (8 bit)"/>
       <a name="height" val="64"/>
       <a name="scale" val="4"/>
       <a name="width" val="64"/>

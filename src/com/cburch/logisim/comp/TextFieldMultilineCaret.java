@@ -110,42 +110,41 @@ class TextFieldMultilineCaret extends TextFieldCaret {
     return box;
   }
 
-  protected void moveCaret(int dx, int dy, boolean shift, boolean ctrl) {
+  protected void moveCaret(int move, boolean shift) {
     if (!shift)
       normalizeSelection();
 
-    if (dy != 0) {
-      if (!shift && pos != end) {
-        if (dx < 0) end = pos;
-        else pos = end;
+    if (move == -3 || move == +3) { // start/end of line
+      if (!shift && pos != end)
+        cancelSelection(move);
+      if (move < 0) {
+        while (pos > 0 && curText.charAt(pos-1) != '\n')
+          pos--;
+      } else {
+        while (pos < curText.length() && curText.charAt(pos) != '\n')
+          pos++;
       }
+    } else if (move == -4 || move == +4) { // down/up a line
+      if (!shift && pos != end)
+        cancelSelection(move);
+      int dy = move < 0 ? -1 : +1;
       String lines[] = curText.split("\n", -1); // keep blank lines at end
       TextMetrics tm = new TextMetrics(g);
       int halign = field.getHAlign();
       int valign = field.getVAlign();
       Rectangle r = GraphicsUtil.getTextCursor(g, field.getFont(), lines, 0, 0, pos, halign, valign);
+      int newpos = pos;
       if (r != null) {
-        pos = GraphicsUtil.getTextPosition(g, field.getFont(), lines,
-            r.x, r.y + tm.ascent + dy * tm.height, halign, valign);
-      } else if (dy < 0) {
-        pos = 0;
-      } else {
-        pos = curText.length();
+        newpos = GraphicsUtil.getTextPosition(g, field.getFont(), lines,
+            r.x, r.y + tm.ascent/2 + dy * tm.height, halign, valign);
       }
-      // control up/down moves to start/end of previous/next line
-      while (ctrl && dy < 0 && pos > 0 && curText.charAt(pos-1) != '\n')
-        pos--;
-      while (ctrl && dy > 0 && pos < curText.length()-1 && curText.charAt(pos) != '\n')
-        pos++;
-    } else if (pos+dx >= 0 && pos+dx <= curText.length()) {
-      if (!shift && pos != end) {
-        if (dx < 0) end = pos;
-        else pos = end;
-      } else {
-        pos += dx;
-      }
-      while (ctrl && !wordBoundary(pos))
-        pos += dx;
+      if (newpos != pos)
+        pos = newpos;
+      else
+        pos = dy < 0 ? 0 : curText.length();
+    } else {
+      super.moveCaret(move, shift);
+      return;
     }
 
     if (!shift)

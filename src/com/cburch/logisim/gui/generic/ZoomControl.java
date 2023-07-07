@@ -154,7 +154,7 @@ public class ZoomControl extends JPanel {
   private static final long serialVersionUID = 1L;
 
   private ZoomModel model;
-  private ZoomLabel label;
+  // private ZoomLabel label;
   private SliderModel sliderModel;
   private JSlider slider;
   private GridIcon grid;
@@ -206,7 +206,7 @@ public class ZoomControl extends JPanel {
     this.model = model;
     this.canvas = canvas;
 
-    label = new ZoomLabel();
+    // label = new ZoomLabel();
     sliderModel = new SliderModel(model);
 
     JButton plus = new ZoomButton("zoomin.png", false);
@@ -229,7 +229,8 @@ public class ZoomControl extends JPanel {
 
     model.addPropertyChangeListener(ZoomModel.SHOW_GRID, grid);
     model.addPropertyChangeListener(ZoomModel.ZOOM, sliderModel);
-    model.addPropertyChangeListener(ZoomModel.ZOOM, label);
+    // model.addPropertyChangeListener(ZoomModel.ZOOM, label);
+    model.addPropertyChangeListener(ZoomModel.ZOOM, e -> updateCoordinates());
 
     showCoordinates(AppPreferences.SHOW_COORDS.get());
     AppPreferences.SHOW_COORDS.addPropertyChangeListener(
@@ -244,7 +245,6 @@ public class ZoomControl extends JPanel {
     double factor = model.getZoomFactor();
     return String.format("%.0f%%", factor * 100.0);
   }
-
 
   public void zoomIn() {
     double zoom = model.getZoomFactor();
@@ -276,11 +276,11 @@ public class ZoomControl extends JPanel {
     model.setZoomFactor(choices[i] / 100.0);
   }
 
-  private class ZoomLabel extends JLabel implements PropertyChangeListener {
-    public ZoomLabel() { super(zoomString(), SwingConstants.CENTER); }
-    public void propertyChange(PropertyChangeEvent evt) { update(); }
-    public void update() { setText(zoomString()); }
-  }
+  // private class ZoomLabel extends JLabel implements PropertyChangeListener {
+  //   public ZoomLabel() { super(zoomString(), SwingConstants.CENTER); }
+  //   public void propertyChange(PropertyChangeEvent evt) { update(); }
+  //   public void update() { setText(zoomString()); }
+  // }
 
   public void setZoomModel(ZoomModel value) {
     ZoomModel oldModel = model;
@@ -288,29 +288,38 @@ public class ZoomControl extends JPanel {
       if (oldModel != null) {
         oldModel.removePropertyChangeListener(ZoomModel.SHOW_GRID, grid);
         oldModel.removePropertyChangeListener(ZoomModel.ZOOM, sliderModel);
-        oldModel.removePropertyChangeListener(ZoomModel.ZOOM, label);
+        // oldModel.removePropertyChangeListener(ZoomModel.ZOOM, label);
       }
       model = value;
       sliderModel = new SliderModel(model);
       slider.setModel(sliderModel);
       grid.update();
-      label.update();
+      // label.update();
+      updateCoordinates();
       if (value != null) {
         value.addPropertyChangeListener(ZoomModel.SHOW_GRID, grid);
         value.addPropertyChangeListener(ZoomModel.ZOOM, sliderModel);
-        value.addPropertyChangeListener(ZoomModel.ZOOM, label);
+        // value.addPropertyChangeListener(ZoomModel.ZOOM, label);
       }
     }
   }
 
   private boolean showCoords = false;
   private JLabel coords = new JLabel("");
+  private int coords_x = 0, coords_y = 0;
+  private void updateCoordinates() {
+    coords.setText(String.format("   zoom = %s   x, y = (%4d, %4d)",
+          zoomString(), coords_x, coords_y));
+  }
   private MouseAdapter coordListener = new MouseAdapter() {
     @Override
     public void mouseMoved(MouseEvent e) {
-      coords.setText(String.format("   x, y = (%d, %d)", e.getX(), e.getY()));
+      coords_x = e.getX();
+      coords_y = e.getY();
+      updateCoordinates();
     }
-    public void mouseExited(MouseEvent e) { coords.setText(""); }
+    @Override
+    public void mouseExited(MouseEvent e) { coords.setText(" "); } // this does not work
   };
 
   public void showCoordinates(boolean value) {
@@ -318,6 +327,7 @@ public class ZoomControl extends JPanel {
       return;
     showCoords = value;
     if (showCoords) {
+      updateCoordinates();
       add(coords, BorderLayout.SOUTH);
       canvas.addMouseMotionListener(coordListener);
     } else {

@@ -149,11 +149,11 @@ public class Canvas extends JPanel
         tool.keyTyped(Canvas.this, e);
       }
       if (!e.isConsumed()) {
-        if (e.getKeyChar() == '<' && e.getModifiers() == KeyEvent.SHIFT_MASK) {
+        if (e.getKeyChar() == '<' && e.getModifiersEx() == KeyEvent.SHIFT_DOWN_MASK) {
           // like YouTube accelerator for slower 
           MenuSimulate.decreaseTickFrequency(proj.getSimulator());
           e.consume();
-        } else if (e.getKeyChar() == '>' && e.getModifiers() == KeyEvent.SHIFT_MASK) {
+        } else if (e.getKeyChar() == '>' && e.getModifiersEx() == KeyEvent.SHIFT_DOWN_MASK) {
           // like YouTube accelerator for faster 
           MenuSimulate.increaseTickFrequency(proj.getSimulator());
           e.consume();

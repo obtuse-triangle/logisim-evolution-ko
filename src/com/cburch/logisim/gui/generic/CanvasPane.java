@@ -120,12 +120,12 @@ public class CanvasPane extends JScrollPane {
 
       double opts[] = zoomModel.getZoomOptions();
       double newZoom = zoom;
-      if (mwe.getWheelRotation() < 0) { // ZOOM IN
-        newZoom *= 1.08; // newZoom += 0.1;
+      if (mwe.getPreciseWheelRotation() < 0) { // ZOOM IN
+        newZoom *= Math.pow(1.08, -mwe.getPreciseWheelRotation()); // newZoom += 0.1;
         double max = opts[opts.length-1] / 100.0;
         zoomModel.setZoomFactor(newZoom >= max ? max : newZoom);
-      } else { // ZOOM OUT
-        newZoom /= 1.08; // newZoom -= 0.1;
+      } else if (mwe.getPreciseWheelRotation() > 0) { // ZOOM OUT
+        newZoom /= Math.pow(1.08, mwe.getPreciseWheelRotation()); // newZoom -= 0.1;
         double min = opts[0] / 100.0;
         zoomModel.setZoomFactor(newZoom <= min ? min : newZoom);
       }

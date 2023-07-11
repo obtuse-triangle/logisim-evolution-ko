@@ -256,9 +256,9 @@ public class FPGASettingsDialog implements ActionListener {
 			return;
 		File file = fc.getSelectedFile();
 		path = file.getPath();
-		if (vendor.equals("Altera")) {
+		if ("Altera".equals(vendor)) {
 			alteraPath.setText(path);
-		} else if (vendor.equals("Xilinx")) {
+		} else if ("Xilinx".equals(vendor)) {
 			xilinxPath.setText(path);
 		} else {
 			workPath.setText(path);

@@ -51,7 +51,6 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import com.cburch.logisim.gui.main.ExportImage;
-import com.cburch.logisim.util.GifEncoder;
 import com.cburch.logisim.util.JFileChoosers;
 
 public abstract class PrintHandler implements Printable {
@@ -93,7 +92,6 @@ public abstract class PrintHandler implements Printable {
   public void exportImage() {
     FileFilter[] filters = {
       ExportImage.getFilter(ExportImage.FORMAT_PNG),
-      ExportImage.getFilter(ExportImage.FORMAT_GIF),
       ExportImage.getFilter(ExportImage.FORMAT_JPG)
     };
     JFileChooser chooser = JFileChoosers.createSelected(getLastExported());
@@ -111,9 +109,8 @@ public abstract class PrintHandler implements Printable {
     File dest = chooser.getSelectedFile();
     FileFilter ff = chooser.getFileFilter();
     if (!ff.accept(dest)) {
-      if (ff == filters[0]) dest = new File(dest + ".png");
-      else if (ff == filters[1]) dest = new File(dest + ".gif");
-      else dest = new File(dest + ".jpg");
+      if (ff == filters[1]) dest = new File(dest + ".jpg");
+      else dest = new File(dest + ".png");
     }
     setLastExported(dest);
     if (dest.exists()) {
@@ -125,9 +122,8 @@ public abstract class PrintHandler implements Printable {
       if (confirm != JOptionPane.YES_OPTION)
         return;
     }
-    String fmt = (ff == filters[0] ? ExportImage.FORMAT_PNG
-        : ff == filters[1] ? ExportImage.FORMAT_GIF
-        : ExportImage.FORMAT_JPG);
+    String fmt = (ff == filters[1] ? ExportImage.FORMAT_JPG
+        : ExportImage.FORMAT_PNG);
     exportImage(dest, fmt);
   }
 
@@ -177,9 +173,6 @@ public abstract class PrintHandler implements Printable {
 
       try {
         switch (fmt) {
-        case ExportImage.FORMAT_GIF:
-          GifEncoder.toFile(img, dest, null);
-          break;
         case ExportImage.FORMAT_PNG:
           ImageIO.write(img, "PNG", dest);
           break;

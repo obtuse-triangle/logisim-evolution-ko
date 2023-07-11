@@ -69,7 +69,6 @@ import com.cburch.logisim.comp.ComponentDrawContext;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.proj.Project;
-import com.cburch.logisim.util.GifEncoder;
 import com.cburch.logisim.util.UniquelyNamedThread;
 
 public class ExportImage {
@@ -162,9 +161,6 @@ public class ExportImage {
 
     try {
       switch (format) {
-      case FORMAT_GIF:
-        GifEncoder.toFile(img, dest, monitor);
-        break;
       case FORMAT_PNG:
         ImageIO.write(img, "PNG", dest);
         break;
@@ -188,7 +184,6 @@ public class ExportImage {
     JLabel curScale;
     JCheckBox printerView;
     JRadioButton formatPng;
-    JRadioButton formatGif;
     JRadioButton formatJpg;
     GridBagLayout gridbag;
     GridBagConstraints gbc;
@@ -198,11 +193,9 @@ public class ExportImage {
     OptionsPanel(JList list) {
       // set up components
       formatPng = new JRadioButton("PNG");
-      formatGif = new JRadioButton("GIF");
       formatJpg = new JRadioButton("JPEG");
       ButtonGroup bgroup = new ButtonGroup();
       bgroup.add(formatPng);
-      bgroup.add(formatGif);
       bgroup.add(formatJpg);
       formatPng.setSelected(true);
 
@@ -241,7 +234,6 @@ public class ExportImage {
       addGb(new JLabel(S.get("labelImageFormat") + " "));
       Box formatsPanel = new Box(BoxLayout.Y_AXIS);
       formatsPanel.add(formatPng);
-      formatsPanel.add(formatGif);
       formatsPanel.add(formatJpg);
       addGb(formatsPanel);
 
@@ -261,8 +253,6 @@ public class ExportImage {
     }
 
     String getImageFormat() {
-      if (formatGif.isSelected())
-        return FORMAT_GIF;
       if (formatJpg.isSelected())
         return FORMAT_JPG;
       return FORMAT_PNG;
@@ -284,8 +274,6 @@ public class ExportImage {
     }
   }
 
-  public static final FileFilter GIF_FILTER =
-      Loader.makeFileFilter(S.getter("exportGifFilter"), ".gif");
   public static final FileFilter PNG_FILTER =
       Loader.makeFileFilter(S.getter("exportPngFilter"), ".png");
   public static final FileFilter JPG_FILTER =
@@ -294,7 +282,6 @@ public class ExportImage {
 
   public static FileFilter getFilter(String fmt) {
     switch (fmt) {
-    case FORMAT_GIF: return GIF_FILTER;
     case FORMAT_PNG: return PNG_FILTER;
     case FORMAT_JPG: return JPG_FILTER;
     default:
@@ -388,8 +375,6 @@ public class ExportImage {
   }
 
   private static final int SLIDER_DIVISIONS = 6;
-
-  public static final String FORMAT_GIF = ".gif";
 
   public static final String FORMAT_PNG = ".png";
 

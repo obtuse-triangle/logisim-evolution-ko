@@ -45,6 +45,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -54,12 +55,11 @@ import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.gui.generic.ComboBox;
-import com.cburch.logisim.gui.generic.LFrame;
 import com.cburch.logisim.gui.main.ExportImage;
 import com.cburch.logisim.proj.Projects;
-import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.Errors;
 import com.cburch.logisim.util.JDialogOk;
+import com.cburch.logisim.gui.generic.LFrame;
 
 public class BoardEditor extends JFrame {
 
@@ -179,8 +179,16 @@ public class BoardEditor extends JFrame {
   }
 
   private void doLoad() {
-    Chooser.loadPopup((f) -> setBoard(BoardReader.read(f.getPath())),
-        this, "Choose XML board description", null, Loader.XML_FILTER);
+    JFileChooser fc = new JFileChooser();
+    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+    fc.setDialogTitle("Choose XML board description");
+    fc.setFileFilter(Loader.XML_FILTER);
+    fc.setAcceptAllFileFilterUsed(false);
+    int retval = fc.showOpenDialog(null);
+    if (retval != JFileChooser.APPROVE_OPTION)
+      return;
+    String path = fc.getSelectedFile().getPath();
+    setBoard(BoardReader.read(path));
   }
 
   private void setBoard(Board board) {
@@ -215,13 +223,16 @@ public class BoardEditor extends JFrame {
 	}
 
 	private String getSaveDirectory() {
-    File dir = Chooser.dirPopup(this, "Choose directory to save XML board description:", null);
-		if (dir == null)
+		JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		fc.setDialogTitle("Choose directory to save XML board description:");
+		int retval = fc.showOpenDialog(null);
+		if (retval != JFileChooser.APPROVE_OPTION)
       return null;
-    String path = dir.getPath();
-    if (!path.endsWith("/"))
-      path += "/";
-    return path;
+    String dir = fc.getSelectedFile().getPath();
+    if (!dir.endsWith("/"))
+      dir += "/";
+    return dir;
 	}
 
 	public void reactivate() {
@@ -443,10 +454,14 @@ public class BoardEditor extends JFrame {
 	}
 
   public void doChangeImage() {
-    File file = Chooser.loadPopup(this, 
-        "Choose FPGA board picture to use",
-        null, ExportImage.PNG_FILTER);
-    if (file != null) {
+    JFileChooser fc = new JFileChooser();
+    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+    fc.setDialogTitle("Choose FPGA board picture to use");
+    fc.setFileFilter(ExportImage.PNG_FILTER);
+    fc.setAcceptAllFileFilterUsed(false);
+    int retval = fc.showOpenDialog(null);
+    if (retval == JFileChooser.APPROVE_OPTION) {
+      File file = fc.getSelectedFile();
       try {
         image.setImage(file);
       } catch (IOException ex) {

@@ -46,12 +46,12 @@ import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JTextField;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import com.bfh.logisim.download.FPGADownload;
 import com.bfh.logisim.settings.Settings;
-import com.cburch.logisim.util.Chooser;
+import com.bfh.logisim.download.FPGADownload;
 
 public class FPGASettingsDialog implements ActionListener {
 
@@ -239,18 +239,26 @@ public class FPGASettingsDialog implements ActionListener {
 	}
 
 	private void pick(String vendor, String path) {
-    String title;
+		JFileChooser fc = new JFileChooser(path);
+		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		if (!"".equals(path)) {
+			File file = new File(path);
+			if (file.exists()) {
+				fc.setSelectedFile(file);
+			}
+		}
 		if (vendor != null)
-			title = vendor + " Design Suite Path Selection";
+			fc.setDialogTitle(vendor + " Design Suite Path Selection");
 		else
-			title = "Temporary directory for compilation";
-    File dir = Chooser.dirPopup(panel, title, new File(path));
-		if (dir == null)
+			fc.setDialogTitle("Temporary directory for compilation");
+		int retval = fc.showOpenDialog(null);
+		if (retval != JFileChooser.APPROVE_OPTION)
 			return;
-		path = dir.getPath();
-		if ("Altera".equals(vendor)) {
+		File file = fc.getSelectedFile();
+		path = file.getPath();
+		if (vendor.equals("Altera")) {
 			alteraPath.setText(path);
-		} else if ("Xilinx".equals(vendor)) {
+		} else if (vendor.equals("Xilinx")) {
 			xilinxPath.setText(path);
 		} else {
 			workPath.setText(path);

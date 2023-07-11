@@ -31,6 +31,7 @@ package com.cburch.logisim.std.memory;
 import static com.cburch.logisim.std.Strings.S;
 
 import java.awt.Graphics;
+import java.io.File;
 import java.util.WeakHashMap;
 
 import com.cburch.hex.HexModel;
@@ -105,11 +106,11 @@ public abstract class Mem extends InstanceFactory {
   // other constants
   static final int DELAY = 10;
 
-  private WeakHashMap<Instance, Object> currentInstanceFiles;
+  private WeakHashMap<Instance, File> currentInstanceFiles;
 
   Mem(String name, StringGetter desc, int extraPorts) {
     super(name, desc);
-    currentInstanceFiles = new WeakHashMap<Instance, Object>();
+    currentInstanceFiles = new WeakHashMap<Instance, File>();
     setInstancePoker(MemPoker.class);
     setKeyConfigurator(JoinedConfigurator.create(new BitWidthConfigurator(
             ADDR_ATTR, 2, 24, 0), new BitWidthConfigurator(DATA_ATTR)));
@@ -176,7 +177,7 @@ public abstract class Mem extends InstanceFactory {
 
   public abstract int getControlHeight(AttributeSet attrs);
 
-  public Object getCurrentImage(Instance instance) {
+  public File getCurrentImage(Instance instance) {
     return currentInstanceFiles.get(instance);
   }
 
@@ -210,7 +211,7 @@ public abstract class Mem extends InstanceFactory {
   @Override
   public abstract void propagate(InstanceState state);
 
-  public void setCurrentImage(Instance instance, Object value) {
+  public void setCurrentImage(Instance instance, File value) {
     currentInstanceFiles.put(instance, value);
   }
 

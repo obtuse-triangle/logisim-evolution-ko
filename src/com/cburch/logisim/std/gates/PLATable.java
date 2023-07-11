@@ -39,7 +39,7 @@ package com.cburch.logisim.std.gates;
 import static com.cburch.logisim.std.Strings.S;
 
 import com.cburch.logisim.file.Loader;
-import com.cburch.logisim.util.Chooser;
+import com.cburch.logisim.util.JFileChoosers;
 import com.cburch.logisim.util.JInputDialog;
 
 import java.awt.BorderLayout;
@@ -51,6 +51,7 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -69,6 +70,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -445,20 +447,41 @@ public class PLATable {
     }
 
     void read() {
-      File suggest = new File(normalizeName(oldTable.label));
-      Chooser.loadPopup((f) -> {
-        PLATable loaded = parse(f);
-        newTable.copyFrom(loaded);
-        reset(false); },
-          this, S.get("plaLoadDialogTitle"),
-          suggest, Loader.TXT_FILTER, Loader.ANY_FILTER); 
+      JFileChooser chooser = JFileChoosers.create();
+      chooser.setSelectedFile(new File(normalizeName(oldTable.label)));
+      chooser.setDialogTitle(S.get("plaLoadDialogTitle"));
+      chooser.setFileFilter(Loader.TXT_FILTER);
+      int choice = chooser.showOpenDialog(null);
+      if (choice == JFileChooser.APPROVE_OPTION) {
+        File f = chooser.getSelectedFile();
+        try {
+          PLATable loaded = parse(f);
+          newTable.copyFrom(loaded);
+          reset(false);
+        } catch (IOException e) {
+          JOptionPane.showMessageDialog(null, e.getMessage(),
+              S.get("plaLoadErrorTitle"),
+              JOptionPane.ERROR_MESSAGE);
+        }
+      }
     }
 
     void write() {
-      File suggest = new File(normalizeName(oldTable.label));
-      Chooser.savePopup((f) -> newTable.save(f),
-          this, S.get("plaSaveDialogTitle"),
-          suggest, Loader.TXT_FILTER);
+      JFileChooser chooser = JFileChoosers.create();
+      chooser.setSelectedFile(new File(normalizeName(oldTable.label)));
+      chooser.setDialogTitle(S.get("plaSaveDialogTitle"));
+      chooser.setFileFilter(Loader.TXT_FILTER);
+      int choice = chooser.showSaveDialog(null);
+      if (choice == JFileChooser.APPROVE_OPTION) {
+        File f = chooser.getSelectedFile();
+        try {
+          newTable.save(f);
+        } catch (IOException e) {
+          JOptionPane.showMessageDialog(null, e.getMessage(),
+              S.get("plaSaveErrorTitle"),
+              JOptionPane.ERROR_MESSAGE);
+        }
+      }
     }
 
     class ButtonPanel extends JPanel {

@@ -34,7 +34,6 @@ import static com.cburch.logisim.gui.main.Strings.S;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
@@ -47,10 +46,13 @@ import java.awt.print.PrinterJob;
 import java.io.File;
 
 import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileFilter;
 
 import com.cburch.logisim.gui.main.ExportImage;
-import com.cburch.logisim.util.Chooser;
+import com.cburch.logisim.util.GifEncoder;
+import com.cburch.logisim.util.JFileChoosers;
 
 public abstract class PrintHandler implements Printable {
 
@@ -64,15 +66,15 @@ public abstract class PrintHandler implements Printable {
       lastExportedFile = f;
   }
 
-  public void actionPerformed(Frame parent, ActionEvent e) {
+  public void actionPerformed(ActionEvent e) {
     Object src = e.getSource();
     if (src == LogisimMenuBar.PRINT)
-      print(parent);
+      print();
     else if (src == LogisimMenuBar.EXPORT_IMAGE)
-      exportImage(parent);
+      exportImage();
   }
 
-  public void print(Frame parent) {
+  public void print() {
     PageFormat format = new PageFormat();
     PrinterJob job = PrinterJob.getPrinterJob();
     job.setPrintable(this, format);
@@ -88,21 +90,44 @@ public abstract class PrintHandler implements Printable {
     }
   }
 
-  public void exportImage(Frame parent) {
-    final Chooser.LFilter[] filters = {
+  public void exportImage() {
+    FileFilter[] filters = {
       ExportImage.getFilter(ExportImage.FORMAT_PNG),
+      ExportImage.getFilter(ExportImage.FORMAT_GIF),
       ExportImage.getFilter(ExportImage.FORMAT_JPG)
     };
-    File dest = Chooser.savePopup(parent, S.get("exportImageFileSelect"),
-        getLastExported(), filters);
-    if (dest == null)
+    JFileChooser chooser = JFileChoosers.createSelected(getLastExported());
+    chooser.setAcceptAllFileFilterUsed(false);
+    for (FileFilter ff : filters)
+      chooser.addChoosableFileFilter(ff);
+    chooser.setFileFilter(filters[0]);
+    chooser.setDialogTitle(S.get("exportImageFileSelect"));
+
+    int returnVal = chooser.showDialog(
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(),
+        S.get("exportImageButton"));
+    if (returnVal != JFileChooser.APPROVE_OPTION)
       return;
+    File dest = chooser.getSelectedFile();
+    FileFilter ff = chooser.getFileFilter();
+    if (!ff.accept(dest)) {
+      if (ff == filters[0]) dest = new File(dest + ".png");
+      else if (ff == filters[1]) dest = new File(dest + ".gif");
+      else dest = new File(dest + ".jpg");
+    }
     setLastExported(dest);
-    String fmt;
-    if (filters[1].get().accept(dest))
-      fmt = ExportImage.FORMAT_JPG;
-    else
-      fmt = ExportImage.FORMAT_PNG;
+    if (dest.exists()) {
+      int confirm = JOptionPane.showConfirmDialog(
+          KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(),
+          S.get("confirmOverwriteMessage"),
+          S.get("confirmOverwriteTitle"),
+          JOptionPane.YES_NO_OPTION);
+      if (confirm != JOptionPane.YES_OPTION)
+        return;
+    }
+    String fmt = (ff == filters[0] ? ExportImage.FORMAT_PNG
+        : ff == filters[1] ? ExportImage.FORMAT_GIF
+        : ExportImage.FORMAT_JPG);
     exportImage(dest, fmt);
   }
 
@@ -152,6 +177,9 @@ public abstract class PrintHandler implements Printable {
 
       try {
         switch (fmt) {
+        case ExportImage.FORMAT_GIF:
+          GifEncoder.toFile(img, dest, null);
+          break;
         case ExportImage.FORMAT_PNG:
           ImageIO.write(img, "PNG", dest);
           break;

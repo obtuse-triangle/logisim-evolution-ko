@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -56,12 +57,10 @@ import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.Simulator;
 import com.cburch.logisim.data.TestException;
 import com.cburch.logisim.data.TestVector;
-import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.gui.generic.LFrame;
 import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.proj.ProjectEvent;
 import com.cburch.logisim.proj.ProjectListener;
-import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.WindowMenuItemManager;
@@ -76,11 +75,18 @@ public class TestFrame extends LFrame.SubWindowWithSimulation {
       if (src == close) {
         requestClose();
       } else if (src == load) {
-        File file = Chooser.loadPopup(TestFrame.this,
-            null /* default title */, null /* default dir */,
-            TestVector.FILE_FILTER, Loader.ANY_FILTER);
-        if (file == null)
+        int result = chooser.showOpenDialog(TestFrame.this);
+        if (result != JFileChooser.APPROVE_OPTION)
           return;
+        File file = chooser.getSelectedFile();
+        if (!file.exists() || !file.canRead() || file.isDirectory()) {
+          JOptionPane.showMessageDialog(
+              TestFrame.this,
+              S.fmt("fileCannotReadMessage", file.getName()),
+              S.get("fileCannotReadTitle"),
+              JOptionPane.OK_OPTION);
+          return;
+        }
         try {
           TestVector vec = new TestVector(file);
           finished = 0;
@@ -221,6 +227,7 @@ public class TestFrame extends LFrame.SubWindowWithSimulation {
   private int finished, count;
 
   private File curFile;
+  private JFileChooser chooser = new JFileChooser();
   private TestPanel panel;
   private JButton load = new JButton();
   private JButton run = new JButton();
@@ -236,6 +243,10 @@ public class TestFrame extends LFrame.SubWindowWithSimulation {
     this.windowManager = new WindowMenuManager();
     project.addProjectWeakListener(null, myListener);
     setSimulator(project.getSimulator(), project.getCircuitState().getCircuit());
+
+    chooser.addChoosableFileFilter(chooser.getAcceptAllFileFilter());
+    chooser.addChoosableFileFilter(TestVector.FILE_FILTER);
+    chooser.setFileFilter(TestVector.FILE_FILTER);
 
     panel = new TestPanel(this);
 

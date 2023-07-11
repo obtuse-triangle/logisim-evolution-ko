@@ -33,7 +33,7 @@ import static com.cburch.logisim.gui.log.Strings.S;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Arrays;;
 import java.util.List;
 
 import com.cburch.logisim.circuit.Circuit;

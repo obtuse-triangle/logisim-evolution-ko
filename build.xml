@@ -53,18 +53,6 @@ In summary:
 
 <project name="logisim-evolution">
 
-    <condition property="swtjar" value="swt-windows.jar">
-        <os family="windows" />
-    </condition>
-
-    <condition property="swtjar" value="swt-linux.jar">
-        <os family="unix" />
-    </condition>
-
-    <condition property="swtjar" value="swt-macos.jar">
-        <os family="unix" />
-    </condition>
-
     <target name="cleanall" depends="clean">
         <delete dir="bin/com/bfh/"/>
         <delete dir="bin/com/cburch/"/>
@@ -81,10 +69,8 @@ In summary:
     <target name="compile" depends="clean">
         <mkdir dir="bin"/>
         <depend srcdir="src" destdir="bin" cache="depcache" closure="no"/>
-        <javac srcdir="src" includeantruntime="false" destdir="bin" debug="true" source="11" target="11" classpath="libs/betterfiledialog.jar:libs/${swtjar}:libs/xswingx.jar:libs/lablib-checkboxtree-3.3.jar:libs/colorpicker.jar:libs/fontchooser.jar:libs/jh.jar:libs/rsyntaxtextarea-stripped.jar">
+        <javac srcdir="src" includeantruntime="false" destdir="bin" debug="true" source="11" target="11" classpath="libs/xswingx.jar:libs/lablib-checkboxtree-3.3.jar:libs/colorpicker.jar:libs/fontchooser.jar:libs/jh.jar:libs/rsyntaxtextarea-stripped.jar">
             <compilerarg line="-Xmaxerrs 10000"/>
-            <!-- <compilerarg line="-Xlint:unchecked"/> -->
-            <compilerarg line="-Xlint:deprecation"/>
         </javac>
     </target>
 	
@@ -92,13 +78,9 @@ In summary:
         <jar destfile="logisim-evolution.jar">
             <fileset dir="bin" />
             <fileset dir="." includes="doc/ resources/" />
-			<zipgroupfileset dir="libs" excludes="swt-*.jar"/>
-            <fileset dir="libs" includes="swt-*.jar" />
+			<zipgroupfileset dir="libs" includes="*.jar"/>
             <manifest>
-                <attribute name="Launcher-Agent-Class" value="com.cburch.logisim.SWTAgent"/>
-                <attribute name="Premain-Class" value="com.cburch.logisim.SWTAgent"/>
-                <attribute name="Agent-Class" value="com.cburch.logisim.SWTAgent"/>
-                <attribute name="Main-Class" value="com.cburch.logisim.SWTAgent"/>
+                <attribute name="Main-Class" value="com.cburch.logisim.Main"/>
             </manifest>
         </jar>
     </target>
@@ -107,19 +89,14 @@ In summary:
         <jar destfile="logisim-evolution-src.jar">
             <fileset dir="bin" />
             <fileset dir="." includes="doc/ src/ build.xml" />
-			<zipgroupfileset dir="libs" excludes="swt-*.jar"/>
-            <fileset dir="libs" includes="swt-*.jar" />
+			<zipgroupfileset dir="libs" includes="*.jar"/>
             <manifest>
-                <attribute name="Launcher-Agent-Class" value="com.cburch.logisim.SWTAgent"/>
-                <attribute name="Premain-Class" value="com.cburch.logisim.SWTAgent"/>
-                <attribute name="Agent-Class" value="com.cburch.logisim.SWTAgent"/>
-                <attribute name="Main-Class" value="com.cburch.logisim.SWTAgent"/>
+                <attribute name="Main-Class" value="com.cburch.logisim.Main"/>
             </manifest>
         </jar>
     </target>
 
     <target name="run" depends="jar">
-        <!-- FIXME: On MacOS, need to add -XstartOnFirstThread, or have app re-launch as needed -->
         <java jar="logisim-evolution.jar" fork="true"/>
     </target>
 

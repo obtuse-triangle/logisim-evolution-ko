@@ -29,203 +29,213 @@
  */
 
 package com.cburch.logisim.gui.log;
+import static com.cburch.logisim.gui.log.Strings.S;
 
-class FilePanel { } // not currently working
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
-// import static com.cburch.logisim.gui.log.Strings.S;
-// 
-// import java.awt.GridBagConstraints;
-// import java.awt.GridBagLayout;
-// import java.awt.event.ActionEvent;
-// import java.awt.event.ActionListener;
-// import java.io.File;
-// import java.io.FileWriter;
-// import java.io.IOException;
-// 
-// import javax.swing.JButton;
-// import javax.swing.JCheckBox;
-// import javax.swing.JComponent;
-// import javax.swing.JLabel;
-// import javax.swing.JOptionPane;
-// import javax.swing.JPanel;
-// import javax.swing.JTextField;
-// 
-// import com.cburch.logisim.data.TestVector;
-// import com.cburch.logisim.util.Chooser;
-// 
-// class FilePanel extends LogPanel {
-//   private class Listener implements ActionListener, Model.Listener {
-//     public void actionPerformed(ActionEvent event) {
-//       Object src = event.getSource();
-//       if (src == enableButton) {
-//         getModel().setFileEnabled(!getModel().isFileEnabled());
-//       } else if (src == selectButton) {
-//         File file = Chooser.savePopup(getLogFrame(),
-//             null /* default title */, null /* default dir */, 
-//             TestVector.FILE_FILTER);
-//         if (file == null)
-//           return;
-//         if (file.exists() && file.length() > 0) {
-//           String[] options = { S.get("fileOverwriteOption"),
-//             S.get("fileAppendOption"),
-//             S.get("fileCancelOption"), };
-//           int option = JOptionPane.showOptionDialog(getLogFrame(),
-//               S.fmt("fileExistsMessage", file.getName()),
-//               S.get("fileExistsTitle"), 0,
-//               JOptionPane.QUESTION_MESSAGE, null, options,
-//               options[0]);
-//           if (option == 0) {
-//             try {
-//               FileWriter delete = new FileWriter(file);
-//               delete.close();
-//             } catch (IOException e) {
-//             }
-//           } else if (option == 1) {
-//             // do nothing
-//           } else {
-//             return;
-//           }
-//         }
-//         getModel().setFile(file);
-//       } else if (src == headerCheckBox) {
-//         getModel().setFileHeader(headerCheckBox.isSelected());
-//       }
-//     }
-// 
-//     private void computeEnableItems(Model model) {
-//       if (model.isFileEnabled()) {
-//         enableLabel.setText(S.get("fileEnabled"));
-//         enableButton.setText(S.get("fileDisableButton"));
-//       } else {
-//         enableLabel.setText(S.get("fileDisabled"));
-//         enableButton.setText(S.get("fileEnableButton"));
-//       }
-//     }
-// 
-//     @Override
-//     public void modeChanged(Model.Event event) { }
-//     @Override
-//     public void historyLimitChanged(Model.Event event) { }
-//     @Override
-//     public void signalsExtended(Model.Event event) { }
-//     @Override
-//     public void signalsReset(Model.Event event) { }
-//     @Override
-//     public void selectionChanged(Model.Event event) { }
-// 
-//     @Override
-//     public void filePropertyChanged(Model.Event event) {
-//       Model model = getModel();
-//       computeEnableItems(model);
-// 
-//       File file = model.getFile();
-//       fileField.setText(file == null ? "" : file.getPath());
-//       enableButton.setEnabled(file != null);
-// 
-//       headerCheckBox.setSelected(model.getFileHeader());
-//     }
-// 
-//   }
-// 
-//   private static final long serialVersionUID = 1L;
-// 
-//   private Listener listener = new Listener();
-//   private JLabel enableLabel = new JLabel();
-//   private JButton enableButton = new JButton();
-//   private JLabel fileLabel = new JLabel();
-//   private JTextField fileField = new JTextField();
-//   private JButton selectButton = new JButton();
-//   private JCheckBox headerCheckBox = new JCheckBox();
-// 
-//   public FilePanel(LogFrame frame) {
-//     super(frame);
-// 
-//     JPanel filePanel = new JPanel(new GridBagLayout());
-//     GridBagLayout gb = (GridBagLayout) filePanel.getLayout();
-//     GridBagConstraints gc = new GridBagConstraints();
-//     gc.fill = GridBagConstraints.HORIZONTAL;
-//     gb.setConstraints(fileLabel, gc);
-//     filePanel.add(fileLabel);
-//     gc.weightx = 1.0;
-//     gb.setConstraints(fileField, gc);
-//     filePanel.add(fileField);
-//     gc.weightx = 0.0;
-//     gb.setConstraints(selectButton, gc);
-//     filePanel.add(selectButton);
-//     fileField.setEditable(false);
-//     fileField.setEnabled(false);
-// 
-//     setLayout(new GridBagLayout());
-//     gb = (GridBagLayout) getLayout();
-//     gc = new GridBagConstraints();
-//     gc.gridx = 0;
-//     gc.weightx = 1.0;
-//     gc.gridy = GridBagConstraints.RELATIVE;
-//     JComponent glue;
-//     glue = new JPanel();
-//     gc.weighty = 1.0;
-//     gb.setConstraints(glue, gc);
-//     add(glue);
-//     gc.weighty = 0.0;
-//     gb.setConstraints(enableLabel, gc);
-//     add(enableLabel);
-//     gb.setConstraints(enableButton, gc);
-//     add(enableButton);
-//     glue = new JPanel();
-//     gc.weighty = 1.0;
-//     gb.setConstraints(glue, gc);
-//     add(glue);
-//     gc.weighty = 0.0;
-//     gc.fill = GridBagConstraints.HORIZONTAL;
-//     gb.setConstraints(filePanel, gc);
-//     add(filePanel);
-//     gc.fill = GridBagConstraints.NONE;
-//     glue = new JPanel();
-//     gc.weighty = 1.0;
-//     gb.setConstraints(glue, gc);
-//     add(glue);
-//     gc.weighty = 0.0;
-//     gb.setConstraints(headerCheckBox, gc);
-//     add(headerCheckBox);
-//     glue = new JPanel();
-//     gc.weighty = 1.0;
-//     gb.setConstraints(glue, gc);
-//     add(glue);
-//     gc.weighty = 0.0;
-// 
-//     enableButton.addActionListener(listener);
-//     selectButton.addActionListener(listener);
-//     headerCheckBox.addActionListener(listener);
-//     modelChanged(null, getModel());
-//     localeChanged();
-//   }
-// 
-//   @Override
-//   public String getHelpText() {
-//     return S.get("fileHelp");
-//   }
-// 
-//   @Override
-//   public String getTitle() {
-//     return S.get("fileTab");
-//   }
-// 
-//   @Override
-//   public void localeChanged() {
-//     listener.computeEnableItems(getModel());
-//     fileLabel.setText(S.get("fileLabel") + " ");
-//     selectButton.setText(S.get("fileSelectButton"));
-//     headerCheckBox.setText(S.get("fileHeaderCheck"));
-//   }
-// 
-//   @Override
-//   public void modelChanged(Model oldModel, Model newModel) {
-//     if (oldModel != null)
-//       oldModel.removeModelWeakListener(null, listener);
-//     if (newModel != null) {
-//       newModel.addModelWeakListener(null, listener);
-//       listener.filePropertyChanged(null);
-//     }
-//   }
-// 
-// }
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import com.cburch.logisim.data.TestVector;
+import com.cburch.logisim.util.JFileChoosers;
+
+class FilePanel extends LogPanel {
+  private class Listener implements ActionListener, Model.Listener {
+    public void actionPerformed(ActionEvent event) {
+      Object src = event.getSource();
+      if (src == enableButton) {
+        getModel().setFileEnabled(!getModel().isFileEnabled());
+      } else if (src == selectButton) {
+        int result = chooser.showSaveDialog(getLogFrame());
+        if (result != JFileChooser.APPROVE_OPTION)
+          return;
+        File file = chooser.getSelectedFile();
+        if (file.exists() && (!file.canWrite() || file.isDirectory())) {
+          JOptionPane.showMessageDialog(
+              getLogFrame(),
+              S.fmt("fileCannotWriteMessage", file.getName()),
+              S.get("fileCannotWriteTitle"),
+              JOptionPane.OK_OPTION);
+          return;
+        }
+        if (file.exists() && file.length() > 0) {
+          String[] options = { S.get("fileOverwriteOption"),
+            S.get("fileAppendOption"),
+            S.get("fileCancelOption"), };
+          int option = JOptionPane.showOptionDialog(getLogFrame(),
+              S.fmt("fileExistsMessage", file.getName()),
+              S.get("fileExistsTitle"), 0,
+              JOptionPane.QUESTION_MESSAGE, null, options,
+              options[0]);
+          if (option == 0) {
+            try {
+              FileWriter delete = new FileWriter(file);
+              delete.close();
+            } catch (IOException e) {
+            }
+          } else if (option == 1) {
+            // do nothing
+          } else {
+            return;
+          }
+        }
+        getModel().setFile(file);
+      } else if (src == headerCheckBox) {
+        getModel().setFileHeader(headerCheckBox.isSelected());
+      }
+    }
+
+    private void computeEnableItems(Model model) {
+      if (model.isFileEnabled()) {
+        enableLabel.setText(S.get("fileEnabled"));
+        enableButton.setText(S.get("fileDisableButton"));
+      } else {
+        enableLabel.setText(S.get("fileDisabled"));
+        enableButton.setText(S.get("fileEnableButton"));
+      }
+    }
+
+    @Override
+    public void modeChanged(Model.Event event) { }
+    @Override
+    public void historyLimitChanged(Model.Event event) { }
+    @Override
+    public void signalsExtended(Model.Event event) { }
+    @Override
+    public void signalsReset(Model.Event event) { }
+    @Override
+    public void selectionChanged(Model.Event event) { }
+
+    @Override
+    public void filePropertyChanged(Model.Event event) {
+      Model model = getModel();
+      computeEnableItems(model);
+
+      File file = model.getFile();
+      fileField.setText(file == null ? "" : file.getPath());
+      enableButton.setEnabled(file != null);
+
+      headerCheckBox.setSelected(model.getFileHeader());
+    }
+
+  }
+
+  private static final long serialVersionUID = 1L;
+
+  private Listener listener = new Listener();
+  private JLabel enableLabel = new JLabel();
+  private JButton enableButton = new JButton();
+  private JLabel fileLabel = new JLabel();
+  private JTextField fileField = new JTextField();
+  private JButton selectButton = new JButton();
+  private JCheckBox headerCheckBox = new JCheckBox();
+  private JFileChooser chooser = JFileChoosers.create();
+
+  public FilePanel(LogFrame frame) {
+    super(frame);
+
+    chooser.addChoosableFileFilter(chooser.getAcceptAllFileFilter());
+    chooser.addChoosableFileFilter(TestVector.FILE_FILTER);
+    chooser.setFileFilter(TestVector.FILE_FILTER);
+
+    JPanel filePanel = new JPanel(new GridBagLayout());
+    GridBagLayout gb = (GridBagLayout) filePanel.getLayout();
+    GridBagConstraints gc = new GridBagConstraints();
+    gc.fill = GridBagConstraints.HORIZONTAL;
+    gb.setConstraints(fileLabel, gc);
+    filePanel.add(fileLabel);
+    gc.weightx = 1.0;
+    gb.setConstraints(fileField, gc);
+    filePanel.add(fileField);
+    gc.weightx = 0.0;
+    gb.setConstraints(selectButton, gc);
+    filePanel.add(selectButton);
+    fileField.setEditable(false);
+    fileField.setEnabled(false);
+
+    setLayout(new GridBagLayout());
+    gb = (GridBagLayout) getLayout();
+    gc = new GridBagConstraints();
+    gc.gridx = 0;
+    gc.weightx = 1.0;
+    gc.gridy = GridBagConstraints.RELATIVE;
+    JComponent glue;
+    glue = new JPanel();
+    gc.weighty = 1.0;
+    gb.setConstraints(glue, gc);
+    add(glue);
+    gc.weighty = 0.0;
+    gb.setConstraints(enableLabel, gc);
+    add(enableLabel);
+    gb.setConstraints(enableButton, gc);
+    add(enableButton);
+    glue = new JPanel();
+    gc.weighty = 1.0;
+    gb.setConstraints(glue, gc);
+    add(glue);
+    gc.weighty = 0.0;
+    gc.fill = GridBagConstraints.HORIZONTAL;
+    gb.setConstraints(filePanel, gc);
+    add(filePanel);
+    gc.fill = GridBagConstraints.NONE;
+    glue = new JPanel();
+    gc.weighty = 1.0;
+    gb.setConstraints(glue, gc);
+    add(glue);
+    gc.weighty = 0.0;
+    gb.setConstraints(headerCheckBox, gc);
+    add(headerCheckBox);
+    glue = new JPanel();
+    gc.weighty = 1.0;
+    gb.setConstraints(glue, gc);
+    add(glue);
+    gc.weighty = 0.0;
+
+    enableButton.addActionListener(listener);
+    selectButton.addActionListener(listener);
+    headerCheckBox.addActionListener(listener);
+    modelChanged(null, getModel());
+    localeChanged();
+  }
+
+  @Override
+  public String getHelpText() {
+    return S.get("fileHelp");
+  }
+
+  @Override
+  public String getTitle() {
+    return S.get("fileTab");
+  }
+
+  @Override
+  public void localeChanged() {
+    listener.computeEnableItems(getModel());
+    fileLabel.setText(S.get("fileLabel") + " ");
+    selectButton.setText(S.get("fileSelectButton"));
+    headerCheckBox.setText(S.get("fileHeaderCheck"));
+  }
+
+  @Override
+  public void modelChanged(Model oldModel, Model newModel) {
+    if (oldModel != null)
+      oldModel.removeModelWeakListener(null, listener);
+    if (newModel != null) {
+      newModel.addModelWeakListener(null, listener);
+      listener.filePropertyChanged(null);
+    }
+  }
+
+}

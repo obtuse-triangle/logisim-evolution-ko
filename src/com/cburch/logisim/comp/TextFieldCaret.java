@@ -43,7 +43,6 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 
-import com.cburch.logisim.Main;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.tools.Caret;
@@ -152,57 +151,67 @@ class TextFieldCaret implements Caret, TextFieldListener {
   }
 
   public void keyPressed(KeyEvent e) {
-    int ign;
-    // Control unused on MacOS, but used as menuMask on Linux/Windows
-    // Alt unused on Linux/Windows, but used for wordMask on MacOS
-    // Meta unused on Linux/Windows, but used for menuMask on MacOS
-    if (Main.MacOS)
-      ign = InputEvent.CTRL_DOWN_MASK;
-    else
-      ign = InputEvent.ALT_DOWN_MASK | InputEvent.META_DOWN_MASK;
-    if ((e.getModifiersEx() & ign) != 0)
+    int ign = InputEvent.ALT_MASK | InputEvent.META_MASK;
+    if ((e.getModifiers() & ign) != 0)
       return;
-    int menuMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
-    int wordMask =  Main.MacOS
-        ? InputEvent.ALT_DOWN_MASK /* MacOS Option keys, don't bother with ALT_GRAPH_DOWN_MASK */
-        : menuMask; /* Windows/Linux wordMask == menuMask == CONTROL_DOWN_MASK */
-    boolean shift = ((e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0);
-    boolean menukey = ((e.getModifiersEx() & menuMask) != 0);
-    boolean wordkey = ((e.getModifiersEx() & wordMask) != 0);
-    processMovementKeys(e, shift, wordkey, menukey);
+    boolean shift = ((e.getModifiers() & InputEvent.SHIFT_MASK) != 0);
+    boolean ctrl = ((e.getModifiers() & InputEvent.CTRL_MASK) != 0);
+    arrowKeyMaybePressed(e, shift, ctrl);
     if (e.isConsumed())
       return;
-    if (menukey)
-      menuShortcutKeyPressed(e, shift);
-    else if (!wordkey)
+    if (ctrl)
+      controlKeyPressed(e, shift);
+    else
       normalKeyPressed(e, shift);
   }
 
   protected boolean wordBoundary(int pos) {
-    return (pos <= 0)
-        || (pos >= curText.length())
+    return (pos == 0 || pos >= curText.length()
         || (Character.isWhitespace(curText.charAt(pos-1))
-          && !Character.isWhitespace(curText.charAt(pos)));
+          != Character.isWhitespace(curText.charAt(pos))));
   }
 
   protected boolean allowedCharacter(char c) {
     return (c != KeyEvent.CHAR_UNDEFINED) && !Character.isISOControl(c);
   }
 
-  protected void menuShortcutKeyPressed(KeyEvent e, boolean shift) {
+  protected void moveCaret(int dx, int dy, boolean shift, boolean ctrl) {
+    if (!shift)
+      normalizeSelection();
+
+    if (dy < 0) {
+      pos = 0;
+    } else if (dy > 0) {
+      pos = curText.length();
+    } else if (pos+dx >= 0 && pos+dx <= curText.length()) {
+      if (!shift && pos != end) {
+        if (dx < 0) end = pos;
+        else pos = end;
+      } else {
+        pos += dx;
+      }
+      while (ctrl && !wordBoundary(pos))
+        pos += dx;
+    }
+
+    if (!shift)
+      end = pos;
+  }
+
+  protected void controlKeyPressed(KeyEvent e, boolean shift) {
     boolean cut = false;
     switch (e.getKeyCode()) {
-    case KeyEvent.VK_A: // select all
+    case KeyEvent.VK_A:
       pos = 0;
       end = curText.length();
       e.consume();
       break;
     case KeyEvent.VK_CUT:
-    case KeyEvent.VK_X: // cut
+    case KeyEvent.VK_X:
       cut = true;
       // fall through
     case KeyEvent.VK_COPY:
-    case KeyEvent.VK_C: // copy
+    case KeyEvent.VK_C:
       if (end != pos) {
         int pp = (pos < end ? pos : end);
         int ee = (pos < end ? end : pos);
@@ -219,7 +228,7 @@ class TextFieldCaret implements Caret, TextFieldListener {
       break;
     case KeyEvent.VK_INSERT:
     case KeyEvent.VK_PASTE:
-    case KeyEvent.VK_V: // paste
+    case KeyEvent.VK_V:
       try {
         String s = (String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
         boolean lastWasSpace = false;
@@ -249,123 +258,40 @@ class TextFieldCaret implements Caret, TextFieldListener {
     }
   }
 
-  // Text field movement shortcuts...
-  // For a multi-line text field are ten possible cursor movements:
-  //    ______________________________________
-  //   |(-5)                                  |   (+1) next char      (-1) prev char
-  //   |                 (-4)                 |   (+2) next word      (-2) prev word
-  //   |(-3)    (-2)   (-1)I(+1)   (+2)   (+3)|   (+3) end of line    (-3) start of line
-  //   |                 (+4)             ____|   (+4) down a line    (-4) up a line
-  //   |_____________________________(+5)|        (+5) end of text    (-5) start of text
-  // 
-  // When cursor is on first or last line, 4 degenerates to 5.
-  // For a single-line text field the same holds except that 3, 4 and 5 are all equivalent.
-  //
-  //                                                   single-line          multi-line
-  //          key          modifiers                   textfield action     textfield action
-  // MacOS:
-  //          left/right   -                           +/- 1                +/- 1            
-  //          left/right   option/wordkey              +/- 2                +/- 2             
-  //          left/right   command/menukey             +/- 5                +/- 3
-  //          up/down      -                           +/- 5                +/- 4
-  //          up/down      command/menukey             +/- 5                +/- 5
-  //          home/end     -                           +/- 5                +/- 5
-  //          pgup/pgdn    -                           +/- 5                +/- 5
-  // Linux/Windows:
-  //          left/right   -                           +/- 1                +/- 1            
-  //          left/right   control/wordkey/menukey     +/- 2                +/- 2             
-  //          up/down      -                           +/- 5                +/- 4
-  //          up/down      control/wordkey/menukey     +/- 5                +/- 5
-  //          home/end     -                           +/- 5                +/- 3
-  //          home/end     control/wordkey/menukey     +/- 5                +/- 5
-  //          pgup/pgdn    -                           +/- 5                +/- 5
-  //
-  // TODO: support for old style linux/apple movemet keys, like control-A / control-E ?
-
-  protected void cancelSelection(int direction) {
-    // selection is being canceled by left/right movement
-    if (direction < 0) end = pos;
-    else pos = end;
-  }
-
-  protected void moveCaret(int move, boolean shift) {
-    if (!shift)
-      normalizeSelection();
-
-    if (move < -5 || move == 0 || move > 5) { // invalid
-      return;
-    } else if (move <= -3) { // start of line, up a line, start of text
-      pos = 0;
-    } else if (move >= +3) { // end of line, down a line, end of text
-      pos = curText.length();
-    } else { // next/prev char, next/prev word
-      int dx = (move < 0 ? -1 : +1);
-      boolean byword = (move == -2 || move == +2);
-      if (!shift && pos != end) {
-        // selection is being canceled by left/right movement,
-        // so we count the cancellation as the first step
-        cancelSelection(move);
-      } else {
-        // move one char left/right as the first step, if possible
-        if (dx < 0 && pos > 0) pos--;
-        else if (dx > 0 && pos < curText.length()) pos++;
-      }
-      if (byword) {
-        while (!wordBoundary(pos))
-          pos += dx;
-      }
-    }
-
-    if (!shift)
-      end = pos;
-  }
-  
-  protected void processMovementKeys(KeyEvent e, boolean shift, boolean wordkey, boolean menukey) {
-    int dir = +1;
+  protected void arrowKeyMaybePressed(KeyEvent e, boolean shift, boolean ctrl) {
     switch (e.getKeyCode()) {
     case KeyEvent.VK_LEFT:
     case KeyEvent.VK_KP_LEFT:
-      dir = -1;
-      // fall through
+      moveCaret(-1, 0, shift, ctrl);
+      e.consume();
+      break;
     case KeyEvent.VK_RIGHT:
     case KeyEvent.VK_KP_RIGHT:
-      if (menukey && !wordkey)
-        moveCaret(dir*3, shift); // MacOS start/end of line
-      else if (wordkey)
-        moveCaret(dir*2, shift); // prev/next word
-      else 
-        moveCaret(dir*1, shift); // prev/next char
+      moveCaret(1, 0, shift, ctrl);
       e.consume();
       break;
     case KeyEvent.VK_UP:
     case KeyEvent.VK_KP_UP:
-      dir = -1;
-      // fall through
-    case KeyEvent.VK_DOWN:
-    case KeyEvent.VK_KP_DOWN:
-      if (menukey)
-        moveCaret(dir*5, shift); // start/end of text
-      else
-        moveCaret(dir*4, shift); // up/down a line
+      moveCaret(0, -1, shift, ctrl);
       e.consume();
       break;
-    case KeyEvent.VK_PAGE_UP:
-      dir = -1;
-      // fall through
-    case KeyEvent.VK_PAGE_DOWN:
-      moveCaret(dir*5, shift); // start/end of text
+    case KeyEvent.VK_DOWN:
+    case KeyEvent.VK_KP_DOWN:
+      moveCaret(0, 1, shift, ctrl);
       e.consume();
       break;
     case KeyEvent.VK_HOME:
-      dir = -1;
-      // fall through
+      pos = 0;
+      if (!shift) {
+        end = pos;
+      }
+      e.consume();
+      break;
     case KeyEvent.VK_END:
-      if (Main.MacOS)
-        moveCaret(dir*5, shift); //  MacOS start/end of text
-      else if (menukey)
-        moveCaret(dir*5, shift); // start/end of text
-      else 
-        moveCaret(dir*3, shift); // start/end of line
+      pos = curText.length();
+      if (!shift) {
+        end = pos;
+      }
       e.consume();
       break;
     default:
@@ -389,7 +315,7 @@ class TextFieldCaret implements Caret, TextFieldListener {
       stopEditing();
       e.consume();
       break;
-    case KeyEvent.VK_BACK_SPACE: // DELETE on MacOS?
+    case KeyEvent.VK_BACK_SPACE:
       normalizeSelection();
       if (pos != end) {
         curText = curText.substring(0, pos) + curText.substring(end);
@@ -402,7 +328,7 @@ class TextFieldCaret implements Caret, TextFieldListener {
       }
       e.consume();
       break;
-    case KeyEvent.VK_DELETE: // BACK_SPACE on MacOS?
+    case KeyEvent.VK_DELETE:
       normalizeSelection();
       if (pos != end) {
         curText = curText.substring(0, pos) + (end < curText.length() ? curText.substring(end) : "");
@@ -421,8 +347,8 @@ class TextFieldCaret implements Caret, TextFieldListener {
   public void keyReleased(KeyEvent e) { }
 
   public void keyTyped(KeyEvent e) {
-    int ign = InputEvent.ALT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK | InputEvent.META_DOWN_MASK;
-    if ((e.getModifiersEx() & ign) != 0)
+    int ign = InputEvent.ALT_MASK | InputEvent.CTRL_MASK | InputEvent.META_MASK;
+    if ((e.getModifiers() & ign) != 0)
       return;
 
     e.consume();

@@ -49,6 +49,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -60,6 +61,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileFilter;
 
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitState;
@@ -67,7 +69,7 @@ import com.cburch.logisim.comp.ComponentDrawContext;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.file.Loader;
 import com.cburch.logisim.proj.Project;
-import com.cburch.logisim.util.Chooser;
+import com.cburch.logisim.util.GifEncoder;
 import com.cburch.logisim.util.UniquelyNamedThread;
 
 public class ExportImage {
@@ -76,14 +78,14 @@ public class ExportImage {
     Frame frame;
     Canvas canvas;
     File dest;
-    Chooser.LFilter filter;
+    FileFilter filter;
     String ext;
     List<Circuit> circuits;
     double scale;
     boolean printerView;
     ProgressMonitor monitor;
 
-    ExportThread(Frame frame, Canvas canvas, File dest, Chooser.LFilter f,
+    ExportThread(Frame frame, Canvas canvas, File dest, FileFilter f,
         String ext, List<Circuit> circuits, double scale, boolean printerView,
         ProgressMonitor monitor) {
       super("ExportThread");
@@ -102,7 +104,7 @@ public class ExportImage {
       File filename;
       if (dest.isDirectory()) {
         filename = new File(dest, circuit.getName() + ext);
-      } else if (filter.get().accept(dest)) {
+      } else if (filter.accept(dest)) {
         filename = dest;
       } else {
         String newName = dest.getName() + ext;
@@ -160,6 +162,9 @@ public class ExportImage {
 
     try {
       switch (format) {
+      case FORMAT_GIF:
+        GifEncoder.toFile(img, dest, monitor);
+        break;
       case FORMAT_PNG:
         ImageIO.write(img, "PNG", dest);
         break;
@@ -168,7 +173,6 @@ public class ExportImage {
         break;
       }
     } catch (Exception e) {
-      e.printStackTrace();
       return S.get("couldNotCreateFile");
     } finally {
       g.dispose();
@@ -184,6 +188,7 @@ public class ExportImage {
     JLabel curScale;
     JCheckBox printerView;
     JRadioButton formatPng;
+    JRadioButton formatGif;
     JRadioButton formatJpg;
     GridBagLayout gridbag;
     GridBagConstraints gbc;
@@ -193,9 +198,11 @@ public class ExportImage {
     OptionsPanel(JList list) {
       // set up components
       formatPng = new JRadioButton("PNG");
+      formatGif = new JRadioButton("GIF");
       formatJpg = new JRadioButton("JPEG");
       ButtonGroup bgroup = new ButtonGroup();
       bgroup.add(formatPng);
+      bgroup.add(formatGif);
       bgroup.add(formatJpg);
       formatPng.setSelected(true);
 
@@ -234,6 +241,7 @@ public class ExportImage {
       addGb(new JLabel(S.get("labelImageFormat") + " "));
       Box formatsPanel = new Box(BoxLayout.Y_AXIS);
       formatsPanel.add(formatPng);
+      formatsPanel.add(formatGif);
       formatsPanel.add(formatJpg);
       addGb(formatsPanel);
 
@@ -253,10 +261,11 @@ public class ExportImage {
     }
 
     String getImageFormat() {
+      if (formatGif.isSelected())
+        return FORMAT_GIF;
       if (formatJpg.isSelected())
         return FORMAT_JPG;
-      else
-        return FORMAT_PNG;
+      return FORMAT_PNG;
     }
 
     boolean getPrinterView() {
@@ -275,14 +284,17 @@ public class ExportImage {
     }
   }
 
-  public static final Chooser.LFilter PNG_FILTER =
-      new Chooser.LFilter(S.getter("exportPngFilter"), ".png");
-  public static final Chooser.LFilter JPG_FILTER =
-      new Chooser.LFilter(S.getter("exportJpgFilter"),
+  public static final FileFilter GIF_FILTER =
+      Loader.makeFileFilter(S.getter("exportGifFilter"), ".gif");
+  public static final FileFilter PNG_FILTER =
+      Loader.makeFileFilter(S.getter("exportPngFilter"), ".png");
+  public static final FileFilter JPG_FILTER =
+      Loader.makeFileFilter(S.getter("exportJpgFilter"),
           ".jpg", ".jpeg", ".jpe", ".jfi", ".jfif", ".jfi");
 
-  public static Chooser.LFilter getFilter(String fmt) {
+  public static FileFilter getFilter(String fmt) {
     switch (fmt) {
+    case FORMAT_GIF: return GIF_FILTER;
     case FORMAT_PNG: return PNG_FILTER;
     case FORMAT_JPG: return JPG_FILTER;
     default:
@@ -315,23 +327,50 @@ public class ExportImage {
       return;
 
     String fmt = options.getImageFormat();
-    Chooser.LFilter filter = getFilter(fmt);
+    FileFilter filter = getFilter(fmt);
     if (filter == null)
       return;
 
     // Then display file chooser
     Loader loader = proj.getLogisimFile().getLoader();
-    File dest;
+    JFileChooser chooser = loader.createChooser();
+    chooser.setAcceptAllFileFilterUsed(false);
     if (circuits.size() > 1) {
-      dest = Chooser.dirPopup(frame, S.get("exportImageDirectorySelect"),
-          loader.getCurrentDirectory());
+      chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+      chooser.setDialogTitle(S.get("exportImageDirectorySelect"));
     } else {
-      String name = circuits.get(0).getName() + "." + filter.get().getDefaultExtension();
-      File suggest = new File(loader.getCurrentDirectory(), name);
-      dest = Chooser.savePopup(frame, S.get("exportImageFileSelect"), suggest, filter);
+      chooser.setFileFilter(filter);
+      chooser.setDialogTitle(S.get("exportImageFileSelect"));
     }
-    if (dest == null)
+    int returnVal = chooser.showDialog(frame,
+        S.get("exportImageButton"));
+    if (returnVal != JFileChooser.APPROVE_OPTION)
       return;
+
+    // Determine whether destination is valid
+    File dest = chooser.getSelectedFile();
+    chooser.setCurrentDirectory(dest.isDirectory() ? dest : dest.getParentFile());
+    if (dest.exists()) {
+      if (!dest.isDirectory()) {
+        int confirm = JOptionPane.showConfirmDialog(proj.getFrame(),
+            S.get("confirmOverwriteMessage"),
+            S.get("confirmOverwriteTitle"),
+            JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION)
+          return;
+      }
+    } else {
+      if (circuits.size() > 1) {
+        boolean created = dest.mkdir();
+        if (!created) {
+          JOptionPane.showMessageDialog(proj.getFrame(),
+              S.get("exportNewDirectoryErrorMessage"),
+              S.get("exportNewDirectoryErrorTitle"),
+              JOptionPane.YES_NO_OPTION);
+          return;
+        }
+      }
+    }
 
     // Create the progress monitor
     ProgressMonitor monitor = new ProgressMonitor(frame,
@@ -341,12 +380,16 @@ public class ExportImage {
     monitor.setProgress(0);
 
     // And start a thread to actually perform the operation
-    // (This is run in a thread so that Swing will update the monitor.)
+    // (This is run in a thread so that Swing will update the
+    // monitor.)
     new ExportThread(frame, frame.getCanvas(), dest, filter, fmt, circuits,
         scale, printerView, monitor).start();
+
   }
 
   private static final int SLIDER_DIVISIONS = 6;
+
+  public static final String FORMAT_GIF = ".gif";
 
   public static final String FORMAT_PNG = ".png";
 

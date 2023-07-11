@@ -90,13 +90,13 @@ import com.cburch.logisim.proj.ProjectEvent;
 import com.cburch.logisim.proj.ProjectListener;
 import com.cburch.logisim.proj.Projects;
 import com.cburch.logisim.std.hdl.HdlContentView;
-import com.cburch.logisim.std.hdl.VhdlContent;
+import com.cburch.logisim.std.hdl.VhdlContent;;
 import com.cburch.logisim.std.hdl.VhdlSimulatorConsole;
 import com.cburch.logisim.std.hdl.VhdlSimulatorListener;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.Tool;
-import com.cburch.logisim.util.Chooser;
 import com.cburch.logisim.util.HorizontalSplitPane;
+import com.cburch.logisim.util.JFileChoosers;
 import com.cburch.logisim.util.LocaleListener;
 import com.cburch.logisim.util.LocaleManager;
 import com.cburch.logisim.util.VerticalSplitPane;
@@ -600,7 +600,7 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     if (rightRegion.getFraction() < 1.0)
       AppPreferences.WINDOW_RIGHT_SPLIT.set(rightRegion.getFraction());
     AppPreferences.WINDOW_MAIN_SPLIT.set(mainRegion.getFraction());
-    AppPreferences.DIALOG_DIRECTORY.set(Chooser.getRecentDirectory());
+    AppPreferences.DIALOG_DIRECTORY.set(JFileChoosers.getCurrentDirectory());
   }
 
   void setAttrTableModel(AttrTableModel value) {

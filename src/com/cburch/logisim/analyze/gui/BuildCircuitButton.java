@@ -48,6 +48,7 @@ import javax.swing.JTextField;
 
 import com.cburch.logisim.proj.ProjectActions;
 import com.cburch.logisim.analyze.model.AnalyzerModel;
+import com.cburch.logisim.analyze.model.Expression;
 import com.cburch.logisim.analyze.model.VariableList;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitMutation;

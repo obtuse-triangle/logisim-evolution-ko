@@ -30,6 +30,7 @@
 
 package com.cburch.logisim.tools;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.cburch.logisim.comp.ComponentFactory;

@@ -40,7 +40,9 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -53,7 +55,7 @@ import com.cburch.logisim.gui.main.Frame;
 import com.cburch.logisim.gui.start.SplashScreen;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.tools.Tool;
-import com.cburch.logisim.util.Chooser;
+import com.cburch.logisim.util.JFileChoosers;
 
 public class ProjectActions {
   private static class CreateFrame implements Runnable {
@@ -86,6 +88,16 @@ public class ProjectActions {
       }
     }
   }
+
+  // /**
+  //  * Returns true if the filename contains valid characters only, that is,
+  //  * alphanumeric characters and underscores.
+  //  */
+  // private static boolean checkValidFilename(String filename) {
+  //   Pattern p = Pattern.compile("[^a-z0-9_.]", Pattern.CASE_INSENSITIVE);
+  //   Matcher m = p.matcher(filename);
+  //   return (!m.find());
+  // }
 
   private static Project completeProject(SplashScreen monitor, Loader loader,
       LogisimFile file, boolean isStartup) {
@@ -196,15 +208,22 @@ public class ProjectActions {
   }
 
   public static Project doOpen(Component parent, Project baseProject) {
-    File suggest = null;
+    JFileChooser chooser;
     if (baseProject != null) {
       Loader oldLoader = baseProject.getLogisimFile().getLoader();
-      suggest = oldLoader.getMainFile();
-      if (suggest == null)
-        suggest = oldLoader.getCurrentDirectory();
+      chooser = oldLoader.createChooser();
+      if (oldLoader.getMainFile() != null) {
+        chooser.setSelectedFile(oldLoader.getMainFile());
+      }
+    } else {
+      chooser = JFileChoosers.create();
     }
-    File selected = Chooser.loadPopup(parent, null /* default title */,
-        suggest, Loader.LOGISIM_FILTER, Loader.ANY_FILTER);
+    chooser.setFileFilter(Loader.LOGISIM_FILTER);
+
+    int returnVal = chooser.showOpenDialog(parent);
+    if (returnVal != JFileChooser.APPROVE_OPTION)
+      return null;
+    File selected = chooser.getSelectedFile();
     if (selected == null)
       return null;
     return doOpen(parent, baseProject, selected);
@@ -338,13 +357,59 @@ public class ProjectActions {
    *            project to be saved
    * @return true if success, false otherwise
    */
-  public static boolean doSaveAs(final Project proj) {
+  public static boolean doSaveAs(Project proj) {
     Loader loader = proj.getLogisimFile().getLoader();
-    File suggest = loader.getMainFile(); // may be null
-    File saved = Chooser.savePopup((f) -> doSave(proj, f),
-        proj.getFrame(), null /* default title */, suggest,
-        Loader.LOGISIM_FILTER);
-    return saved != null;
+    JFileChooser chooser = loader.createChooser();
+    chooser.setFileFilter(Loader.LOGISIM_FILTER);
+    if (loader.getMainFile() != null) {
+      chooser.setSelectedFile(loader.getMainFile());
+    }
+
+    int returnVal = chooser.showSaveDialog(proj.getFrame());
+    if (returnVal != JFileChooser.APPROVE_OPTION)
+      return false;
+
+    File f = chooser.getSelectedFile();
+    String circExt = LogisimFile.LOGISIM_EXTENSION;
+    if (!f.getName().endsWith(circExt)) {
+      String old = f.getName();
+      int ext0 = old.lastIndexOf('.');
+      if (ext0 < 0
+          || !Pattern.matches("\\.\\p{L}{2,}[0-9]?",
+            old.substring(ext0))) {
+        f = new File(f.getParentFile(), old + circExt);
+      } else {
+        String ext = old.substring(ext0);
+        String ttl = S.get("replaceExtensionTitle");
+        String msg = S.fmt("replaceExtensionMessage", ext);
+        Object[] options = {
+          S.fmt("replaceExtensionReplaceOpt", ext),
+          S.fmt("replaceExtensionAddOpt", circExt),
+          S.get("replaceExtensionKeepOpt") };
+        JOptionPane dlog = new JOptionPane(msg);
+        dlog.setMessageType(JOptionPane.QUESTION_MESSAGE);
+        dlog.setOptions(options);
+        dlog.createDialog(proj.getFrame(), ttl).setVisible(true);
+
+        Object result = dlog.getValue();
+        if (result == options[0]) {
+          String name = old.substring(0, ext0) + circExt;
+          f = new File(f.getParentFile(), name);
+        } else if (result == options[1]) {
+          f = new File(f.getParentFile(), old + circExt);
+        }
+      }
+    }
+
+    if (f.exists()) {
+      int confirm = JOptionPane.showConfirmDialog(proj.getFrame(),
+          S.get("confirmOverwriteMessage"),
+          S.get("confirmOverwriteTitle"),
+          JOptionPane.YES_NO_OPTION);
+      if (confirm != JOptionPane.YES_OPTION)
+        return false;
+    }
+    return doSave(proj, f);
   }
 
   private ProjectActions() {

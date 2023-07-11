@@ -362,28 +362,29 @@ public class CircuitAppearance extends Drawing {
   }
 
   public void setObjectsForce(List<? extends CanvasObject> shapesBase) {
-    // This shouldn't ever be an issue, but just to make doubly sure, we'll
-    // check that the anchor and all ports are in their proper places.
+    // Outside the appearance editor, the anchor is not drawn at all, and ports
+    // are always drawn last (as the top layer) by the simulation rendering
+    // code. So, the layer-order of ports and anchor within the shape lists does
+    // not really matter much. However, we force the anchor to be in the last
+    // position (top  layer), so it is easier to move, and we force the ports to
+    // be next to last (near top layer), so it matches the simulation rendering.
     List<CanvasObject> shapes = new ArrayList<CanvasObject>(shapesBase);
-    int n = shapes.size();
-    int ports = 0;
-    for (int i = n - 1; i >= 0; i--) { // count ports, move anchor to end
+    int end = shapes.size() - 1;
+    int reserved = 0;
+    for (int i = end; i >= 0; i--) {
       CanvasObject o = shapes.get(i);
       if (o instanceof AppearanceAnchor) {
-        if (i != n - 1) {
+        if (i != end) {
           shapes.remove(i);
           shapes.add(o);
         }
+        reserved++;
       } else if (o instanceof AppearancePort) {
-        ports++;
-      }
-    }
-    for (int i = (n - ports - 1) - 1; i >= 0; i--) { // move ports to top
-      CanvasObject o = shapes.get(i);
-      if (o instanceof AppearancePort) {
-        shapes.remove(i);
-        shapes.add(n - ports - 1, o);
-        i--;
+        if (i != end - reserved) {
+          shapes.remove(i);
+          shapes.add(end - reserved, o);
+        }
+        reserved++;
       }
     }
 

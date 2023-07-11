@@ -246,9 +246,12 @@ public class XmlCircuitReader extends CircuitTransaction {
 
   private void buildDynamicAppearance(XmlReader.CircuitData circData, CircuitMutator mutator) {
     Circuit dest = circData.circuit;
-    List<AbstractCanvasObject> shapes = new ArrayList<AbstractCanvasObject>();
+    List<AbstractCanvasObject> shapes = new ArrayList<>();
+    List<Integer> layers = new ArrayList<>();
+    int layer = -1;
     for (Element appearElt : XmlIterator.forChildElements(circData.circuitElement, "appear")) {
       for (Element sub : XmlIterator.forChildElements(appearElt)) {
+        layer++;
         // Dynamic shapes are handled here. Static shapes are already done.
         if (!sub.getTagName().startsWith("visible-"))
           continue;
@@ -259,6 +262,7 @@ public class XmlCircuitReader extends CircuitTransaction {
                 circData.circuit.getName() + "." + sub.getTagName());
           } else {
             shapes.add(m);
+            layers.add(layer);
           }
         } catch (RuntimeException e) {
           reader.addError(S.fmt("fileAppearanceError", sub.getTagName()),
@@ -270,7 +274,8 @@ public class XmlCircuitReader extends CircuitTransaction {
       if (circData.appearance == null) {
         circData.appearance = shapes;
       } else {
-        circData.appearance.addAll(shapes);
+        for (int i = 0; i < shapes.size(); i++)
+          circData.appearance.add(layers.get(i), shapes.get(i));
       }
     }
     if (circData.appearance != null && !circData.appearance.isEmpty()) {

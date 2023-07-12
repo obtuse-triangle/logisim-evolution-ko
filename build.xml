@@ -39,7 +39,7 @@ Updates on Java Versions [19 June 2023]:
 Java 17 is the most recent LTS release, with Java 21 for release September 2023.
 When it comes to AArch64 support, Java 17 appears to have better support than
 Java 11 In simple trials, there appears to be no performance improvement when
-compiling against version 17 versus version 11. Therefore, developmentwill now
+compiling against version 17 versus version 11. Therefore, development will now
 target Java 17, though the binaries will still be compiled using language
 version 11 to allow for some backwards compatibility when using the JAR release.
 

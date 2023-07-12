@@ -232,7 +232,7 @@ public class Loader implements LibraryLoader {
     // instantiate library
     Library ret;
     try {
-      ret = (Library) retClass.newInstance();
+      ret = (Library) retClass.getDeclaredConstructor().newInstance();
       // Backwards-compatibility: fix any null libraryClass references in
       // the library's AddTool objects.
       for (Tool t : ret.getTools()) {

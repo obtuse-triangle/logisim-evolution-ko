@@ -55,7 +55,7 @@ class InstancePokerAdapter extends AbstractCaret implements Pokable {
       Class<? extends InstancePoker> pokerClass) {
     try {
       this.comp = comp;
-      poker = pokerClass.newInstance();
+      poker = pokerClass.getDeclaredConstructor().newInstance();
     } catch (Exception t) {
       handleError(t, pokerClass);
       poker = null;

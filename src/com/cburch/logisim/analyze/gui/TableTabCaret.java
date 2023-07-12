@@ -100,7 +100,7 @@ class TableTabCaret {
       int inputs = table.getInputColumnCount();
       int outputs = table.getOutputColumnCount();
       int cols = inputs + outputs;
-      boolean shift = (e.getModifiers() & InputEvent.SHIFT_MASK) != 0;
+      boolean shift = (e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0;
       Pt p = (shift ? markB.isValid() ? markB : markA : cursor);
       switch (e.getKeyCode()) {
       case KeyEvent.VK_UP:
@@ -148,8 +148,8 @@ class TableTabCaret {
 
     public void keyTyped(KeyEvent e) {
       e.consume();
-      int mask = e.getModifiers();
-      if ((mask & ~InputEvent.SHIFT_MASK) != 0)
+      int mask = e.getModifiersEx();
+      if ((mask & ~InputEvent.SHIFT_DOWN_MASK) != 0)
         return;
       char c = e.getKeyChar();
       doKey(c);
@@ -354,7 +354,7 @@ class TableTabCaret {
 
     public void mousePressed(MouseEvent e) {
       table.requestFocus();
-      if ((e.getModifiers() & InputEvent.SHIFT_MASK) != 0)
+      if ((e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0)
         mouseDragged(e);
       else
         setCursor(pointAt(e), pointNear(e));

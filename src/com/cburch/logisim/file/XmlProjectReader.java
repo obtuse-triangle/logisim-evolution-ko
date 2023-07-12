@@ -98,7 +98,7 @@ public class XmlProjectReader extends XmlReader {
         }
         int mods;
         try {
-          mods = InputEventUtil.fromString(mods_str);
+          mods = InputEventUtil.fromXMLString(mods_str);
         } catch (NumberFormatException e) {
           addError(S.fmt("mappingBadError", mods_str), "mouse mapping");
           continue;

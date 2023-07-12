@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import java.awt.event.InputEvent;
 import javax.swing.JPopupMenu;
 
 import com.cburch.draw.canvas.Canvas;
@@ -53,6 +54,7 @@ import com.cburch.draw.tools.RoundRectangleTool;
 import com.cburch.draw.tools.TextTool;
 import com.cburch.draw.tools.ToolbarToolItem;
 import com.cburch.logisim.gui.menu.Popups;
+import com.cburch.logisim.util.InputEventUtil;
 
 class AppearanceToolbarModel extends AbstractToolbarModel
   implements PropertyChangeListener {
@@ -76,8 +78,12 @@ class AppearanceToolbarModel extends AbstractToolbarModel
     };
 
     ArrayList<ToolbarItem> rawItems = new ArrayList<ToolbarItem>();
+    int mask = InputEvent.CTRL_DOWN_MASK;
+    int index = 1;
     for (AbstractTool tool : tools) {
-      rawItems.add(new ToolbarToolItem(tool));
+      String shortcut = InputEventUtil.toKeyDisplayString(Character.valueOf((char)('0'+(index%10))), mask);
+      rawItems.add(new ToolbarToolItem(tool, shortcut));
+      index++;
     }
     rawItems.add(ssTool);
     items = Collections.unmodifiableList(rawItems);

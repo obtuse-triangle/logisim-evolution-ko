@@ -34,9 +34,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Graphics;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.event.InputEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -181,9 +182,8 @@ class LayoutToolbarModel extends AbstractToolbarModel {
       if (index <= 10) {
         if (index == 10)
           index = 0;
-        int mask = frame.getToolkit().getMenuShortcutKeyMask();
-        ret += " (" + InputEventUtil.toKeyDisplayString(mask) + "-"
-            + index + ")";
+        int mask = InputEvent.CTRL_DOWN_MASK;
+        ret += " (" + InputEventUtil.toKeyDisplayString(Character.valueOf((char)('0'+index)), mask) + ")";
       }
       return ret;
     }

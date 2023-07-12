@@ -42,10 +42,12 @@ import com.cburch.draw.toolbar.ToolbarItem;
 public class ToolbarToolItem implements ToolbarItem {
 	private AbstractTool tool;
 	private Icon icon;
+  private String shortcut;
 
-	public ToolbarToolItem(AbstractTool tool) {
+	public ToolbarToolItem(AbstractTool tool, String shortcut) {
 		this.tool = tool;
 		this.icon = tool.getIcon();
+    this.shortcut = shortcut;
 	}
 
 	public Dimension getDimension(Object orientation) {
@@ -62,7 +64,10 @@ public class ToolbarToolItem implements ToolbarItem {
 	}
 
 	public String getToolTip() {
-		return tool.getDescription();
+    if (shortcut != null)
+      return tool.getDescription() + " (" + shortcut + ")";
+    else
+      return tool.getDescription();
 	}
 
 	public boolean isSelectable() {

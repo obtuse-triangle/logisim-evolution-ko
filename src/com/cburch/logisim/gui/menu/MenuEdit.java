@@ -101,7 +101,7 @@ class MenuEdit extends Menu {
   public MenuEdit(LogisimMenuBar menubar) {
     this.menubar = menubar;
 
-    int menuMask = getToolkit().getMenuShortcutKeyMask();
+    int menuMask = getToolkit().getMenuShortcutKeyMaskEx();
     undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, menuMask));
     redo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuMask));
     cut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, menuMask));

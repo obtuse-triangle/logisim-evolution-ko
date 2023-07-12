@@ -31,11 +31,12 @@
 package com.cburch.logisim.util;
 import static com.cburch.logisim.util.Strings.S;
 
-import java.awt.Event;
 import java.awt.event.InputEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+
+import com.cburch.logisim.Main;
 
 public class InputEventUtil {
   public static int fromDisplayString(String str) {
@@ -61,22 +62,22 @@ public class InputEventUtil {
     return ret;
   }
 
-  public static int fromString(String str) {
+  public static int fromXMLString(String str) {
     int ret = 0;
     StringTokenizer toks = new StringTokenizer(str);
     while (toks.hasMoreTokens()) {
       String s = toks.nextToken();
-      if (s.equals(CTRL))
+      if (s.equals(XML_CTRL))
         ret |= InputEvent.CTRL_DOWN_MASK;
-      else if (s.equals(SHIFT))
+      else if (s.equals(XML_SHIFT))
         ret |= InputEvent.SHIFT_DOWN_MASK;
-      else if (s.equals(ALT))
+      else if (s.equals(XML_ALT))
         ret |= InputEvent.ALT_DOWN_MASK;
-      else if (s.equals(BUTTON1))
+      else if (s.equals(XML_BUTTON1))
         ret |= InputEvent.BUTTON1_DOWN_MASK;
-      else if (s.equals(BUTTON2))
+      else if (s.equals(XML_BUTTON2))
         ret |= InputEvent.BUTTON2_DOWN_MASK;
-      else if (s.equals(BUTTON3))
+      else if (s.equals(XML_BUTTON3))
         ret |= InputEvent.BUTTON3_DOWN_MASK;
       else
         throw new NumberFormatException("InputEventUtil");
@@ -116,45 +117,62 @@ public class InputEventUtil {
     }
   }
 
-  public static String toKeyDisplayString(int mods) {
+  public static String toKeyDisplayString(Character key, int mods) {
     ArrayList<String> arr = new ArrayList<String>();
-    if ((mods & Event.META_MASK) != 0)
-      arr.add(S.get("metaMod"));
-    if ((mods & Event.CTRL_MASK) != 0)
-      arr.add(S.get("ctrlMod"));
-    if ((mods & Event.ALT_MASK) != 0)
-      arr.add(S.get("altMod"));
-    if ((mods & Event.SHIFT_MASK) != 0)
-      arr.add(S.get("shiftMod"));
+    if (Main.MacOS) {
+      if ((mods & InputEvent.META_DOWN_MASK) != 0)
+        arr.add("\u2318"); // MacOS Command key
+      if ((mods & InputEvent.CTRL_DOWN_MASK) != 0)
+        arr.add("\u2303");
+      if ((mods & InputEvent.ALT_DOWN_MASK) != 0)
+        arr.add("\u2325"); // MacOS Option key
+      if ((mods & InputEvent.SHIFT_DOWN_MASK) != 0)
+        arr.add("\u21E7");
+    } else {
+      if ((mods & InputEvent.META_DOWN_MASK) != 0)
+        arr.add(S.get("metaMod"));
+      if ((mods & InputEvent.CTRL_DOWN_MASK) != 0)
+        arr.add(S.get("ctrlMod"));
+      if ((mods & InputEvent.ALT_DOWN_MASK) != 0)
+        arr.add(S.get("altMod"));
+      if ((mods & InputEvent.SHIFT_DOWN_MASK) != 0)
+        arr.add(S.get("shiftMod"));
+    }
 
     Iterator<String> it = arr.iterator();
     if (it.hasNext()) {
       StringBuilder ret = new StringBuilder();
       ret.append(it.next());
       while (it.hasNext()) {
-        ret.append(" ");
+        if (Main.MacOS)
+          ret.append(" ");
+        else
+          ret.append("+");
         ret.append(it.next());
       }
-      return ret.toString();
+      if (Main.MacOS)
+        return ret.toString() + " " + key; // "^ A"
+      else
+        return ret.toString() + "-" + key; // "Ctrl+Shift-A"
     } else {
       return "";
     }
   }
 
-  public static String toString(int mods) {
+  public static String toXMLString(int mods) {
     ArrayList<String> arr = new ArrayList<String>();
     if ((mods & InputEvent.CTRL_DOWN_MASK) != 0)
-      arr.add(CTRL);
+      arr.add(XML_CTRL);
     if ((mods & InputEvent.ALT_DOWN_MASK) != 0)
-      arr.add(ALT);
+      arr.add(XML_ALT);
     if ((mods & InputEvent.SHIFT_DOWN_MASK) != 0)
-      arr.add(SHIFT);
+      arr.add(XML_SHIFT);
     if ((mods & InputEvent.BUTTON1_DOWN_MASK) != 0)
-      arr.add(BUTTON1);
+      arr.add(XML_BUTTON1);
     if ((mods & InputEvent.BUTTON2_DOWN_MASK) != 0)
-      arr.add(BUTTON2);
+      arr.add(XML_BUTTON2);
     if ((mods & InputEvent.BUTTON3_DOWN_MASK) != 0)
-      arr.add(BUTTON3);
+      arr.add(XML_BUTTON3);
 
     Iterator<String> it = arr.iterator();
     if (it.hasNext()) {
@@ -170,17 +188,17 @@ public class InputEventUtil {
     }
   }
 
-  public static String CTRL = "Ctrl";
+  public static String XML_CTRL = "Ctrl";
 
-  public static String SHIFT = "Shift";
+  public static String XML_SHIFT = "Shift";
 
-  public static String ALT = "Alt";
+  public static String XML_ALT = "Alt";
 
-  public static String BUTTON1 = "Button1";
+  public static String XML_BUTTON1 = "Button1";
 
-  public static String BUTTON2 = "Button2";
+  public static String XML_BUTTON2 = "Button2";
 
-  public static String BUTTON3 = "Button3";
+  public static String XML_BUTTON3 = "Button3";
 
   private InputEventUtil() {
   }

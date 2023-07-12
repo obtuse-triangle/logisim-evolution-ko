@@ -31,6 +31,7 @@
 package com.cburch.logisim.gui.main;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -46,11 +47,13 @@ public class KeyboardToolSelection extends AbstractAction {
   public static void register(Toolbar toolbar) {
     ActionMap amap = toolbar.getActionMap();
     InputMap imap = toolbar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-    int mask = toolbar.getToolkit().getMenuShortcutKeyMask();
+    // Note: Shortcut was menukey + 1, menukey + 2, etc., but on MacOS,
+    // many/most/all of Command-digit shortcuts are already assigned by default
+    // and do not work reliably. We now use Control-digit on all platforms.
+    int mask = InputEvent.CTRL_DOWN_MASK;
     for (int i = 0; i < 10; i++) {
-      KeyStroke keyStroke = KeyStroke
-          .getKeyStroke((char) ('0' + i), mask);
-      int j = (i == 0 ? 10 : i - 1);
+      KeyStroke keyStroke = KeyStroke.getKeyStroke('0' + i, mask);
+      int j = (i == 0 ? 9 : i - 1);
       KeyboardToolSelection action = new KeyboardToolSelection(toolbar, j);
       String key = "ToolSelect" + i;
       amap.put(key, action);
@@ -76,6 +79,7 @@ public class KeyboardToolSelection extends AbstractAction {
         i++;
         if (i == index) {
           model.itemSelected(item);
+          break;
         }
       }
     }

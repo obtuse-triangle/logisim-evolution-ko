@@ -585,7 +585,7 @@ public class XmlWriter {
       Integer mods = entry.getKey();
       Tool tool = entry.getValue();
       Element toolElt = fromTool(tool);
-      String mapValue = InputEventUtil.toString(mods.intValue());
+      String mapValue = InputEventUtil.toXMLString(mods.intValue());
       toolElt.setAttribute("map", mapValue);
       elt.appendChild(toolElt);
     }

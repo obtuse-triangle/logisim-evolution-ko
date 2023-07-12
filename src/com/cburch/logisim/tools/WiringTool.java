@@ -640,13 +640,13 @@ public final class WiringTool extends Tool {
     Location p = cornerPoint();
     tip = new Callout(S.get("wiringTip"));
     if (p.x >= Math.max(cur.x, anchor.x) && p.y >= Math.max(cur.y, anchor.y))
-      tip.show(canvas, p.x, p.y, Callout.SE, Callout.DURATION);
+      tip.popup(canvas, p.x, p.y, Callout.SE, Callout.DURATION);
     else if (p.x <= Math.min(cur.x, anchor.x) && p.y <= Math.min(cur.y, anchor.y))
-      tip.show(canvas, p.x, p.y, Callout.NW, Callout.DURATION);
+      tip.popup(canvas, p.x, p.y, Callout.NW, Callout.DURATION);
     else if (p.x >= Math.max(cur.x, anchor.x) && p.y <= Math.min(cur.y, anchor.y))
-      tip.show(canvas, p.x, p.y, Callout.NE, Callout.DURATION);
+      tip.popup(canvas, p.x, p.y, Callout.NE, Callout.DURATION);
     else if (p.x <= Math.min(cur.x, anchor.x) && p.y >= Math.max(cur.y, anchor.y))
-      tip.show(canvas, p.x, p.y, Callout.SW, Callout.DURATION);
+      tip.popup(canvas, p.x, p.y, Callout.SW, Callout.DURATION);
     else
       tip = null;
   }

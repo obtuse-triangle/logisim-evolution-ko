@@ -172,7 +172,7 @@ public abstract class Tool implements AttributeDefaultProvider, DragDrop.Support
   protected void hideHint() {
     if (tip == null)
       return;
-    tip.hide();
+    tip.unpop();
     tip = null;
   }
 
@@ -200,7 +200,7 @@ public abstract class Tool implements AttributeDefaultProvider, DragDrop.Support
 
   protected void showHint(Canvas canvas, Location p, String msg) {
     tip = new Callout(msg);
-    tip.show(canvas, p.x, p.y, Callout.NW, Callout.DURATION);
+    tip.popup(canvas, p.x, p.y, Callout.NW, Callout.DURATION);
   }
 
 }

@@ -110,7 +110,7 @@ public class Callout extends JPanel {
     return false;
   }
 
-  public void show(Canvas parent, int x, int y, int pos) {
+  public void popup(Canvas parent, int x, int y, int pos) {
     pos = pos & (N|W);
     Dimension dl = label.getPreferredSize();
     Dimension d = getPreferredSize();
@@ -152,16 +152,16 @@ public class Callout extends JPanel {
     parent.repaint(x-1, y-1, w+2, h+2);
   }
 
-  public void show(Canvas parent, int x, int y, int pos, int duration) {
-    show(parent, x, y, pos);
+  public void popup(Canvas parent, int x, int y, int pos, int duration) {
+    popup(parent, x, y, pos);
     Timer timer = new Timer(duration, new ActionListener() {
-      public void actionPerformed(ActionEvent e) { hide(); }
+      public void actionPerformed(ActionEvent e) { unpop(); }
     });
     timer.setRepeats(false);
     timer.start();
   }
 
-  public void hide() {
+  public void unpop() {
     Container parent = getParent();
     if (parent != null) {
       parent.remove(this);

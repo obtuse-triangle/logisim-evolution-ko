@@ -199,7 +199,7 @@ public class Errors {
     };
     dialog.getContentPane().add(msg);
     dialog.pack();
-    dialog.show();
+    dialog.setVisible(true);
   }
 
 }

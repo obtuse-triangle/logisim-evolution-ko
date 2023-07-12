@@ -96,7 +96,7 @@ public class ClockSource extends JDialogOk {
     ClockSource dialog = new ClockSource(
         S.getter("selectClockDriverMessage"),
         circ, true);
-    dialog.show();
+    dialog.setVisible(true);
     return dialog.item == null ? null : dialog.item.getComponent(); // always top-level
   }
 
@@ -104,7 +104,7 @@ public class ClockSource extends JDialogOk {
     ClockSource dialog = new ClockSource(
         S.getter("selectClockMissingMessage"),
         circ, false);
-    dialog.show();
+    dialog.setVisible(true);
     return dialog.item;
   }
 
@@ -112,7 +112,7 @@ public class ClockSource extends JDialogOk {
     ClockSource dialog = new ClockSource(
         S.getter("selectClockMultipleMessage"),
         circ, false);
-    dialog.show();
+    dialog.setVisible(true);
     return dialog.item;
   }
 
@@ -120,7 +120,7 @@ public class ClockSource extends JDialogOk {
     ClockSource dialog = new ClockSource(
         S.getter("selectClockObserverMessage"),
         circ, false);
-    dialog.show();
+    dialog.setVisible(true);
     return dialog.item;
   }
 

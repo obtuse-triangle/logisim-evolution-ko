@@ -29,118 +29,121 @@
  */
 package com.cburch.logisim.std.hdl;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.Ellipse2D;
+// This code is disabled as it is not maintained and does not currently work.
+public class VhdlSimulatorConsole { }
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.border.EmptyBorder;
-
-import com.cburch.logisim.proj.Project;
-import com.cburch.logisim.util.SmartScroller;
-
-public class VhdlSimulatorConsole extends JPanel {
-
-  private class VhdlSimState extends JPanel implements VhdlSimulatorListener {
-
-    private static final long serialVersionUID = 1L;
-    Ellipse2D.Double circle;
-    Color color;
-    private int margin = 5;
-
-    public VhdlSimState() {
-      int radius = 15;
-      circle = new Ellipse2D.Double(margin, margin, radius, radius);
-      setOpaque(false);
-      color = Color.GRAY;
-      this.setBorder(new EmptyBorder(margin, margin, margin, margin));
-    }
-
-    public Dimension getPreferredSize() {
-      Rectangle bounds = circle.getBounds();
-      return new Dimension(bounds.width + 2 * margin, bounds.height + 2
-          * margin);
-    }
-
-    public void paintComponent(Graphics g) {
-      super.paintComponent(g);
-      Graphics2D g2 = (Graphics2D) g;
-      g2.setColor(color);
-      g2.fill(circle);
-    }
-
-    @Override
-    public void stateChanged() {
-
-      switch (project.getVhdlSimulator().getState()) {
-      case DISABLED:
-        color = Color.GRAY;
-        break;
-
-      case ENABLED:
-        color = Color.RED;
-        break;
-
-      case STARTING:
-        color = Color.ORANGE;
-        break;
-
-      case RUNNING:
-        color = new Color(40, 180, 40);
-        break;
-      }
-
-      this.repaint();
-    }
-  }
-
-  private static final long serialVersionUID = 1L;
-  private JLabel label = new JLabel();
-  private JScrollPane log = new JScrollPane();
-  private JTextArea logContent = new JTextArea();
-  private VhdlSimState vhdlSimState;
-
-  private Project project;
-
-  public VhdlSimulatorConsole(Project proj) {
-    project = proj;
-
-    show();
-  }
-
-  public void append(String s) {
-    logContent.append(s);
-  }
-
-  public void clear() {
-    logContent.setText("");
-  }
-
-  public void show() {
-    this.setLayout(new BorderLayout());
-
-    /* Add title */
-    label.setText("VHDL simulator log");
-    this.add(label, BorderLayout.PAGE_START);
-
-    /* Add console log */
-    logContent.setEditable(false);
-    log.setViewportView(logContent);
-    new SmartScroller(log);
-    this.add(log, BorderLayout.CENTER);
-
-    /* Add Simulator state indicator */
-    vhdlSimState = new VhdlSimState();
-    vhdlSimState.stateChanged();
-    project.getVhdlSimulator().addVhdlSimStateListener(vhdlSimState);
-
-    this.add(vhdlSimState, BorderLayout.PAGE_END);
-  }
-}
+// import java.awt.BorderLayout;
+// import java.awt.Color;
+// import java.awt.Dimension;
+// import java.awt.Graphics;
+// import java.awt.Graphics2D;
+// import java.awt.Rectangle;
+// import java.awt.geom.Ellipse2D;
+// 
+// import javax.swing.JLabel;
+// import javax.swing.JPanel;
+// import javax.swing.JScrollPane;
+// import javax.swing.JTextArea;
+// import javax.swing.border.EmptyBorder;
+// 
+// import com.cburch.logisim.proj.Project;
+// import com.cburch.logisim.util.SmartScroller;
+// 
+// public class VhdlSimulatorConsole extends JPanel {
+// 
+//   private class VhdlSimState extends JPanel implements VhdlSimulatorListener {
+// 
+//     private static final long serialVersionUID = 1L;
+//     Ellipse2D.Double circle;
+//     Color color;
+//     private int margin = 5;
+// 
+//     public VhdlSimState() {
+//       int radius = 15;
+//       circle = new Ellipse2D.Double(margin, margin, radius, radius);
+//       setOpaque(false);
+//       color = Color.GRAY;
+//       this.setBorder(new EmptyBorder(margin, margin, margin, margin));
+//     }
+// 
+//     public Dimension getPreferredSize() {
+//       Rectangle bounds = circle.getBounds();
+//       return new Dimension(bounds.width + 2 * margin, bounds.height + 2
+//           * margin);
+//     }
+// 
+//     public void paintComponent(Graphics g) {
+//       super.paintComponent(g);
+//       Graphics2D g2 = (Graphics2D) g;
+//       g2.setColor(color);
+//       g2.fill(circle);
+//     }
+// 
+//     @Override
+//     public void stateChanged() {
+// 
+//       switch (project.getVhdlSimulator().getState()) {
+//       case DISABLED:
+//         color = Color.GRAY;
+//         break;
+// 
+//       case ENABLED:
+//         color = Color.RED;
+//         break;
+// 
+//       case STARTING:
+//         color = Color.ORANGE;
+//         break;
+// 
+//       case RUNNING:
+//         color = new Color(40, 180, 40);
+//         break;
+//       }
+// 
+//       this.repaint();
+//     }
+//   }
+// 
+//   private static final long serialVersionUID = 1L;
+//   private JLabel label = new JLabel();
+//   private JScrollPane log = new JScrollPane();
+//   private JTextArea logContent = new JTextArea();
+//   private VhdlSimState vhdlSimState;
+// 
+//   private Project project;
+// 
+//   public VhdlSimulatorConsole(Project proj) {
+//     project = proj;
+// 
+//     show();
+//   }
+// 
+//   public void append(String s) {
+//     logContent.append(s);
+//   }
+// 
+//   public void clear() {
+//     logContent.setText("");
+//   }
+// 
+//   public void show() {
+//     this.setLayout(new BorderLayout());
+// 
+//     /* Add title */
+//     label.setText("VHDL simulator log");
+//     this.add(label, BorderLayout.PAGE_START);
+// 
+//     /* Add console log */
+//     logContent.setEditable(false);
+//     log.setViewportView(logContent);
+//     new SmartScroller(log);
+//     this.add(log, BorderLayout.CENTER);
+// 
+//     /* Add Simulator state indicator */
+//     vhdlSimState = new VhdlSimState();
+//     vhdlSimState.stateChanged();
+//     project.getVhdlSimulator().addVhdlSimStateListener(vhdlSimState);
+// 
+//     this.add(vhdlSimState, BorderLayout.PAGE_END);
+//   }
+// }

@@ -129,14 +129,14 @@ public class VhdlEntity extends InstanceFactory implements HdlModelListener {
     return new VhdlEntityAttributes(content);
   }
 
-  public String getHDLNameForInstanceSimulation(AttributeSet attrs) {
-    String suffix = "";
-    String label = attrs.getValue(StdAttr.LABEL);
-    if (label != null && label.length() != 0)
-      suffix = "_" + label.toLowerCase();
-    VhdlContent content = ((VhdlEntityAttributes)attrs).getContent();
-    return VhdlSimulator.ctx.sanitizeName(this, "Vhdl", content.getName() + suffix);
-  }
+  // public String getHDLNameForInstanceSimulation(AttributeSet attrs) {
+  //   String suffix = "";
+  //   String label = attrs.getValue(StdAttr.LABEL);
+  //   if (label != null && label.length() != 0)
+  //     suffix = "_" + label.toLowerCase();
+  //   VhdlContent content = ((VhdlEntityAttributes)attrs).getContent();
+  //   return VhdlSimulator.ctx.sanitizeName(this, "Vhdl", content.getName() + suffix);
+  // }
 
   @Override
   public Bounds getOffsetBounds(AttributeSet attrs) {
@@ -247,63 +247,65 @@ public class VhdlEntity extends InstanceFactory implements HdlModelListener {
    *
    * This can be done only if Logisim could connect to the tcl server (socket). This is
    * done in Simulation.java.
+   *
+   * This code is disabled as it is not maintained and does not currently work.
    */
   public void propagate(InstanceState state) {
 
-    if (state.getProject().getVhdlSimulator().isEnabled()
-        && state.getProject().getVhdlSimulator().isRunning()) {
+    // if (state.getProject().getVhdlSimulator().isEnabled()
+    //     && state.getProject().getVhdlSimulator().isRunning()) {
 
-      VhdlSimulator vhdlSimulator = state.getProject().getVhdlSimulator();
+    //   VhdlSimulator vhdlSimulator = state.getProject().getVhdlSimulator();
 
-      List<Port> ports = state.getInstance().getPorts();
-      int n = ports.size();
-      for (int i = 0; i < n; i++) {
-        Port p = ports.get(i);
-        Value val = state.getPortValue(i);
-        String vhdlEntityName = getHDLNameForInstanceSimulation(state.getAttributeSet());
-        String message = p.getType() + ":" + vhdlEntityName + "_"
-            + p.getToolTip() + ":" + val.toBinaryString() + ":" + i;
-        vhdlSimulator.send(message);
-      }
+    //   List<Port> ports = state.getInstance().getPorts();
+    //   int n = ports.size();
+    //   for (int i = 0; i < n; i++) {
+    //     Port p = ports.get(i);
+    //     Value val = state.getPortValue(i);
+    //     String vhdlEntityName = getHDLNameForInstanceSimulation(state.getAttributeSet());
+    //     String message = p.getType() + ":" + vhdlEntityName + "_"
+    //         + p.getToolTip() + ":" + val.toBinaryString() + ":" + i;
+    //     vhdlSimulator.send(message);
+    //   }
 
-      vhdlSimulator.send("sync");
+    //   vhdlSimulator.send("sync");
 
-      /* Get response from tcl server */
-      String server_response = vhdlSimulator.receive();
-      while (server_response != null
-          && server_response.length() > 0
-          && !server_response.equals("sync")) {
+    //   /* Get response from tcl server */
+    //   String server_response = vhdlSimulator.receive();
+    //   while (server_response != null
+    //       && server_response.length() > 0
+    //       && !server_response.equals("sync")) {
 
-        String[] parameters = server_response.split("\\:");
-        String busValue = parameters[1];
-        Value vector_values[] = new Value[busValue.length()];
+    //     String[] parameters = server_response.split("\\:");
+    //     String busValue = parameters[1];
+    //     Value vector_values[] = new Value[busValue.length()];
 
-        int k = busValue.length() - 1;
-        for (char bit : busValue.toCharArray()) {
+    //     int k = busValue.length() - 1;
+    //     for (char bit : busValue.toCharArray()) {
 
-          try {
-            switch (Character.getNumericValue(bit)) {
-            case 0:
-              vector_values[k] = Value.FALSE;
-              break;
-            case 1:
-              vector_values[k] = Value.TRUE;
-              break;
-            default:
-              vector_values[k] = Value.UNKNOWN;
-              break;
-            }
-          } catch (NumberFormatException e) {
-            vector_values[k] = Value.UNKNOWN;
-          }
-          k--;
-        }
+    //       try {
+    //         switch (Character.getNumericValue(bit)) {
+    //         case 0:
+    //           vector_values[k] = Value.FALSE;
+    //           break;
+    //         case 1:
+    //           vector_values[k] = Value.TRUE;
+    //           break;
+    //         default:
+    //           vector_values[k] = Value.UNKNOWN;
+    //           break;
+    //         }
+    //       } catch (NumberFormatException e) {
+    //         vector_values[k] = Value.UNKNOWN;
+    //       }
+    //       k--;
+    //     }
 
-        state.setPort(Integer.parseInt(parameters[2]),
-            Value.create(vector_values), 1);
-      }
+    //     state.setPort(Integer.parseInt(parameters[2]),
+    //         Value.create(vector_values), 1);
+    //   }
 
-    } else { // VhdlSimulation stopped or disabled
+    // } else { // VhdlSimulation stopped or disabled
       List<Port> ports = state.getInstance().getPorts();
       int n = ports.size();
       for (int i = 0; i < n; i++) {
@@ -314,37 +316,39 @@ public class VhdlEntity extends InstanceFactory implements HdlModelListener {
             state.setPort(i, Value.createUnknown(w), 1);
         }
       }
-    }
+    // }
   }
 
   /**
    * Save the VHDL entity in a file. The file is used for VHDL components
    * simulation by QUestasim/Modelsim
+   *
+   * This code is disabled as it is not maintained and does not currently work.
    */
-  public void saveFile(AttributeSet attrs) {
+  // public void saveFile(AttributeSet attrs) {
 
-    PrintWriter writer;
-    try {
-      writer = new PrintWriter(VhdlSimulator.SIM_SRC_PATH + getHDLNameForInstanceSimulation(attrs) + ".vhdl", "UTF-8");
+  //   PrintWriter writer;
+  //   try {
+  //     writer = new PrintWriter(VhdlSimulator.SIM_SRC_PATH + getHDLNameForInstanceSimulation(attrs) + ".vhdl", "UTF-8");
 
-      String content = this.content.getContent();
+  //     String content = this.content.getContent();
 
-      content = content.replaceAll(
-          "(?i)" + VhdlHDLGenerator.deriveHDLName(VhdlSimulator.ctx, attrs), // wrong ctx?
-          getHDLNameForInstanceSimulation(attrs));
+  //     content = content.replaceAll(
+  //         "(?i)" + VhdlHDLGenerator.deriveHDLName(VhdlSimulator.ctx, attrs), // wrong ctx?
+  //         getHDLNameForInstanceSimulation(attrs));
 
-      writer.print(content);
-      writer.close();
-    } catch (FileNotFoundException e) {
-      System.err.printf("Could not create vhdl file: %s\n", e.getMessage());
-      e.printStackTrace();
-      return;
-    } catch (UnsupportedEncodingException e) {
-      System.err.printf("Could not create vhdl file: %s\n", e.getMessage());
-      e.printStackTrace();
-      return;
-    }
-  }
+  //     writer.print(content);
+  //     writer.close();
+  //   } catch (FileNotFoundException e) {
+  //     System.err.printf("Could not create vhdl file: %s\n", e.getMessage());
+  //     e.printStackTrace();
+  //     return;
+  //   } catch (UnsupportedEncodingException e) {
+  //     System.err.printf("Could not create vhdl file: %s\n", e.getMessage());
+  //     e.printStackTrace();
+  //     return;
+  //   }
+  // }
 
   private VhdlAppearance appearance;
 

@@ -30,13 +30,16 @@
 
 package com.cburch.logisim.std.hdl;
 
-/**
- * Listener interface for all classes who wants to be advised on current VHDL
- * simulator status changes.
- *
- * @author christian.mueller@heig-vd.ch
- * @since 2.12.0.t
- */
-public interface VhdlSimulatorListener {
-  public void stateChanged();
-}
+// This code is disabled as it is not maintained and does not currently work.
+public class VhdlSimulatorListener { }
+
+// /**
+//  * Listener interface for all classes who wants to be advised on current VHDL
+//  * simulator status changes.
+//  *
+//  * @author christian.mueller@heig-vd.ch
+//  * @since 2.12.0.t
+//  */
+// public interface VhdlSimulatorListener {
+//   public void stateChanged();
+// }

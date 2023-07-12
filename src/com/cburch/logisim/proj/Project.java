@@ -56,7 +56,7 @@ import com.cburch.logisim.gui.main.SelectionActions;
 import com.cburch.logisim.gui.opts.OptionsFrame;
 import com.cburch.logisim.gui.test.TestFrame;
 import com.cburch.logisim.gui.test.TestThread;
-import com.cburch.logisim.std.hdl.VhdlSimulator;
+// import com.cburch.logisim.std.hdl.VhdlSimulator;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.SelectTool;
@@ -108,7 +108,7 @@ public class Project {
   private static final int MAX_UNDO_SIZE = 64;
 
   private Simulator simulator = new Simulator();
-  private VhdlSimulator vhdlSimulator = null;
+  // private VhdlSimulator vhdlSimulator = null;
 
   private LogisimFile file;
   private HdlModel hdlModel;
@@ -136,7 +136,7 @@ public class Project {
     fileListeners.add(null, myListener);
     setLogisimFile(file);
 
-    this.vhdlSimulator = new VhdlSimulator(this);
+    // this.vhdlSimulator = new VhdlSimulator(this);
   }
 
   public void addCircuitWeakListener(/*Object owner,*/ CircuitListener value) {
@@ -415,9 +415,9 @@ public class Project {
     return tool;
   }
 
-  public VhdlSimulator getVhdlSimulator() {
-    return vhdlSimulator;
-  }
+  // public VhdlSimulator getVhdlSimulator() {
+  //   return vhdlSimulator;
+  // }
 
   public boolean isFileDirty() {
     return (undoMods > 0);

@@ -42,6 +42,8 @@ Java 11 In simple trials, there appears to be no performance improvement when
 compiling against version 17 versus version 11. Therefore, development will now
 target Java 17, though the binaries will still be compiled using language
 version 11 to allow for some backwards compatibility when using the JAR release.
+In brief testing, there does not seem to be a significant difference in behavior
+or simulation speed.
 
 AdoptOpenJDK has been renamed to Adoptium, with the JDK named temurin
 
@@ -69,7 +71,7 @@ In summary:
     <target name="compile" depends="clean">
         <mkdir dir="bin"/>
         <depend srcdir="src" destdir="bin" cache="depcache" closure="no"/>
-        <javac srcdir="src" includeantruntime="false" destdir="bin" debug="true" source="11" target="11" classpath="libs/xswingx.jar:libs/lablib-checkboxtree-3.3.jar:libs/colorpicker.jar:libs/fontchooser.jar:libs/jh.jar:libs/rsyntaxtextarea-stripped.jar">
+        <javac srcdir="src" includeantruntime="false" destdir="bin" debug="true" source="11" target="11" classpath="libs/xswingx.jar:libs/lablib-checkboxtree-3.3.jar:libs/colorpicker.jar:libs/fontchooser.jar:libs/rsyntaxtextarea-stripped.jar">
             <compilerarg line="-Xmaxerrs 10000"/>
             <!-- <compilerarg line="-Xlint:unchecked"/> -->
             <compilerarg line="-Xlint:deprecation"/>

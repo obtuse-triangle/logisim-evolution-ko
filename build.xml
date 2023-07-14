@@ -71,7 +71,7 @@ In summary:
     <target name="compile" depends="clean">
         <mkdir dir="bin"/>
         <depend srcdir="src" destdir="bin" cache="depcache" closure="no"/>
-        <javac srcdir="src" includeantruntime="false" destdir="bin" debug="true" source="11" target="11" classpath="libs/xswingx.jar:libs/lablib-checkboxtree-3.3.jar:libs/colorpicker.jar:libs/fontchooser.jar:libs/rsyntaxtextarea-stripped.jar">
+        <javac srcdir="src" includeantruntime="false" destdir="bin" debug="true" release="11" classpath="libs/xswingx.jar:libs/lablib-checkboxtree-3.3.jar:libs/colorpicker.jar:libs/fontchooser.jar:libs/rsyntaxtextarea-stripped.jar">
             <compilerarg line="-Xmaxerrs 10000"/>
             <!-- <compilerarg line="-Xlint:unchecked"/> -->
             <compilerarg line="-Xlint:deprecation"/>

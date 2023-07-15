@@ -30,8 +30,8 @@
 
 package com.cburch.logisim.util;
 
-public interface JInputComponent {
-  public Object getValue();
+public interface JInputComponent<V> {
+  public V getValue();
 
-  public void setValue(Object value);
+  public void setValue(V value);
 }

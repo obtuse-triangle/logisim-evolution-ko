@@ -55,6 +55,9 @@ import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.instance.InstanceComponent;
 import com.cburch.logisim.util.EventSourceWeakSupport;
 
+import com.cburch.logisim.circuit.appear.DynamicElement;
+import com.cburch.logisim.data.Value;
+
 public class CircuitAppearance extends Drawing {
   private class MyListener implements CanvasModelListener {
     public void modelChanged(CanvasModelEvent event) {
@@ -279,6 +282,9 @@ public class CircuitAppearance extends Drawing {
     }
     for (CanvasObject shape : getObjectsFromBottom()) {
       if (!(shape instanceof AppearanceElement)) {
+        DynamicCondition dyn = shape.getDynamicCondition();
+        if (dyn != null && !dyn.evaluateCondition(state))
+          continue;
         Graphics dup = g.create();
         if (shape instanceof DynamicElement)
           ((DynamicElement)shape).paintDynamic(dup, state);

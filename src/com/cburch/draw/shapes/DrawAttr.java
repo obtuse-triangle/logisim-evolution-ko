@@ -36,6 +36,8 @@ import java.awt.Font;
 import java.util.List;
 
 import com.cburch.draw.util.EditableLabel;
+import com.cburch.logisim.circuit.appear.DynamicCondition;
+import com.cburch.logisim.circuit.appear.DynamicConditionAttribute;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.Attributes;
@@ -117,28 +119,31 @@ public class DrawAttr {
 	public static final Attribute<Integer> CORNER_RADIUS = Attributes
 			.forIntegerRange("rx", S.getter("attrRx"), 1, 1000);
 
+	public static final Attribute<DynamicCondition> DYNAMIC_CONDITION =
+      new DynamicConditionAttribute("dynamic-condition", S.getter("attrDynamicCondition"));
+
 	public static final List<Attribute<?>> ATTRS_TEXT // for text
-	= createAttributes(new Attribute[] { FONT, HALIGNMENT, VALIGNMENT, FILL_COLOR });
+	= createAttributes(new Attribute[] { FONT, HALIGNMENT, VALIGNMENT, FILL_COLOR, DYNAMIC_CONDITION });
 	public static final List<Attribute<?>> ATTRS_TEXT_TOOL // for text tool
-	= createAttributes(new Attribute[] { FONT, HALIGNMENT, VALIGNMENT, TEXT_DEFAULT_FILL });
+	= createAttributes(new Attribute[] { FONT, HALIGNMENT, VALIGNMENT, TEXT_DEFAULT_FILL, DYNAMIC_CONDITION });
 	public static final List<Attribute<?>> ATTRS_STROKE // for line, polyline
-	= createAttributes(new Attribute[] { STROKE_WIDTH, STROKE_COLOR });
+	= createAttributes(new Attribute[] { STROKE_WIDTH, STROKE_COLOR, DYNAMIC_CONDITION });
 
 	// attribute lists for rectangle, oval, polygon
 	private static final List<Attribute<?>> ATTRS_FILL_STROKE = createAttributes(new Attribute[] {
-			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR });
+			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, DYNAMIC_CONDITION });
 	private static final List<Attribute<?>> ATTRS_FILL_FILL = createAttributes(new Attribute[] {
-			PAINT_TYPE, FILL_COLOR });
+			PAINT_TYPE, FILL_COLOR , DYNAMIC_CONDITION});
 	private static final List<Attribute<?>> ATTRS_FILL_BOTH = createAttributes(new Attribute[] {
-			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, FILL_COLOR });
+			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, FILL_COLOR, DYNAMIC_CONDITION });
 
 	// attribute lists for rounded rectangle
 	private static final List<Attribute<?>> ATTRS_RRECT_STROKE = createAttributes(new Attribute[] {
-			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, CORNER_RADIUS });
+			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, CORNER_RADIUS, DYNAMIC_CONDITION });
 
 	private static final List<Attribute<?>> ATTRS_RRECT_FILL = createAttributes(new Attribute[] {
-			PAINT_TYPE, FILL_COLOR, CORNER_RADIUS });
+			PAINT_TYPE, FILL_COLOR, CORNER_RADIUS, DYNAMIC_CONDITION });
 
 	private static final List<Attribute<?>> ATTRS_RRECT_BOTH = createAttributes(new Attribute[] {
-			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, FILL_COLOR, CORNER_RADIUS });
+			PAINT_TYPE, STROKE_WIDTH, STROKE_COLOR, FILL_COLOR, CORNER_RADIUS, DYNAMIC_CONDITION });
 }

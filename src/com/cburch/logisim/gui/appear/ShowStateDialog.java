@@ -258,7 +258,7 @@ public class ShowStateDialog extends JDialog implements ActionListener {
     return false;
   }
 
-  private static DynamicElement.Path toComponentPath(TreePath p) {
+  static DynamicElement.Path toComponentPath(TreePath p) {
     Object[] o = p.getPath();
     InstanceComponent[] elt = new InstanceComponent[o.length-1];
     for (int i = 1; i < o.length; i++) {
@@ -268,7 +268,7 @@ public class ShowStateDialog extends JDialog implements ActionListener {
     return new DynamicElement.Path(elt);
   }
 
-  private static TreePath toTreePath(DefaultMutableTreeNode root, DynamicElement.Path path) {
+  static TreePath toTreePath(DefaultMutableTreeNode root, DynamicElement.Path path) {
     Object[] o = new Object[path.elt.length + 1];
     o[0] = root;
     for (int i = 1; i < o.length; i++) {
@@ -298,7 +298,7 @@ public class ShowStateDialog extends JDialog implements ActionListener {
     this.dispose();
   }
 
-  private static class Ref {
+  static class Ref {
     InstanceComponent ic;
     Ref(InstanceComponent ic) { this.ic = ic; }
     public String toString() {
@@ -311,7 +311,7 @@ public class ShowStateDialog extends JDialog implements ActionListener {
     }
   }
 
-  private static class CircuitRef extends Ref {
+  static class CircuitRef extends Ref {
     Circuit c;
     CircuitRef(Circuit c, InstanceComponent ic) {
       super(ic);

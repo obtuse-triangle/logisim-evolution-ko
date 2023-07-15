@@ -33,6 +33,7 @@ package com.cburch.draw.model;
 import java.awt.Graphics;
 import java.util.List;
 
+import com.cburch.logisim.circuit.appear.DynamicCondition;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
@@ -73,4 +74,6 @@ public interface CanvasObject extends AttributeSet, Cloneable {
 	public abstract void paint(Graphics g, HandleGesture gesture);
 
 	public void translate(int dx, int dy);
+
+  public DynamicCondition getDynamicCondition();
 }

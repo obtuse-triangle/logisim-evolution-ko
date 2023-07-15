@@ -38,6 +38,7 @@ import org.w3c.dom.Element;
 
 import com.cburch.draw.model.AbstractCanvasObject;
 import com.cburch.draw.model.Handle;
+import com.cburch.logisim.circuit.appear.DynamicCondition;
 import com.cburch.logisim.data.Location;
 
 public class SvgCreator {

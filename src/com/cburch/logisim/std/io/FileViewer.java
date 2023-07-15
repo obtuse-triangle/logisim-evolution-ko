@@ -148,7 +148,7 @@ public class FileViewer extends InstanceFactory {
     // void selectOffset(int offset) { }
   }
 
-  private static class FileChooser extends java.awt.Component implements JInputDialog {
+  private static class FileChooser extends java.awt.Component implements JInputDialog<List<String>> {
     JFileChooser chooser;
     Frame parent;
     List<String> result;
@@ -161,11 +161,11 @@ public class FileViewer extends InstanceFactory {
       chooser.setFileFilter(Loader.TXT_FILTER);
     }
 
-    public void setValue(Object r) {
-      result = (List<String>)r;
+    public void setValue(List<String> r) {
+      result = r;
     }
 
-    public Object getValue() {
+    public List<String> getValue() {
       return result;
     }
 

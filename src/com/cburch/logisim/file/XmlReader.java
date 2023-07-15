@@ -63,7 +63,7 @@ import com.cburch.logisim.std.wiring.Pin;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.Tool;
 
-class XmlReader {
+public class XmlReader {
 
   public static class CircuitData {
 
@@ -107,11 +107,11 @@ class XmlReader {
         }
       }
       for (Element sub : XmlIterator.forChildElements(elt)) {
-        String tag = sub.getTagName();
-        if (tag.startsWith("visible-"))
+        if (XmlCircuitReader.hasDynamicAppearance(sub))
           continue; // skip dynamic shapes
+        String tag = sub.getTagName();
         try {
-          AbstractCanvasObject shape = AppearanceSvgReader.createShape(sub, pins, null);
+          AbstractCanvasObject shape = AppearanceSvgReader.createShape(sub, pins, null, ctx);
           if (shape == null)
             ctx.addError(S.fmt("fileAppearanceNotFound", tag), context + "." + tag);
           else
@@ -154,7 +154,7 @@ class XmlReader {
 
   }
 
-  static abstract class ReadContext {
+  public static abstract class ReadContext {
 
     LogisimFile file;
     String srcDirPath = ""; // used for de-relativizing path names
@@ -167,7 +167,7 @@ class XmlReader {
         srcDirPath = srcFilePath.substring(0, srcFilePath.lastIndexOf(File.separator));
     }
 
-    void addError(String message, String context) {
+    public void addError(String message, String context) {
       messages.add(message + " [" + context + "]");
     }
 

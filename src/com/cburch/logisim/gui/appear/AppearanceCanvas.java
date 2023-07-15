@@ -208,7 +208,7 @@ public class AppearanceCanvas extends Canvas
     proj.doAction(new CanvasActionAdapter(circuit, canvasAction));
   }
 
-  Circuit getCircuit() {
+  public Circuit getCircuit() {
     return circuitState.getCircuit();
   }
 

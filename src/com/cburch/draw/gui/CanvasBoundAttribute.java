@@ -32,49 +32,16 @@ package com.cburch.draw.gui;
 
 import java.awt.Window;
 
-import com.cburch.draw.gui.CanvasBoundAttribute;
-import com.cburch.draw.tools.AbstractTool;
-import com.cburch.draw.tools.DrawingAttributeSet;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.gui.appear.AppearanceCanvas;
-import com.cburch.logisim.gui.generic.AttrTableSetException;
-import com.cburch.logisim.gui.generic.AttributeSetTableModel;
+import com.cburch.logisim.util.StringGetter;
 
-class AttrTableToolModel extends AttributeSetTableModel {
-  private AppearanceCanvas canvas;
-	private DrawingAttributeSet defaults;
-	private AbstractTool currentTool;
-
-	public AttrTableToolModel(AppearanceCanvas canvas, DrawingAttributeSet defaults, AbstractTool tool) {
-		super(defaults.createSubset(tool));
-    this.canvas = canvas;
-		this.defaults = defaults;
-		this.currentTool = tool;
-	}
-
-  @Override
-  public <V> java.awt.Component getCellEditor(Attribute<V> attr, Window parent, V value) {
-    if (attr instanceof CanvasBoundAttribute)
-      return ((CanvasBoundAttribute)attr).getCellEditor(parent, canvas, value);
-    else
-      return attr.getCellEditor(parent, value);
+public abstract class CanvasBoundAttribute<V> extends Attribute<V> {
+  
+  public CanvasBoundAttribute(String name, StringGetter disp) {
+    super(name, disp);
   }
 
-	@Override
-	public String getTitle() {
-		return currentTool.getDescription();
-	}
+  public abstract java.awt.Component getCellEditor(Window source, AppearanceCanvas canvas, V value);
 
-	public void setTool(AbstractTool value) {
-		currentTool = value;
-		setAttributeSet(defaults.createSubset(value));
-		fireTitleChanged();
-	}
-
-	@Override
-	public <V> void setValueRequested(Attribute<V> attr, V value)
-			throws AttrTableSetException {
-    // fixme: validate attr value first
-		defaults.setAttr(attr, value);
-	}
 }

@@ -31,11 +31,11 @@
 package com.cburch.draw.gui;
 import static com.cburch.draw.Strings.S;
 
+import java.awt.Window;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.cburch.draw.actions.ModelChangeAttributeAction;
-import com.cburch.draw.canvas.Canvas;
 import com.cburch.draw.canvas.Selection;
 import com.cburch.draw.canvas.SelectionEvent;
 import com.cburch.draw.canvas.SelectionListener;
@@ -44,18 +44,28 @@ import com.cburch.draw.model.CanvasModel;
 import com.cburch.draw.model.CanvasObject;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
+import com.cburch.logisim.gui.appear.AppearanceCanvas;
 import com.cburch.logisim.gui.generic.AttrTableSetException;
 import com.cburch.logisim.gui.generic.AttributeSetTableModel;
 
 class AttrTableSelectionModel extends AttributeSetTableModel implements
 		SelectionListener {
-	private Canvas canvas;
+	private AppearanceCanvas canvas;
 
-	public AttrTableSelectionModel(Canvas canvas) {
+	public AttrTableSelectionModel(AppearanceCanvas canvas) {
 		super(new SelectionAttributes(canvas.getSelection()));
 		this.canvas = canvas;
 		canvas.getSelection().addSelectionListener(this);
 	}
+
+  @Override
+  public <V> java.awt.Component getCellEditor(Attribute<V> attr, Window parent, V value) {
+    if (attr instanceof CanvasBoundAttribute)
+      return ((CanvasBoundAttribute)attr).getCellEditor(parent, canvas, value);
+    else
+      return attr.getCellEditor(parent, value);
+  }
+
 
 	@Override
 	public String getTitle() {

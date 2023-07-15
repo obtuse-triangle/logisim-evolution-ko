@@ -28,8 +28,13 @@
  *   + Kevin Walsh (kwalsh@holycross.edu, http://mathcs.holycross.edu/~kwalsh)
  */
 
-package com.cburch.logisim.util;
+package com.cburch.logisim.circuit.appear;
 
-public interface JInputDialog<V> extends JInputComponent<V> {
-  public void setVisible(boolean b);
+import com.cburch.logisim.data.Value;
+import com.cburch.logisim.instance.InstanceComponent;
+
+public interface DynamicValueProvider {
+
+  public Value getDynamicValue(InstanceComponent comp, Object instanceStateData);
+
 }

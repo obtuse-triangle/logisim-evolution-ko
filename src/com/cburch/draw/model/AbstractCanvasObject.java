@@ -39,6 +39,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.cburch.draw.shapes.DrawAttr;
+import com.cburch.logisim.circuit.appear.DynamicCondition;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.util.GraphicsUtil;
@@ -183,5 +184,19 @@ public abstract class AbstractCanvasObject extends AbstractDrawingAttributeSet
 
 	public abstract Element toSvgElement(Document doc);
 
+	public Element toDynamicSvgElement(Document doc) {
+    Element elt = toSvgElement(doc);
+    if (elt == null)
+      return null;
+    DynamicCondition dyn = getValue(DrawAttr.DYNAMIC_CONDITION);
+    if (dyn != null)
+      elt.setAttribute("visibility", dyn.toSvgString());
+    return elt;
+  }
+
 	public abstract void translate(int dx, int dy);
+
+  public DynamicCondition getDynamicCondition() {
+    return getValue(DrawAttr.DYNAMIC_CONDITION);
+  }
 }

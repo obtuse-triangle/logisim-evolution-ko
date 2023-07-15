@@ -38,6 +38,7 @@ import java.awt.event.KeyEvent;
 import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.circuit.appear.DynamicElement;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
+import com.cburch.logisim.circuit.appear.DynamicValueProvider;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
@@ -46,6 +47,7 @@ import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.Instance;
+import com.cburch.logisim.instance.InstanceComponent;
 import com.cburch.logisim.instance.InstanceDataSingleton;
 import com.cburch.logisim.instance.InstanceFactory;
 import com.cburch.logisim.instance.InstanceLogger;
@@ -56,7 +58,7 @@ import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.tools.key.DirectionConfigurator;
 import com.cburch.logisim.util.GraphicsUtil;
 
-public class Led extends InstanceFactory implements DynamicElementProvider {
+public class Led extends InstanceFactory implements DynamicElementProvider, DynamicValueProvider {
 
   public static class Logger extends InstanceLogger {
     @Override
@@ -160,6 +162,12 @@ public class Led extends InstanceFactory implements DynamicElementProvider {
     g.setColor(painter.getAttributeValue(StdAttr.LABEL_COLOR));
     painter.drawLabel();
     painter.drawPorts();
+  }
+
+  @Override
+  public Value getDynamicValue(InstanceComponent comp, Object instanceStateData) {
+    InstanceDataSingleton data = (InstanceDataSingleton) instanceStateData;
+    return data == null ? Value.FALSE : (Value) data.getValue();
   }
 
   @Override

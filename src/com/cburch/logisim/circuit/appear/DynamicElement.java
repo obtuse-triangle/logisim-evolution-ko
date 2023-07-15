@@ -228,6 +228,10 @@ public abstract class DynamicElement extends AbstractCanvasObject {
   }
 
   protected Object getData(CircuitState state) {
+    return getData(path, state);
+  }
+
+  public static Object getData(Path path, CircuitState state) {
     Object o = state.getData(path.elt[0]);
     for (int i = 1; i < path.elt.length && o != null; i++) {
       if (!(o instanceof CircuitState)) {

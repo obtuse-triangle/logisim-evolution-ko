@@ -339,7 +339,7 @@ public class PLATable {
     return "n/a";
   }
 
-  public static class EditorDialog extends JDialog implements JInputDialog {
+  public static class EditorDialog extends JDialog implements JInputDialog<PLATable> {
     private final float smallFont = 9.5f;
     private final float tinyFont = 8.8f;
     private HeaderPanel hdrPanel;
@@ -391,15 +391,13 @@ public class PLATable {
       setLocationRelativeTo(parent);
     }
 
-    public void setValue(Object o) {
-      if (!(o instanceof PLATable))
-        return;
-      oldTable = (PLATable)o;
+    public void setValue(PLATable table) {
+      oldTable = table;
       newTable = new PLATable(oldTable);
       reset(true);
     }
 
-    public Object getValue() {
+    public PLATable getValue() {
       return oldTable;
     }
 

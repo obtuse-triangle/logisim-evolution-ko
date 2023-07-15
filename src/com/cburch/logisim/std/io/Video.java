@@ -488,7 +488,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   }
 
   private static class ColorChooser extends ColorPicker
-    implements JInputComponent {
+    implements JInputComponent<ColorModelColor> {
     private static final long serialVersionUID = 1L;
     String model;
 
@@ -505,19 +505,18 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       setOpacityVisible(false);
     }
 
-    public Object getValue() {
+    public ColorModelColor getValue() {
       return new ColorModelColor(model, getUnscaledColor());
     }
 
-    public void setValue(Object value) {
-      ColorModelColor cmc = (ColorModelColor)value;
-      model = cmc.model;
-      setColor(new Color(Video.getColorModel(model).getRGB(cmc.color)));
+    public void setValue(ColorModelColor value) {
+      model = value.model;
+      setColor(new Color(Video.getColorModel(model).getRGB(value.color)));
     }
   }
 
   private static class IndexColorChooser extends IndexedColorPicker
-    implements JInputComponent {
+    implements JInputComponent<ColorModelColor> {
     private static final long serialVersionUID = 1L;
     String model;
 
@@ -527,16 +526,15 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       setColorIndex(initial.color);
     }
 
-    public Object getValue() {
+    public ColorModelColor getValue() {
       return new ColorModelColor(model, getColorIndex());
     }
 
-    public void setValue(Object value) {
-      ColorModelColor cmc = (ColorModelColor)value;
-      if (!model.equals(cmc.model))
+    public void setValue(ColorModelColor value) {
+      if (!model.equals(value.model))
         throw new IllegalArgumentException("can't change color models here");
-      // model = cmc.model;
-      setColorIndex(cmc.color);
+      // model = value.model;
+      setColorIndex(value.color);
     }
   }
 

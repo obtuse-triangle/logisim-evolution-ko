@@ -114,7 +114,7 @@ public class Attributes {
   }
 
   private static class ColorChooser extends ColorPicker
-    implements JInputComponent {
+    implements JInputComponent<Color> {
     private static final long serialVersionUID = 1L;
 
     ColorChooser(Color initial) {
@@ -123,12 +123,12 @@ public class Attributes {
       setOpacityVisible(true);
     }
 
-    public Object getValue() {
+    public Color getValue() {
       return getColor();
     }
 
-    public void setValue(Object value) {
-      setColor((Color) value);
+    public void setValue(Color value) {
+      setColor(value);
     }
   }
 
@@ -227,6 +227,22 @@ public class Attributes {
     }
   }
 
+  public static int parseInteger(String value) {
+    value = value.toLowerCase();
+    if (value.startsWith("0x")) {
+      value = value.substring(2);
+      return Integer.valueOf((int) Long.parseLong(value, 16));
+    } else if (value.startsWith("0b")) {
+      value = value.substring(2);
+      return Integer.valueOf((int) Long.parseLong(value, 2));
+    } else if (value.startsWith("0") && value.length() > 1) {
+      value = value.substring(1);
+      return Integer.valueOf((int) Long.parseLong(value, 8));
+    } else {
+      return Integer.valueOf((int) Long.parseLong(value, 10));
+    }
+  }
+
   private static class HexIntegerAttribute extends Attribute<Integer> {
     private HexIntegerAttribute(String name, StringGetter disp) {
       super(name, disp);
@@ -234,20 +250,7 @@ public class Attributes {
 
     @Override
     public Integer parse(String value) {
-      value = value.toLowerCase();
-      if (value.startsWith("0x")) {
-        value = value.substring(2);
-        return Integer.valueOf((int) Long.parseLong(value, 16));
-      } else if (value.startsWith("0b")) {
-        value = value.substring(2);
-        return Integer.valueOf((int) Long.parseLong(value, 2));
-      } else if (value.startsWith("0") && value.length() > 1) {
-        value = value.substring(1);
-        return Integer.valueOf((int) Long.parseLong(value, 8));
-      } else {
-        return Integer.valueOf((int) Long.parseLong(value, 10));
-      }
-
+      return parseInteger(value);
     }
 
     @Override

@@ -222,13 +222,13 @@ public class AttrTable extends JPanel implements LocaleListener {
         } else {
           rowIndexes = null;
         }
-      } else if (editor instanceof JInputDialog) {
-        JInputDialog dlg = (JInputDialog) editor;
+      } else if (editor instanceof JInputDialog<?>) {
+        JInputDialog<?> dlg = (JInputDialog<?>) editor;
         String text = row.getDisplayString();
         editor = new PopupEditor(text, this, 
             () -> { dlg.setVisible(true); return dlg.getValue(); });
-      } else if (editor instanceof JInputComponent) {
-        JInputComponent input = (JInputComponent) editor;
+      } else if (editor instanceof JInputComponent<?>) {
+        JInputComponent<?> input = (JInputComponent<?>) editor;
         MyDialog dlg = new MyDialog(input);
         String text = row.getDisplayString();
         editor = new PopupEditor(text, this, dlg);
@@ -344,15 +344,15 @@ public class AttrTable extends JPanel implements LocaleListener {
   private static class MyDialog extends JDialogOk
     implements PopupActor {
 
-    JInputComponent input;
+    JInputComponent<?> input;
     Object value;
 
-    public MyDialog(JInputComponent input) {
+    public MyDialog(JInputComponent<?> input) {
       super(S.get("attributeDialogTitle"));
       configure(input);
     }
 
-    private void configure(JInputComponent input) {
+    private void configure(JInputComponent<?> input) {
       this.input = input;
 
       // Thanks to Christophe Jacquet, who contributed a fix to this

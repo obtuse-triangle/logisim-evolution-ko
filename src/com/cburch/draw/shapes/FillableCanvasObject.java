@@ -34,6 +34,7 @@ import java.awt.Color;
 
 import com.cburch.draw.model.AbstractCanvasObject;
 import com.cburch.draw.model.CanvasObject;
+import com.cburch.logisim.circuit.appear.DynamicCondition;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 
@@ -42,6 +43,7 @@ abstract class FillableCanvasObject extends AbstractCanvasObject {
 	private int strokeWidth;
 	private Color strokeColor;
 	private Color fillColor;
+  private DynamicCondition visibility;
 
 	public FillableCanvasObject() {
 		paintType = DrawAttr.PAINT_STROKE;
@@ -69,6 +71,8 @@ abstract class FillableCanvasObject extends AbstractCanvasObject {
 			return (V) fillColor;
 		else if (attr == DrawAttr.STROKE_WIDTH)
 			return (V) Integer.valueOf(strokeWidth);
+		else if (attr == DrawAttr.DYNAMIC_CONDITION)
+			return (V) visibility;
 		else
 			return null;
 	}
@@ -78,6 +82,9 @@ abstract class FillableCanvasObject extends AbstractCanvasObject {
 		if (other instanceof FillableCanvasObject) {
 			FillableCanvasObject that = (FillableCanvasObject) other;
 			boolean ret = this.paintType == that.paintType;
+      ret = ret &&
+          (this.visibility == null ? "" : this.visibility.toSvgString()).equals(
+          (that.visibility == null ? "" : that.visibility.toSvgString()));
 			if (ret && this.paintType != DrawAttr.PAINT_FILL) {
 				ret = ret && this.strokeWidth == that.strokeWidth
 						&& this.strokeColor.equals(that.strokeColor);
@@ -94,6 +101,8 @@ abstract class FillableCanvasObject extends AbstractCanvasObject {
 	@Override
 	public int matchesHashCode() {
 		int ret = paintType.hashCode();
+    if (visibility != null)
+      ret = ret * 31 + visibility.toSvgString().hashCode();
 		if (paintType != DrawAttr.PAINT_FILL) {
 			ret = ret * 31 + strokeWidth;
 			ret = ret * 31 + strokeColor.hashCode();
@@ -118,5 +127,7 @@ abstract class FillableCanvasObject extends AbstractCanvasObject {
 			fillColor = (Color) value;
 		else if (attr == DrawAttr.STROKE_WIDTH)
 			strokeWidth = ((Integer) value).intValue();
+		else if (attr == DrawAttr.DYNAMIC_CONDITION)
+			visibility = (DynamicCondition) value;
 	}
 }

@@ -45,6 +45,11 @@ import com.cburch.logisim.circuit.SplitterAttributes;
 
 public abstract class AttributeSetTableModel
   implements AttrTableModel, AttributeListener {
+
+  public <V> Component getCellEditor(Attribute<V> attr, Window parent, V value) {
+    return attr.getCellEditor(parent, value);
+  }
+
   private class AttrRow<V> implements AttrTableModelRow {
     private Attribute<V> attr;
 
@@ -62,7 +67,7 @@ public abstract class AttributeSetTableModel
 
     public Component getEditor(Window parent) {
       V value = attrs.getValue(attr);
-      return attr.getCellEditor(parent, value);
+      return getCellEditor(attr, parent, value);
     }
 
     public String getLabel() {
@@ -132,7 +137,7 @@ public abstract class AttributeSetTableModel
   private ArrayList<AttrTableModelListener> listeners = new ArrayList<>();
   private AttributeSet attrs;
   private HashMap<Attribute<?>, AttrRow<?>> rowMap = new HashMap<>();
-  private ArrayList<AttrRow<?>> rows = new ArrayList<>();;
+  private ArrayList<AttrRow<?>> rows = new ArrayList<>();
 
   public AttributeSetTableModel(AttributeSet attrs) {
     this.attrs = attrs;

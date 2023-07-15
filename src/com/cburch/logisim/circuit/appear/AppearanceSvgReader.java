@@ -30,26 +30,31 @@
 
 package com.cburch.logisim.circuit.appear;
 
+import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Element;
 
 import com.cburch.draw.model.AbstractCanvasObject;
+import com.cburch.draw.shapes.DrawAttr;
 import com.cburch.draw.shapes.SvgReader;
 import com.cburch.logisim.circuit.Circuit;
+import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Location;
+import com.cburch.logisim.file.XmlReader;
 import com.cburch.logisim.instance.Instance;
+import com.cburch.logisim.std.io.HexDigitShape;
 import com.cburch.logisim.std.io.LedShape;
 import com.cburch.logisim.std.io.RGBLedShape;
 import com.cburch.logisim.std.io.SevenSegmentShape;
-import com.cburch.logisim.std.io.HexDigitShape;
-import com.cburch.logisim.std.memory.RegisterShape;
 import com.cburch.logisim.std.memory.CounterShape;
+import com.cburch.logisim.std.memory.RegisterShape;
 
 public class AppearanceSvgReader {
+
   public static AbstractCanvasObject createShape(Element elt,
-      Map<Location, Instance> pins, Circuit circuit) {
+      Map<Location, Instance> pins, Circuit circuit, XmlReader.ReadContext ctx) {
     String name = elt.getTagName();
     if (name.equals("circ-anchor") || name.equals("circ-origin")) {
       Location loc = getLocation(elt);
@@ -69,7 +74,9 @@ public class AppearanceSvgReader {
       if (pin == null)
         return null;
       return new AppearancePort(loc, pin);
-    } else if (name.startsWith("visible-")) {
+    } 
+		AbstractCanvasObject ret;
+    if (name.startsWith("visible-")) {
       String pathstr = elt.getAttribute("path");
       if (pathstr == null || pathstr.length() == 0)
         return null;
@@ -106,9 +113,27 @@ public class AppearanceSvgReader {
         e.printStackTrace();
         throw e;
       }
-      return shape;
+      ret = shape;
+    } else {
+      ret = SvgReader.createShape(elt);
     }
-    return SvgReader.createShape(elt);
+    if (ret == null)
+      return null;
+		List<Attribute<?>> attrs = ret.getAttributes();
+		if (attrs.contains(DrawAttr.DYNAMIC_CONDITION)) {
+			String dyn = elt.getAttribute("visibility");
+			if (dyn.equals("")) {
+        ret.setAttr(DrawAttr.DYNAMIC_CONDITION, null);
+      } else {
+        try {
+          DynamicCondition visibility = DynamicCondition.fromSvgString(dyn, circuit);
+          ret.setAttr(DrawAttr.DYNAMIC_CONDITION, visibility);
+        } catch (Throwable t) {
+          ctx.addError("Error parsing dynamic visibility condition", t.getMessage());
+        }
+      }
+    }
+    return ret;
   }
 
   private static Location getLocation(Element elt) {

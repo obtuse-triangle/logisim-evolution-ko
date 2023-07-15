@@ -148,9 +148,11 @@ public class DynamicCondition {
     Object data = DynamicElement.getData(path, state);
     InstanceComponent child = path.leaf();
     ComponentFactory f = child.getFactory();
-    Value v = ((DynamicValueProvider)f).getDynamicValue(child, data);
-    if (v == null || v.getWidth() == 0)
-      return false; // ???
+    // Note: Path stores InstanceComponent, but its cojoined twin Instance seems
+    // more common in factories, so let's use Instance for getDynamicValue().
+    Value v = ((DynamicValueProvider)f).getDynamicValue(child.getInstance(), data);
+    if (v == null || v.getWidth() == 0 || v == Value.NIL)
+      return false; // invisible by default during any errors
     if (statusValue != null) {
       if (statusValue == Status.NOERRORS)
         return noneEqual(v.getAll(), Value.ERROR);
@@ -170,10 +172,10 @@ public class DynamicCondition {
         return someDefined(v.getAll());
       if (statusValue == Status.ALLDEFINED)
         return allDefined(v.getAll());
-      return false; // ???
+      return false; // should not be possible
     } else {
       if (!v.isFullyDefined())
-        return false;
+        return false; // invisible by default
       int val = v.toIntValue();
       if (op.equals("=="))
         return (val == numericValue);
@@ -187,7 +189,7 @@ public class DynamicCondition {
         return (val < numericValue);
       if (op.equals(">"))
         return (val > numericValue);
-      return false; // ???
+      return false; // should not be possible
     }
   }
 

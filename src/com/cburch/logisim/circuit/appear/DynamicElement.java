@@ -165,6 +165,7 @@ public abstract class DynamicElement extends AbstractCanvasObject {
   protected AttributeOption labelLoc;
   protected Font labelFont;
   protected Color labelColor;
+  protected DynamicCondition visibility;
 
   public DynamicElement(Path p, Bounds b) {
     path = p;
@@ -207,11 +208,13 @@ public abstract class DynamicElement extends AbstractCanvasObject {
 
   @Override
   public int matchesHashCode() {
+    // this doesn't need to be precise?
     return bounds.hashCode();
   }
 
   @Override
   public boolean matches(CanvasObject other) {
+    // does not account for other factors, like dynamic visibility?
     return (other instanceof DynamicElement)
         && this.bounds.equals(((DynamicElement)other).bounds);
   }
@@ -353,6 +356,8 @@ public abstract class DynamicElement extends AbstractCanvasObject {
       return (V) labelFont;
     else if (attr == StdAttr.LABEL_COLOR)
       return (V) labelColor;
+    else if (attr == DrawAttr.DYNAMIC_CONDITION)
+			return (V) visibility;
     else
       return null;
   }
@@ -367,6 +372,8 @@ public abstract class DynamicElement extends AbstractCanvasObject {
       labelFont = (Font) value;
     else if (attr == StdAttr.LABEL_COLOR)
       labelColor = (Color) value;
+    else if (attr == DrawAttr.DYNAMIC_CONDITION)
+			visibility = (DynamicCondition) value;
   }
 
 }

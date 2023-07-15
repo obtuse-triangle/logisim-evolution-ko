@@ -56,6 +56,7 @@ import javax.swing.event.DocumentEvent;
 
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.RadixOption;
+import com.cburch.logisim.circuit.appear.DynamicValueProvider;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
@@ -82,7 +83,7 @@ import com.cburch.logisim.tools.key.JoinedConfigurator;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.Icons;
 
-public class Pin extends InstanceFactory {
+public class Pin extends InstanceFactory implements DynamicValueProvider {
 
   @SuppressWarnings("serial")
   private static class EditDecimal extends JDialog implements KeyListener {
@@ -512,6 +513,12 @@ public class Pin extends InstanceFactory {
           Value.UNKNOWN);
     }
     return ret;
+  }
+
+  @Override
+  public Value getDynamicValue(Instance instance, Object instanceStateData) {
+    PinState data = (PinState) instanceStateData;
+    return data == null ? Value.NIL : data.intendedValue;
   }
 
   // private static Value pull2(Value mod, BitWidth expectedWidth, Value pullTo) {

@@ -43,6 +43,7 @@ import com.cburch.draw.model.AbstractCanvasObject;
 import com.cburch.draw.model.CanvasObject;
 import com.cburch.draw.model.Handle;
 import com.cburch.draw.model.HandleGesture;
+import com.cburch.logisim.circuit.appear.DynamicCondition;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
@@ -58,6 +59,7 @@ public class Line extends AbstractCanvasObject {
 	private Bounds bounds;
 	private int strokeWidth;
 	private Color strokeColor;
+  private DynamicCondition visibility;
 
 	public Line(int x0, int y0, int x1, int y1) {
 		this.x0 = x0;
@@ -148,6 +150,8 @@ public class Line extends AbstractCanvasObject {
 			return (V) strokeColor;
 		else if (attr == DrawAttr.STROKE_WIDTH)
 			return (V) Integer.valueOf(strokeWidth);
+    else if (attr == DrawAttr.DYNAMIC_CONDITION)
+			return (V) visibility;
 		else
 			return null;
 	}
@@ -159,7 +163,9 @@ public class Line extends AbstractCanvasObject {
 			return this.x0 == that.x0 && this.y0 == that.x1
 					&& this.x1 == that.y0 && this.y1 == that.y1
 					&& this.strokeWidth == that.strokeWidth
-					&& this.strokeColor.equals(that.strokeColor);
+					&& this.strokeColor.equals(that.strokeColor)
+          && (this.visibility == null ? "" : this.visibility.toSvgString()).equals(
+          (that.visibility == null ? "" : that.visibility.toSvgString()));
 		} else {
 			return false;
 		}
@@ -168,6 +174,8 @@ public class Line extends AbstractCanvasObject {
 	@Override
 	public int matchesHashCode() {
 		int ret = x0 * 31 + y0;
+    if (visibility != null)
+      ret = ret * 31 + visibility.toSvgString().hashCode();
 		ret = ret * 31 * 31 + x1 * 31 + y1;
 		ret = ret * 31 + strokeWidth;
 		ret = ret * 31 + strokeColor.hashCode();
@@ -233,6 +241,8 @@ public class Line extends AbstractCanvasObject {
 			strokeColor = (Color) value;
 		else if (attr == DrawAttr.STROKE_WIDTH)
 			strokeWidth = ((Integer) value).intValue();
+    else if (attr == DrawAttr.DYNAMIC_CONDITION)
+			visibility = (DynamicCondition) value;
 	}
 
 }

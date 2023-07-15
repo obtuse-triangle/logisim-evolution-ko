@@ -44,6 +44,7 @@ import com.cburch.draw.model.CanvasObject;
 import com.cburch.draw.model.Handle;
 import com.cburch.draw.model.HandleGesture;
 import com.cburch.draw.util.EditableLabel;
+import com.cburch.logisim.circuit.appear.DynamicCondition;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.Bounds;
@@ -52,6 +53,7 @@ import com.cburch.logisim.util.UnmodifiableList;
 
 public class Text extends AbstractCanvasObject {
 	private EditableLabel label;
+  private DynamicCondition visibility;
 
 	private Text(int x, int y, int halign, int valign, String text, Font font,
 			Color color) {
@@ -148,6 +150,8 @@ public class Text extends AbstractCanvasObject {
 				return (V) DrawAttr.VALIGN_BASELINE;
 			else
 				return (V) DrawAttr.VALIGN_MIDDLE;
+    } else if (attr == DrawAttr.DYNAMIC_CONDITION) {
+			return (V) visibility;
 		} else {
 			return null;
 		}
@@ -157,7 +161,9 @@ public class Text extends AbstractCanvasObject {
 	public boolean matches(CanvasObject other) {
 		if (other instanceof Text) {
 			Text that = (Text) other;
-			return this.label.equals(that.label);
+			return this.label.equals(that.label) &&
+          (this.visibility == null ? "" : this.visibility.toSvgString()).equals(
+          (that.visibility == null ? "" : that.visibility.toSvgString()));
 		} else {
 			return false;
 		}
@@ -165,7 +171,10 @@ public class Text extends AbstractCanvasObject {
 
 	@Override
 	public int matchesHashCode() {
-		return label.hashCode();
+		int ret = label.hashCode();
+    if (visibility != null)
+      ret = ret * 31 + visibility.toSvgString().hashCode();
+    return ret;
 	}
 
 	@Override
@@ -199,6 +208,8 @@ public class Text extends AbstractCanvasObject {
 		} else if (attr == DrawAttr.VALIGNMENT) {
 			Integer intVal = (Integer) ((AttributeOption) value).getValue();
 			label.setVerticalAlignment(intVal.intValue());
+    } else if (attr == DrawAttr.DYNAMIC_CONDITION) {
+			visibility = (DynamicCondition) value;
 		}
 	}
 }

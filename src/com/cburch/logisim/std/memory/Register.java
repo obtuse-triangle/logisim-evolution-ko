@@ -38,6 +38,7 @@ import java.awt.event.KeyEvent;
 import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.circuit.appear.DynamicElement;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
+import com.cburch.logisim.circuit.appear.DynamicValueProvider;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Attributes;
@@ -53,12 +54,12 @@ import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.tools.key.BitWidthConfigurator;
+import com.cburch.logisim.tools.key.DirectionConfigurator;
+import com.cburch.logisim.tools.key.JoinedConfigurator;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.StringUtil;
-import com.cburch.logisim.tools.key.JoinedConfigurator;
-import com.cburch.logisim.tools.key.DirectionConfigurator;
 
-public class Register extends InstanceFactory implements DynamicElementProvider {
+public class Register extends InstanceFactory implements DynamicElementProvider, DynamicValueProvider {
   public static void DrawRegisterClassic(InstancePainter painter, int x, int y,
       int nr_of_bits, boolean isLatch, boolean neg_active,
       boolean has_we, String value) {
@@ -292,6 +293,15 @@ public class Register extends InstanceFactory implements DynamicElementProvider 
       painter.drawPort(EN);
       painter.drawPort(CK);
     }
+  }
+
+  @Override
+  public Value getDynamicValue(Instance instance, Object instanceStateData) {
+    RegisterData data = (RegisterData) instanceStateData;
+    if (data == null)
+      return Value.NIL;
+    BitWidth dataWidth = instance.getAttributeValue(StdAttr.WIDTH);
+    return Value.createKnown(dataWidth, data.value);
   }
 
   @Override

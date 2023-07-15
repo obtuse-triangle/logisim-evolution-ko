@@ -31,10 +31,10 @@
 package com.cburch.logisim.circuit.appear;
 
 import com.cburch.logisim.data.Value;
-import com.cburch.logisim.instance.InstanceComponent;
+import com.cburch.logisim.instance.Instance;
 
 public interface DynamicValueProvider {
 
-  public Value getDynamicValue(InstanceComponent comp, Object instanceStateData);
+  public Value getDynamicValue(Instance instance, Object instanceStateData);
 
 }

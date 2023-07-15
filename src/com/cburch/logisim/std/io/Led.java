@@ -47,7 +47,6 @@ import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Direction;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.Instance;
-import com.cburch.logisim.instance.InstanceComponent;
 import com.cburch.logisim.instance.InstanceDataSingleton;
 import com.cburch.logisim.instance.InstanceFactory;
 import com.cburch.logisim.instance.InstanceLogger;
@@ -165,9 +164,9 @@ public class Led extends InstanceFactory implements DynamicElementProvider, Dyna
   }
 
   @Override
-  public Value getDynamicValue(InstanceComponent comp, Object instanceStateData) {
+  public Value getDynamicValue(Instance instance, Object instanceStateData) {
     InstanceDataSingleton data = (InstanceDataSingleton) instanceStateData;
-    return data == null ? Value.FALSE : (Value) data.getValue();
+    return data == null ? Value.NIL : (Value) data.getValue();
   }
 
   @Override

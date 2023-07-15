@@ -39,16 +39,16 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.cburch.draw.shapes.DrawAttr;
-import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.circuit.appear.DynamicElement;
-import com.cburch.logisim.data.Value;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.Bounds;
 import com.cburch.logisim.data.Location;
-import com.cburch.logisim.util.UnmodifiableList;
-import com.cburch.logisim.util.GraphicsUtil;
+import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.InstanceDataSingleton;
+import com.cburch.logisim.instance.StdAttr;
+import com.cburch.logisim.util.GraphicsUtil;
+import com.cburch.logisim.util.UnmodifiableList;
 
 public class LedShape extends DynamicElement {
   static final int DEFAULT_RADIUS = 5;
@@ -77,7 +77,7 @@ public class LedShape extends DynamicElement {
   @Override
   public List<Attribute<?>> getAttributes() {
     return UnmodifiableList.create(new Attribute<?>[] {
-      DrawAttr.STROKE_WIDTH, ATTR_LABEL, StdAttr.LABEL_FONT, StdAttr.LABEL_COLOR });
+      DrawAttr.STROKE_WIDTH, ATTR_LABEL, StdAttr.LABEL_FONT, StdAttr.LABEL_COLOR, DrawAttr.DYNAMIC_CONDITION});
   }
 
   @Override

@@ -76,4 +76,6 @@ public interface CanvasObject extends AttributeSet, Cloneable {
 	public void translate(int dx, int dy);
 
   public DynamicCondition getDynamicCondition();
+
+  public void clearDynamicCondition();
 }

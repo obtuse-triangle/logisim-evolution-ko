@@ -56,7 +56,6 @@ import com.cburch.logisim.instance.InstanceComponent;
 import com.cburch.logisim.util.EventSourceWeakSupport;
 
 import com.cburch.logisim.circuit.appear.DynamicElement;
-import com.cburch.logisim.data.Value;
 
 public class CircuitAppearance extends Drawing {
   private class MyListener implements CanvasModelListener {
@@ -323,18 +322,36 @@ public class CircuitAppearance extends Drawing {
   }
 
   public void removeDynamicElement(InstanceComponent c) {
+    // System.out.println("Removing " + c);
     ArrayList<CanvasObject> toRemove = new ArrayList<>();
-    for (CanvasObject o : getObjectsFromBottom()) {
-      if (o instanceof DynamicElement) {
-        if (((DynamicElement)o).getPath().contains(c))
-          toRemove.add(o);
+    ArrayList<CanvasObject> toModify = new ArrayList<>();
+    for (CanvasObject shape : getObjectsFromBottom()) {
+      boolean removed = false;
+      if (shape instanceof DynamicElement) {
+        // System.out.println("Checking shape: " + shape);
+        if (((DynamicElement)shape).getPath().contains(c)) {
+          // System.out.println("match, remove this one");
+          toRemove.add(shape);
+          removed = true;
+        }
+      }
+      if (!removed) {
+        DynamicCondition dyn = shape.getDynamicCondition();
+        // System.out.println("dyn = " + (dyn == null ? " null " : dyn.toSvgString()));
+        if (dyn != null && dyn.dependsOn(c)) {
+          // System.out.println("match, modify this one");
+          toModify.add(shape);
+        }
       }
     }
-    if (toRemove.isEmpty())
+    if (toRemove.isEmpty() && toModify.isEmpty())
       return;
     boolean oldSuppress = suppressRecompute;
     try {
       suppressRecompute = true;
+      for (CanvasObject shape : toModify) {
+        shape.clearDynamicCondition();
+      }
       removeObjects(toRemove);
       recomputeDefaultAppearance();
     } finally {

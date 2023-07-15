@@ -96,18 +96,18 @@
   </toolbar>
   <circuit name="main">
     <a name="appearance" val="classic"/>
-    <comp lib="1" loc="(120,250)" name="Pin"/>
     <comp lib="1" loc="(140,120)" name="Constant"/>
     <comp lib="1" loc="(140,140)" name="Constant">
       <a name="value" val="0x0"/>
     </comp>
-    <comp lib="1" loc="(180,320)" name="Clock"/>
+    <comp lib="1" loc="(180,320)" name="Pin"/>
+    <comp lib="1" loc="(240,390)" name="Clock"/>
     <comp lib="1" loc="(290,130)" name="Pin">
       <a name="facing" val="west"/>
       <a name="labelloc" val="east"/>
       <a name="type" val="output"/>
     </comp>
-    <comp lib="1" loc="(320,250)" name="Pin">
+    <comp lib="1" loc="(380,320)" name="Pin">
       <a name="facing" val="west"/>
       <a name="labelloc" val="east"/>
       <a name="radix" val="10unsigned"/>
@@ -116,15 +116,15 @@
     </comp>
     <comp lib="1" loc="(80,70)" name="Pin"/>
     <comp loc="(220,130)" name="1G3157"/>
-    <comp loc="(280,250)" name="DecayingCounter"/>
-    <wire from="(120,250)" to="(170,250)"/>
+    <comp loc="(340,320)" name="DecayingCounter"/>
     <wire from="(140,120)" to="(180,120)"/>
     <wire from="(140,140)" to="(180,140)"/>
-    <wire from="(180,320)" to="(190,320)"/>
-    <wire from="(190,290)" to="(190,320)"/>
+    <wire from="(180,320)" to="(230,320)"/>
     <wire from="(200,70)" to="(200,110)"/>
     <wire from="(220,130)" to="(290,130)"/>
-    <wire from="(280,250)" to="(320,250)"/>
+    <wire from="(240,390)" to="(250,390)"/>
+    <wire from="(250,360)" to="(250,390)"/>
+    <wire from="(340,320)" to="(380,320)"/>
     <wire from="(80,70)" to="(200,70)"/>
   </circuit>
   <circuit name="1G3157">
@@ -201,13 +201,14 @@
       <polyline fill="none" points="55,120 61,114 66,120" stroke="#000000"/>
       <rect fill="none" height="43" stroke="#000000" width="45" x="67" y="73"/>
       <text dominant-baseline="central" fill="#404040" font-family="SansSerif" font-size="10" text-anchor="start" visibility="/Register(360,320) == 0x0" x="114" y="112">empty</text>
-      <text dominant-baseline="central" fill="#404040" font-family="SansSerif" font-size="10" text-anchor="start" visibility="/Register(360,320) == 0xff" x="128" y="67">full</text>
+      <text dominant-baseline="central" fill="#404040" font-family="SansSerif" font-size="10" text-anchor="start" visibility="/LED(610,270) != 0x1" x="128" y="67">full</text>
       <rect fill="#ff4815" height="6" stroke="none" visibility="/Register(360,320) &gt; 0x0" width="43" x="68" y="109"/>
       <rect fill="#ff7882" height="6" stroke="none" visibility="/Register(360,320) &gt; 0x30" width="43" x="68" y="102"/>
       <rect fill="#ff04f3" height="6" stroke="none" visibility="/Register(360,320) &gt; 0x60" width="43" x="68" y="95"/>
       <rect fill="#8805ff" height="6" stroke="none" visibility="/Register(360,320) &gt; 0xc0" width="43" x="68" y="88"/>
       <rect fill="#009eff" height="6" stroke="none" visibility="/Register(360,320) &gt; 0xe0" width="43" x="68" y="81"/>
       <rect fill="#17ad00" height="6" stroke="none" visibility="/Register(360,320) == 0xff" width="43" x="68" y="74"/>
+      <visible-led height="10" path="/LED(610,270)" stroke-width="0" width="10" x="117" y="61"/>
       <circ-port height="8" pin="170,370" width="8" x="36" y="76"/>
       <circ-port height="8" pin="170,410" width="8" x="56" y="116"/>
       <circ-port height="10" pin="420,320" width="10" x="145" y="75"/>
@@ -289,6 +290,10 @@
       <a name="mode" val="unsigned"/>
     </comp>
     <comp lib="5" loc="(360,320)" name="Register"/>
+    <comp lib="6" loc="(610,270)" name="LED">
+      <a name="active" val="false"/>
+      <a name="facing" val="south"/>
+    </comp>
     <wire from="(140,340)" to="(220,340)"/>
     <wire from="(140,80)" to="(140,340)"/>
     <wire from="(140,80)" to="(680,80)"/>
@@ -326,10 +331,14 @@
     <wire from="(540,230)" to="(550,230)"/>
     <wire from="(540,250)" to="(550,250)"/>
     <wire from="(560,260)" to="(560,270)"/>
+    <wire from="(560,270)" to="(590,270)"/>
     <wire from="(570,190)" to="(580,190)"/>
     <wire from="(570,240)" to="(680,240)"/>
     <wire from="(590,120)" to="(590,160)"/>
+    <wire from="(590,270)" to="(590,280)"/>
+    <wire from="(590,280)" to="(610,280)"/>
     <wire from="(600,180)" to="(650,180)"/>
+    <wire from="(610,270)" to="(610,280)"/>
     <wire from="(650,90)" to="(650,180)"/>
     <wire from="(680,80)" to="(680,240)"/>
   </circuit>

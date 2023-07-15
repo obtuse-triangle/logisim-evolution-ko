@@ -196,7 +196,13 @@ public abstract class AbstractCanvasObject extends AbstractDrawingAttributeSet
 
 	public abstract void translate(int dx, int dy);
 
+  @Override
   public DynamicCondition getDynamicCondition() {
     return getValue(DrawAttr.DYNAMIC_CONDITION);
+  }
+
+  @Override
+  public void clearDynamicCondition() {
+    updateAttr(DrawAttr.DYNAMIC_CONDITION, null);
   }
 }

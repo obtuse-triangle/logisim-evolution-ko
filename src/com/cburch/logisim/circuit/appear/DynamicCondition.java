@@ -144,7 +144,13 @@ public class DynamicCondition {
       return new DynamicCondition(path, op, numericValue);
   }
 
+  public boolean dependsOn(InstanceComponent c) {
+    return path.contains(c);
+  }
+
   public boolean evaluateCondition(CircuitState state) {
+    if (state == null)
+      return false; // invisible by default during any errors
     Object data = DynamicElement.getData(path, state);
     InstanceComponent child = path.leaf();
     ComponentFactory f = child.getFactory();

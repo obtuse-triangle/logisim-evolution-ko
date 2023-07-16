@@ -123,7 +123,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     public String getDisplayName() { return S.get("rgbVideoComponent"); }
     public AttributeSet createAttributeSet() {
       return AttributeSets.fixedSet(ATTRIBUTES, new Object[] {
-        BLINK_OPTIONS[0], RESET_OPTIONS[0], BLANK_OPTIONS[0], Integer.valueOf(0) /* black */, COLOR_OPTIONS[0], Integer.valueOf(128), Integer.valueOf(128), Integer.valueOf(2) });
+        BLINK_OPTIONS[0], RESET_OPTIONS[0], BLANK_OPTIONS[0], new ColorModelColor(COLOR_RGB, 0 /*black*/), COLOR_RGB, Integer.valueOf(128), Integer.valueOf(128), Integer.valueOf(2) });
     }
     public Component createComponent(Location loc, AttributeSet attrs) { return new Video(loc, attrs); }
     public Bounds getOffsetBounds(AttributeSet attrs) {
@@ -478,7 +478,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
         return "0x0";
       int digits = (value.bits+3)/4;
       int mask = (1 << value.bits) - 1;
-      return String.format("0x%"+digits+"x", value.color & mask);
+      return String.format("0x%0"+digits+"x", value.color & mask);
     }
 
     @Override

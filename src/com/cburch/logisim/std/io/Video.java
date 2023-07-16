@@ -86,15 +86,15 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   static final String BLANK_INPUT  = "Input Color";
   static final String[] BLANK_OPTIONS = { BLANK_FIXED, BLANK_INPUT };
 
-  static final String COLOR_RGB = "888 RGB (24 bit)";
-  static final String COLOR_555_RGB = "555 RGB (15 bit)";
-  static final String COLOR_565_RGB = "565 RGB (16 bit)";
-  static final String COLOR_111_RGB = "8-Color RGB (3 bit)";
-  static final String COLOR_ATARI = "Atari 2600 (7 bit)";
-  static final String COLOR_XTERM16 = "XTerm16 (4 bit)";
-  static final String COLOR_XTERM256 = "XTerm256 (8 bit)";
-  static final String COLOR_GRAY4 = "Grayscale (4 bit)";
-  static final String[] COLOR_OPTIONS = { COLOR_RGB, COLOR_555_RGB, COLOR_565_RGB, COLOR_111_RGB, COLOR_ATARI, COLOR_XTERM16, COLOR_XTERM256, COLOR_GRAY4 };
+  static final String MODEL_RGB = "888 RGB (24 bit)";
+  static final String MODEL_555_RGB = "555 RGB (15 bit)";
+  static final String MODEL_565_RGB = "565 RGB (16 bit)";
+  static final String MODEL_111_RGB = "8-Color RGB (3 bit)";
+  static final String MODEL_ATARI = "Atari 2600 (7 bit)";
+  static final String MODEL_XTERM16 = "XTerm16 (4 bit)";
+  static final String MODEL_XTERM256 = "XTerm256 (8 bit)";
+  static final String MODEL_GRAY4 = "Grayscale (4 bit)";
+  static final String[] MODEL_OPTIONS = { MODEL_RGB, MODEL_555_RGB, MODEL_565_RGB, MODEL_111_RGB, MODEL_ATARI, MODEL_XTERM16, MODEL_XTERM256, MODEL_GRAY4 };
 
   static final Integer[] SIZE_OPTIONS = { 2, 4, 8, 16, 32, 64, 128, 256 };
 
@@ -106,8 +106,8 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       S.getter("rgbVideoBlank"), BLANK_OPTIONS);
   public static final Attribute<ColorModelColor> FIXED_OPTION = forColor("fixed",
       S.getter("rgbVideoFixed"));
-  public static final Attribute COLOR_OPTION = Attributes.forOption("color",
-      S.getter("rgbVideoColor"), COLOR_OPTIONS);
+  public static final Attribute MODEL_OPTION = Attributes.forOption("color",
+      S.getter("rgbVideoColor"), MODEL_OPTIONS);
   public static final Attribute<Integer> WIDTH_OPTION = Attributes.forOption("width",
       S.getter("rgbVideoWidth"), SIZE_OPTIONS);
   public static final Attribute<Integer> HEIGHT_OPTION = Attributes.forOption("height",
@@ -115,16 +115,11 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   public static final Attribute<Integer> SCALE_OPTION = Attributes.forIntegerRange("scale",
       S.getter("rgbVideoScale"), 1, 8);
 
-  private static final Attribute[] ATTRIBUTES = { BLINK_OPTION, RESET_OPTION, BLANK_OPTION, FIXED_OPTION, COLOR_OPTION, WIDTH_OPTION, HEIGHT_OPTION, SCALE_OPTION };
-
   private static class Factory extends AbstractComponentFactory {
     private Factory() { }
     public String getName() { return "RGB Video"; }
     public String getDisplayName() { return S.get("rgbVideoComponent"); }
-    public AttributeSet createAttributeSet() {
-      return AttributeSets.fixedSet(ATTRIBUTES, new Object[] {
-        BLINK_OPTIONS[0], RESET_OPTIONS[0], BLANK_OPTIONS[0], new ColorModelColor(COLOR_RGB, 0 /*black*/), COLOR_RGB, Integer.valueOf(128), Integer.valueOf(128), Integer.valueOf(2) });
-    }
+    public AttributeSet createAttributeSet() { return new VideoAttributes(); }
     public Component createComponent(Location loc, AttributeSet attrs) { return new Video(loc, attrs); }
     public Bounds getOffsetBounds(AttributeSet attrs) {
       int s = attrs.getValue(SCALE_OPTION);
@@ -175,7 +170,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     if (reset_option == null) reset_option = RESET_OPTIONS[0];
     Object blank_option = attrs.getValue(BLANK_OPTION);
     if (blank_option == null) blank_option = BLANK_OPTIONS[0];
-    ColorModel cm = getColorModel(attrs.getValue(COLOR_OPTION));
+    ColorModel cm = getColorModel(attrs.getValue(MODEL_OPTION));
     int w = attrs.getValue(WIDTH_OPTION);
     int h = attrs.getValue(HEIGHT_OPTION);
 
@@ -308,14 +303,14 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
       }, 0, false, -1, 0);
 
   static ColorModel getColorModel(Object model) {
-    if (model.equals(COLOR_RGB)) return rgb;
-    else if (model.equals(COLOR_555_RGB)) return rgb555;
-    else if (model.equals(COLOR_565_RGB)) return rgb565;
-    else if (model.equals(COLOR_111_RGB)) return rgb111;
-    else if (model.equals(COLOR_ATARI)) return atari;
-    else if (model.equals(COLOR_XTERM16)) return xterm16;
-    else if (model.equals(COLOR_XTERM256)) return xterm256;
-    else if (model.equals(COLOR_GRAY4)) return gray4;
+    if (model.equals(MODEL_RGB)) return rgb;
+    else if (model.equals(MODEL_555_RGB)) return rgb555;
+    else if (model.equals(MODEL_565_RGB)) return rgb565;
+    else if (model.equals(MODEL_111_RGB)) return rgb111;
+    else if (model.equals(MODEL_ATARI)) return atari;
+    else if (model.equals(MODEL_XTERM16)) return xterm16;
+    else if (model.equals(MODEL_XTERM256)) return xterm256;
+    else if (model.equals(MODEL_GRAY4)) return gray4;
     else return gray4; // ???
   }
 
@@ -325,7 +320,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     AttributeSet attrs = getAttributeSet();
     Object blink_option = attrs.getValue(BLINK_OPTION);
     Object reset_option = attrs.getValue(RESET_OPTION);
-    ColorModel cm = getColorModel(attrs.getValue(COLOR_OPTION));
+    ColorModel cm = getColorModel(attrs.getValue(MODEL_OPTION));
 
     int s = attrs.getValue(SCALE_OPTION);
     int w = attrs.getValue(WIDTH_OPTION);
@@ -357,7 +352,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
   private State getState(CircuitState circuitState, AttributeSet attrs) {
     State state = (State) circuitState.getData(this);
     if (state == null) {
-      ColorModel cm = getColorModel(attrs.getValue(COLOR_OPTION));
+      ColorModel cm = getColorModel(attrs.getValue(MODEL_OPTION));
       Object blank_option = attrs.getValue(BLANK_OPTION);
       ColorModelColor cmc = attrs.getValue(FIXED_OPTION);
       int color = cmc == null ? 0 : ((ColorModelColor)cmc).color;
@@ -416,7 +411,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     case P_Y: return S.get("rgbVideoY");
     case P_DATA:
       AttributeSet attrs = getAttributeSet();
-      return S.fmt("rgbVideoData", attrs.getValue(COLOR_OPTION).toString());
+      return S.fmt("rgbVideoData", attrs.getValue(MODEL_OPTION).toString());
     case P_RST: return S.get("rgbVideoRST");
     default: return null;
     }
@@ -431,7 +426,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
 
   void configureComponent() {
     AttributeSet attrs = getAttributeSet();
-    String model = (String)attrs.getValue(COLOR_OPTION);
+    String model = (String)attrs.getValue(MODEL_OPTION);
     int bpp = getColorModel(model).getPixelSize();
     int xs = 31 - Integer.numberOfLeadingZeros(attrs.getValue(WIDTH_OPTION));
     int ys = 31 - Integer.numberOfLeadingZeros(attrs.getValue(HEIGHT_OPTION));
@@ -483,7 +478,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
 
     @Override
     public String toStandardString(ColorModelColor value) {
-      return value == null ? "000000#" + COLOR_RGB : String.format("%x#%s", value.color & 0xffffff, value.model);
+      return value == null ? "000000#" + MODEL_RGB : String.format("%x#%s", value.color & 0xffffff, value.model);
     }
   }
 
@@ -499,7 +494,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
         ColorModel cm = Video.getColorModel(model);
         setColor(new Color(cm.getRGB(initial.color)));
       } else {
-        model = COLOR_RGB;
+        model = MODEL_RGB;
         setColor(Color.GRAY);
       }
       setOpacityVisible(false);
@@ -538,7 +533,7 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     }
   }
 
-  private static class ColorModelColor {
+  static class ColorModelColor {
     final String model;
     final int color;
     final String depth;
@@ -548,21 +543,21 @@ class Video extends ManagedComponent implements ToolTipMaker, AttributeListener 
     ColorModelColor(String model, int color) {
       this.model = model;
       this.color = color;
-      if (model.equals(COLOR_RGB)) {
+      if (model.equals(MODEL_RGB)) {
         depth="888"; bits = 24; indexed = false;
-      } else if (model.equals(COLOR_555_RGB)) {
+      } else if (model.equals(MODEL_555_RGB)) {
         depth="555"; bits = 15; indexed = false;
-      } else if (model.equals(COLOR_565_RGB)) {
+      } else if (model.equals(MODEL_565_RGB)) {
         depth="565"; bits = 16; indexed = false;
-      } else if (model.equals(COLOR_111_RGB)) {
+      } else if (model.equals(MODEL_111_RGB)) {
         depth="111"; bits = 3; indexed = false;
-      } else if (model.equals(COLOR_ATARI)) {
+      } else if (model.equals(MODEL_ATARI)) {
         depth = null; bits = 7; indexed = true;
-      } else if (model.equals(COLOR_XTERM16)) {
+      } else if (model.equals(MODEL_XTERM16)) {
         depth = null; bits = 4; indexed = true;
-      } else if (model.equals(COLOR_XTERM256)) {
+      } else if (model.equals(MODEL_XTERM256)) {
         depth = null; bits = 8; indexed = true;
-      } else if (model.equals(COLOR_GRAY4)) {
+      } else if (model.equals(MODEL_GRAY4)) {
         depth = null; bits = 4; indexed = true;
       } else {
         throw new IllegalArgumentException("invalid color model: " + model);

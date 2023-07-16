@@ -58,11 +58,11 @@ public class XmlAttributesUtil {
         if (dflt == null || !dflt.equals(val)) {
           Element a = doc.createElement("a");
           a.setAttribute("name", attr.getName());
-          String value = attr.toStandardString(val);
+          String value = attr.toStandardStringRelative(val, outFilepath);
           if (value.indexOf("\n") >= 0)
             a.appendChild(doc.createTextNode(value));
           else
-            a.setAttribute("val", attr.toStandardString(val));
+            a.setAttribute("val", value);
           elt.appendChild(a);
         }
       }

@@ -279,7 +279,7 @@ public class XmlReader {
           }
         } else {
           try {
-            Object val = attr.parse(attrVal);
+            Object val = attr.parseFromFilesystem(new File(srcDirPath), attrVal);
             attrs.setAttr(attr, val);
           } catch (NumberFormatException e) {
             if (messages == null)

@@ -116,7 +116,7 @@ public abstract class AttributeSetTableModel
       try {
         V value;
         if (valueOrStr instanceof String)
-          value = attr.parse(parent, (String) valueOrStr);
+          value = attr.parseFromUser(parent, (String) valueOrStr);
         else
           value = (V)valueOrStr;
         setValueRequested(attr, value);

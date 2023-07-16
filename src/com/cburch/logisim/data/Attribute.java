@@ -31,6 +31,7 @@
 package com.cburch.logisim.data;
 
 import java.awt.Window;
+import java.io.File;
 
 import javax.swing.JTextField;
 
@@ -61,7 +62,11 @@ public abstract class Attribute<V> {
     return name;
   }
 
-  public V parse(Window source, String value) {
+  public V parseFromUser(Window source, String value) {
+    return parse(value);
+  }
+
+  public V parseFromFilesystem(File directory, String value) {
     return parse(value);
   }
 
@@ -72,6 +77,10 @@ public abstract class Attribute<V> {
   }
 
   public String toStandardString(V value) {
+    return value.toString();
+  }
+
+  public String toStandardStringRelative(V value, String outFilepath) {
     return value.toString();
   }
 

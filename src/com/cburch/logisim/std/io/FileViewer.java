@@ -69,27 +69,39 @@ import com.cburch.logisim.util.JInputDialog;
 public class FileViewer extends InstanceFactory {
 
   public static final Font FONT = new Font("monospaced", Font.PLAIN, 12);
-
+    
   private static class State implements InstanceData, Cloneable {
-    int lines = -1;
-    int cols = -1;
+    int lines, cols;
     List<String> contents = null;
     HashMap<Integer, Integer> map = null;
-    int offset = 0;
-    int firstline, selectedline;
+    // int offset = 0;
+    int firstline = 0, selectedline = -1;
 
-    State(int lines, int cols, List<String> contents) {
-      update(lines, cols, contents);
-    }
-
-    void update(int lines, int cols, List<String> contents) {
-      if (this.lines == lines && this.cols == cols && this.contents == contents)
-        return;
-      selectedline = -1;
+    State(int lines, int cols) {
       this.lines = lines;
       this.cols = cols;
+    }
+
+    State(int lines, int cols, List<String> contents) {
+      this(lines, cols);
+      updateContents(contents);
+    }
+
+    void updateSize(int lines, int cols) {
+      this.lines = lines;
+      this.cols = cols;
+    }
+
+    void updateContents(List<String> contents) {
+      if (this.contents == contents)
+        return;
       this.contents = contents;
-      this.map = new HashMap<Integer, Integer>();
+      selectedline = -1; // why?
+      if (contents == null) {
+        map = null;
+        return;
+      }
+      map = new HashMap<Integer, Integer>();
       int lineno = 0;
       for (String line : contents) {
         int s = 0, n = line.length();
@@ -125,6 +137,10 @@ public class FileViewer extends InstanceFactory {
     }
 
     void selectLine(int lineno) {
+      if (contents == null) {
+        selectedline = -1;
+        return;
+      }
       int n = contents.size();
       if (lineno < 0) {
         selectedline = -1;
@@ -139,13 +155,79 @@ public class FileViewer extends InstanceFactory {
     }
 
     void selectAddr(int addr) {
-      if (map.containsKey(addr))
+      if (map != null && map.containsKey(addr)) {
         selectLine(map.get(addr));
-      else
+      } else {
         selectedline = -1;
+      }
     }
 
     // void selectOffset(int offset) { }
+  }
+
+  private static class LinkedFileState extends State {
+    long timestamp = 0;
+    Attributes.LinkedFile source = null;
+
+    LinkedFileState(int lines, int cols, Attributes.LinkedFile src) {
+      super(lines, cols);
+      updateSource(src);
+    }
+
+    void updateSource(Attributes.LinkedFile src) {
+      if (((this.source == null && src == null)
+           || this.source != null && this.source.equals(src))) {
+        return;
+      }
+      source = src;
+      if (source == null) {
+        timestamp = 0;
+        updateContents(null);
+        return;
+      }
+      timestamp = source.absolute.lastModified();
+      try {
+        List<String> data;
+        data = Files.readAllLines(source.absolute.toPath(), StandardCharsets.UTF_8);
+        updateContents(data);
+      } catch (IOException e) {
+        updateContents(null);
+        // maybe don't warn?
+        System.out.println("file access error: " + source.relative);
+        // JOptionPane.showMessageDialog(null, e.getMessage(),
+        //     S.get("fileViewerLoadErrorTitle"),
+        //     JOptionPane.ERROR_MESSAGE);
+      }
+    }
+
+    void reloadFile() {
+      if (source == null)
+        return;
+      long ts = source.absolute.lastModified();
+      if (ts == timestamp)
+        return;
+      timestamp = ts;
+      try {
+        List<String> data;
+        data = Files.readAllLines(source.absolute.toPath(), StandardCharsets.UTF_8);
+        updateContents(data);
+      } catch (IOException e) {
+        updateContents(null);
+        // maybe don't warn?
+        System.out.println("file access error: " + source.relative);
+      }
+    }
+
+    void selectLine(int lineno) {
+      reloadFile();
+      super.selectLine(lineno);
+    }
+
+    void selectAddr(int addr) {
+      reloadFile();
+      super.selectAddr(addr);
+    }
+
   }
 
   private static class FileChooser extends java.awt.Component implements JInputDialog<List<String>> {
@@ -157,7 +239,7 @@ public class FileViewer extends InstanceFactory {
       this.parent = parent;
       this.result = r;
       chooser = JFileChoosers.create();
-      chooser.setDialogTitle(S.get("fileViewerLoadDialogTitle"));
+      chooser.setDialogTitle(S.get("ioFileViewerLoadDialogTitle"));
       chooser.setFileFilter(Loader.TXT_FILTER);
     }
 
@@ -223,20 +305,30 @@ public class FileViewer extends InstanceFactory {
       Attributes.forOption("select", S.getter("ioFileViewerSelect"),
           new AttributeOption[] { BY_LINE, BY_ADDR, /* BY_OFFSET, */ });
 
+  static final AttributeOption FILE_EMBED = new AttributeOption("embed",
+      S.getter("ioFileViewerEmbedFile"));
+  static final AttributeOption FILE_LINK = new AttributeOption("link",
+      S.getter("ioFileViewerLinkFile"));
+
+  static final Attribute<AttributeOption> ATTR_STORAGE = 
+      Attributes.forOption("storage", S.getter("ioFileViewerStorage"),
+          new AttributeOption[] { FILE_EMBED, FILE_LINK });
+
   static final Attribute<Integer> ATTR_LINES =
       Attributes.forIntegerRange("lines", S.getter("ioFileViewerLines"), 1, 60);
   static final Attribute<Integer> ATTR_COLS =
       Attributes.forIntegerRange("cols", S.getter("ioFileViewerCols"), 1, 120);
   public static final Attribute<BitWidth> ATTR_WIDTH = Attributes.forBitWidth(
       "addrWidth", S.getter("ioFileViewerAddrWidth"), 1, 30);
+
   static final ContentsAttribute ATTR_CONTENTS = new ContentsAttribute();
+
+  static final Attribute<Attributes.LinkedFile> ATTR_FILENAME = Attributes.forFilename("filename",
+      S.getter("ioFileViewerFilename"), S.getter("ioFileViewerLoadDialogTitle"),
+      Loader.TXT_FILTER);
 
   public FileViewer() {
     super("FileViewer", S.getter("fileViewerComponent"));
-    setAttributes(new Attribute<?>[] {
-      ATTR_WIDTH, ATTR_LINES, ATTR_COLS, ATTR_SELECT, ATTR_CONTENTS },
-      new Object[] {
-        BitWidth.create(16), 5, 40, BY_LINE, new ArrayList<String>() });
     setKeyConfigurator(new BitWidthConfigurator(ATTR_WIDTH, 1, 30));
     setIconName("fileviewer.gif");
     setPorts(new Port[] { new Port(0, 0, Port.INPUT, ATTR_WIDTH) });
@@ -246,6 +338,11 @@ public class FileViewer extends InstanceFactory {
   @Override
   protected void configureNewInstance(Instance instance) {
     instance.addAttributeListener();
+  }
+
+  @Override
+  public AttributeSet createAttributeSet() {
+    return new FileViewerAttributes();
   }
 
   @Override
@@ -263,22 +360,38 @@ public class FileViewer extends InstanceFactory {
   private State getState(InstanceState state) {
     int lines = state.getAttributeValue(ATTR_LINES).intValue();
     int cols = state.getAttributeValue(ATTR_COLS).intValue();
-    List<String> contents = state.getAttributeValue(ATTR_CONTENTS);
-
-    State data = (State) state.getData();
-    if (data == null) {
-      data = new State(lines, cols, contents);
-      state.setData(data);
+    if (state.getAttributeValue(ATTR_STORAGE) == FILE_EMBED) {
+      List<String> contents = state.getAttributeValue(ATTR_CONTENTS);
+      State data = (State) state.getData();
+      if (data == null) {
+        data = new State(lines, cols, contents);
+        state.setData(data);
+      } else {
+        data.updateSize(lines, cols);
+        data.updateContents(contents);
+      }
+      return data;
     } else {
-      data.update(lines, cols, contents);
+      Attributes.LinkedFile source = state.getAttributeValue(ATTR_FILENAME);
+      State data = (State) state.getData();
+      if (data == null || !(data instanceof LinkedFileState)) {
+        data = new LinkedFileState(lines, cols, source);
+        state.setData(data);
+      } else {
+        LinkedFileState linkedData = (LinkedFileState) data;
+        linkedData.updateSize(lines, cols);
+        linkedData.updateSource(source);
+      }
+      return data;
     }
-    return data;
   }
 
   @Override
   protected void instanceAttributeChanged(Instance instance, Attribute<?> attr) {
     if (attr == ATTR_LINES || attr == ATTR_COLS)
       instance.recomputeBounds();
+    // if (attr == ATTR_FILENAME)
+    //   ...
     instance.fireInvalidated();
   }
 
@@ -312,9 +425,10 @@ public class FileViewer extends InstanceFactory {
       gt.setFont(FONT);
       int L = GraphicsUtil.H_LEFT;
       int T = GraphicsUtil.V_TOP;
+      int numlines = data.contents == null ? 0 : data.contents.size();
       for (int i = 0; i < lines; i++) {
         int lineno = data.firstline + i;
-        if (lineno < 0 || lineno >= data.contents.size())
+        if (lineno < 0 || lineno >= numlines)
           break;
         if (lineno == data.selectedline) {
           gt.setColor(SELECTED_LINE_COLOR);

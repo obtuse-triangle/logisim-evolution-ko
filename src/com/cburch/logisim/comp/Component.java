@@ -54,8 +54,8 @@ import com.cburch.logisim.instance.StdAttr;
 //      _______________|___________________
 //     |               |                   |
 //    Wire     AbstractComponent   InstanceComponent <---> Instance
-//                     |
-//              _______|_______
+//                     |                   |
+//              _______|_______     std.io.Text$innerclass 
 //             |               |
 //          Splitter         Video
 //

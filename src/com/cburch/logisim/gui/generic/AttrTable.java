@@ -33,13 +33,19 @@ import static com.cburch.logisim.gui.main.Strings.S;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.LinkedList;
@@ -549,6 +555,70 @@ public class AttrTable extends JPanel implements LocaleListener {
     }
   }
 
+
+  private static class TableColumnResizer implements MouseListener, MouseMotionListener {
+    Cursor moveEastCursor = new Cursor(Cursor.E_RESIZE_CURSOR);
+    Cursor moveWestCursor = new Cursor(Cursor.W_RESIZE_CURSOR);
+    Cursor origCursor;
+    boolean ready, dragging;
+    int prevX;
+    JTable table;
+
+    TableColumnResizer(JTable t) {
+      table = t;
+      table.addMouseListener(this);
+      table.addMouseMotionListener(this);
+    }
+   
+    void reset() {
+      if (ready) {
+        ready = false;
+        table.setCursor(origCursor);
+        origCursor = null;
+      }
+    }
+
+    public void mouseClicked(MouseEvent e)  { if (dragging) { e.consume(); reset(); } else reset(); }
+    public void mouseEntered(MouseEvent e)  { }
+    public void mouseExited(MouseEvent e)   { if (!dragging) reset(); }
+    public void mousePressed(MouseEvent e)  { if (ready || dragging) e.consume(); }
+    public void mouseReleased(MouseEvent e) { if (dragging) { e.consume(); reset(); } }
+    
+    public void mouseDragged(MouseEvent e) {
+      if (!ready)
+        return;
+      e.consume();
+      int w0 = table.getColumnModel().getColumn(0).getWidth();
+      int w1 = table.getColumnModel().getColumn(1).getWidth();
+      int p0 = e.getX() + 2;
+      int p1 = w0+w1 - p0;
+      if (p0 < 40 || p1 < 40)
+        return;
+      table.getColumnModel().getColumn(0).setPreferredWidth(p0);
+      table.getColumnModel().getColumn(1).setPreferredWidth(p1);
+    }
+
+    public void mouseMoved(MouseEvent e) {
+      int w = table.getColumnModel().getColumn(0).getWidth();
+      Rectangle r = table.getCellRect(0, 0, true);
+      // to avoid confusion with click on cells in right column, only drag from
+      // left side
+      if (w - 6 <= e.getX() && e.getX() < w) {
+        if (!ready) {
+          ready = true;
+          origCursor = table.getCursor();
+          table.setCursor(e.getX() > prevX ? moveEastCursor : moveWestCursor);
+        }
+      } else {
+        if (ready) {
+          ready = false;
+          table.setCursor(origCursor);
+        }
+      }
+      prevX = e.getX();
+    }
+  }
+
   private static final AttrTableModel NULL_ATTR_MODEL = new NullAttrModel();
   private Window parent;
   private boolean titleEnabled;
@@ -568,9 +638,9 @@ public class AttrTable extends JPanel implements LocaleListener {
     tableModel = new TableModelAdapter(parent, NULL_ATTR_MODEL);
     table = new JTable(tableModel) {
       @Override
-      public String getToolTipText(java.awt.event.MouseEvent e) {
+      public String getToolTipText(MouseEvent e) {
         String tip = null;
-        java.awt.Point p = e.getPoint();
+        Point p = e.getPoint();
         int rowIndex = rowAtPoint(p);
         int colIndex = columnAtPoint(p);
         try {
@@ -583,7 +653,9 @@ public class AttrTable extends JPanel implements LocaleListener {
     table.setDefaultEditor(Object.class, editor);
     table.setTableHeader(null);
     table.setRowHeight(20);
-
+    table.getColumnModel().getColumn(0).setPreferredWidth(1);
+    table.getColumnModel().getColumn(1).setPreferredWidth(1);
+    new TableColumnResizer(table);
     Font baseFont = title.getFont();
     int titleSize = Math.round(baseFont.getSize() * 1.2f);
     Font titleFont = baseFont.deriveFont((float) titleSize).deriveFont(

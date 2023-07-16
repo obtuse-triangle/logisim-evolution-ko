@@ -144,8 +144,8 @@ public class DynamicCondition {
       return new DynamicCondition(path, op, numericValue);
   }
 
-  public boolean dependsOn(InstanceComponent c) {
-    return path.contains(c);
+  public void replaceInstance(InstanceComponent c, InstanceComponent r) {
+    // todo
   }
 
   public boolean evaluateCondition(CircuitState state) {

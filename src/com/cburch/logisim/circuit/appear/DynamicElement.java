@@ -82,9 +82,11 @@ public abstract class DynamicElement extends AbstractCanvasObject {
 
   public static class Path {
     public InstanceComponent[] elt;
+
     public Path(InstanceComponent[] elt) {
       this.elt = elt;
     }
+
     public boolean contains(Component c) {
       for (InstanceComponent ic : elt) {
         if (ic == c)
@@ -92,6 +94,14 @@ public abstract class DynamicElement extends AbstractCanvasObject {
       }
       return false;
     }
+
+    public void replaceInstance(InstanceComponent c, InstanceComponent r) {
+      for (int i = 0; i < elt.length; i++) {
+        if (elt[i] == c)
+          elt[i] = r;
+      }
+    }
+
     public InstanceComponent leaf() {
       return elt[elt.length-1];
     }

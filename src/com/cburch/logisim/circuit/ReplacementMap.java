@@ -142,12 +142,12 @@ public class ReplacementMap {
     return inverse.keySet();
   }
 
-  // apply relation: a --> {components replacing b}
+  // apply relation: a --> {components replacing a}
   public Collection<Component> getReplacementsFor(Component a) {
     return map.get(a);
   }
 
-  // preimage of relation: {components replaced by b} --> b
+  // preimage of relation: {components replaced by b} <-- b
   public Collection<Component> getReplacedBy(Component b) {
     return inverse.get(b);
   }

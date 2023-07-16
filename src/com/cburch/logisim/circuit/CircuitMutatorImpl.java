@@ -132,6 +132,7 @@ class CircuitMutatorImpl implements CircuitMutator {
   }
 
   public void replace(Circuit circuit, ReplacementMap repl) {
+    ArrayList<Component> added = new ArrayList<>();
     if (!repl.isEmpty()) {
       modified.add(circuit);
       log.add(CircuitChange.replace(circuit, repl));
@@ -140,10 +141,18 @@ class CircuitMutatorImpl implements CircuitMutator {
       getMap(circuit).append(repl);
 
       for (Component c : repl.getRemovals()) {
-        circuit.mutatorRemove(c);
+        Collection<Component> replacements = repl.getReplacementsFor(c);
+        if (replacements != null && replacements.size() == 1) {
+          Component r = replacements.iterator().next();
+          circuit.mutatorReplace(c, r);
+          added.add(r);
+        } else {
+          circuit.mutatorRemove(c);
+        }
       }
       for (Component c : repl.getAdditions()) {
-        circuit.mutatorAdd(c);
+        if (!added.contains(c))
+          circuit.mutatorAdd(c);
       }
     }
   }

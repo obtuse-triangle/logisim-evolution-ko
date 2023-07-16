@@ -321,38 +321,47 @@ public class CircuitAppearance extends Drawing {
     checkToFirePortsChanged(shapes);
   }
 
-  public void removeDynamicElement(InstanceComponent c) {
-    // System.out.println("Removing " + c);
+  public void fixDynamicElement(InstanceComponent c, InstanceComponent r) {
     ArrayList<CanvasObject> toRemove = new ArrayList<>();
-    ArrayList<CanvasObject> toModify = new ArrayList<>();
+    ArrayList<DynamicElement.Path> toPatch = new ArrayList<>();
+    ArrayList<CanvasObject> toRemoveCondition = new ArrayList<>();
     for (CanvasObject shape : getObjectsFromBottom()) {
       boolean removed = false;
       if (shape instanceof DynamicElement) {
-        // System.out.println("Checking shape: " + shape);
-        if (((DynamicElement)shape).getPath().contains(c)) {
-          // System.out.println("match, remove this one");
-          toRemove.add(shape);
-          removed = true;
+        DynamicElement.Path path = ((DynamicElement)shape).getPath();
+        if (path.contains(c)) {
+          if (r == null) {
+            toRemove.add(shape);
+            removed = true;
+          } else {
+            toPatch.add(path);
+          }
         }
       }
       if (!removed) {
         DynamicCondition dyn = shape.getDynamicCondition();
-        // System.out.println("dyn = " + (dyn == null ? " null " : dyn.toSvgString()));
-        if (dyn != null && dyn.dependsOn(c)) {
-          // System.out.println("match, modify this one");
-          toModify.add(shape);
-        }
+        DynamicElement.Path path = dyn == null ? null : dyn.getPath();
+        if (path != null && path.contains(c)) {
+          if (r == null) {
+            toRemoveCondition.add(shape);
+          } else {
+            toPatch.add(path);
+          }
+        } 
       }
     }
-    if (toRemove.isEmpty() && toModify.isEmpty())
+    if (toRemove.isEmpty() && toRemoveCondition.isEmpty() && toPatch.isEmpty())
       return;
     boolean oldSuppress = suppressRecompute;
     try {
       suppressRecompute = true;
-      for (CanvasObject shape : toModify) {
+      for (CanvasObject shape : toRemoveCondition) {
         shape.clearDynamicCondition();
       }
       removeObjects(toRemove);
+      for (DynamicElement.Path path : toPatch) {
+        path.replaceInstance(c, r);
+      }
       recomputeDefaultAppearance();
     } finally {
       suppressRecompute = oldSuppress;

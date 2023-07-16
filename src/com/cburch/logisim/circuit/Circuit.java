@@ -49,6 +49,7 @@ import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.LogisimVersion;
 import com.cburch.logisim.circuit.appear.CircuitAppearance;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
+import com.cburch.logisim.circuit.appear.DynamicValueProvider;
 import com.cburch.logisim.comp.Component;
 import com.cburch.logisim.comp.ComponentDrawContext;
 import com.cburch.logisim.comp.ComponentEvent;
@@ -613,6 +614,77 @@ public class Circuit implements AttributeDefaultProvider {
     fireEvent(CircuitEvent.ACTION_CLEAR, oldComps);
   }
 
+  HashSet<Circuit> dynamicShapeDependentCircuits() {
+    HashSet<Circuit> allAffected = new HashSet<>();
+    LinkedList<Circuit> todo = new LinkedList<>();
+    todo.add(this);
+    while (!todo.isEmpty()) {
+      Circuit circ = todo.remove();
+      if (allAffected.contains(circ))
+        continue;
+      allAffected.add(circ);
+      for (Circuit other : circ.circuitsUsingThis.values())
+        if (!allAffected.contains(other))
+          todo.add(other);
+    }
+    return allAffected;
+  }
+
+  // Normally, even a simple change like moving an LED on the canvas, will
+  // result mutatorRemove(c) followed mutatorAdd(r), where c is the old LED
+  // component in the old position, and r is the new LED component in the new
+  // position. This causes trouble for DynamicElement and DynamicCondition
+  // shapes that depend on the old component c. For those cases, we try hader
+  // to update rather than simply remove-then-add.
+  void mutatorReplace(Component c, Component r) {
+    ComponentFactory factory = c.getFactory();
+    ComponentFactory factory2 = r.getFactory();
+    if (factory == factory2 && (factory instanceof SubcircuitFactory)) {
+      locker.checkForWritePermission("remove", this);
+      locker.checkForWritePermission("add", this);
+      // remove c, but update dynamic shapes instead of removing them
+      wires.remove(c);
+      comps.remove(c);
+      SubcircuitFactory subcirc = (SubcircuitFactory) factory;
+      subcirc.getSubcircuit().circuitsUsingThis.remove(c);
+      for (Circuit circ : dynamicShapeDependentCircuits())
+        circ.appearance.fixDynamicElement((InstanceComponent)c, (InstanceComponent)r);
+      c.removeComponentWeakListener(null, myComponentListener);
+      fireEvent(CircuitEvent.ACTION_REMOVE, c);
+      // add r
+      boolean added = comps.add(r);
+      if (!added)
+        return;
+      wires.add(r);
+      subcirc.getSubcircuit().circuitsUsingThis.put(r, this);
+      r.addComponentWeakListener(null, myComponentListener);
+      fireEvent(CircuitEvent.ACTION_ADD, r);
+    } else if (factory == factory2
+        && ((factory instanceof DynamicElementProvider || factory instanceof DynamicValueProvider))
+        && c instanceof InstanceComponent
+        && r instanceof InstanceComponent) {
+      locker.checkForWritePermission("remove", this);
+      locker.checkForWritePermission("add", this);
+      // remove c, but update dynamic shapes instead of removing them
+      wires.remove(c);
+      comps.remove(c);
+      for (Circuit circ : dynamicShapeDependentCircuits())
+        circ.appearance.fixDynamicElement((InstanceComponent)c, (InstanceComponent)r);
+      c.removeComponentWeakListener(null, myComponentListener);
+      fireEvent(CircuitEvent.ACTION_REMOVE, c);
+      // add r
+      boolean added = comps.add(r);
+      if (!added)
+        return;
+      wires.add(r);
+      r.addComponentWeakListener(null, myComponentListener);
+      fireEvent(CircuitEvent.ACTION_ADD, r);
+    } else {
+      mutatorRemove(c);
+      mutatorAdd(r);
+    }
+  }
+
   void mutatorRemove(Component c) {
 
     locker.checkForWritePermission("remove", this);
@@ -630,27 +702,20 @@ public class Circuit implements AttributeDefaultProvider {
       } else if (factory instanceof SubcircuitFactory) {
         SubcircuitFactory subcirc = (SubcircuitFactory) factory;
         subcirc.getSubcircuit().circuitsUsingThis.remove(c);
+        // TODO: fix stale appearance dynamic elements in
+        // CircuitTransaction.execute() instead?
+        if (c instanceof InstanceComponent)
+          for (Circuit circ : dynamicShapeDependentCircuits())
+            circ.appearance.fixDynamicElement((InstanceComponent)c, null);
       } else if (factory instanceof VhdlEntity) {
         VhdlEntity vhdl = (VhdlEntity)factory;
         vhdl.removeCircuitUsing(c);
-      } else if (factory instanceof DynamicElementProvider
+      } else if (((factory instanceof DynamicElementProvider || factory instanceof DynamicValueProvider))
           && c instanceof InstanceComponent) {
-        // TODO: remove stale appearance dynamic elements in
+        // TODO: fix stale appearance dynamic elements in
         // CircuitTransaction.execute() instead?
-        HashSet<Circuit> allAffected = new HashSet<>();
-        LinkedList<Circuit> todo = new LinkedList<>();
-        todo.add(this);
-        while (!todo.isEmpty()) {
-          Circuit circ = todo.remove();
-          if (allAffected.contains(circ))
-            continue;
-          allAffected.add(circ);
-          for (Circuit other : circ.circuitsUsingThis.values())
-            if (!allAffected.contains(other))
-              todo.add(other);
-        }
-        for (Circuit circ : allAffected)
-          circ.appearance.removeDynamicElement((InstanceComponent)c);
+        for (Circuit circ : dynamicShapeDependentCircuits())
+          circ.appearance.fixDynamicElement((InstanceComponent)c, null);
       }
       c.removeComponentWeakListener(null, myComponentListener);
     }

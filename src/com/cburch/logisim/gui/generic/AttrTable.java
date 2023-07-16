@@ -566,7 +566,20 @@ public class AttrTable extends JPanel implements LocaleListener {
     title.setHorizontalAlignment(SwingConstants.CENTER);
     title.setVerticalAlignment(SwingConstants.CENTER);
     tableModel = new TableModelAdapter(parent, NULL_ATTR_MODEL);
-    table = new JTable(tableModel);
+    table = new JTable(tableModel) {
+      @Override
+      public String getToolTipText(java.awt.event.MouseEvent e) {
+        String tip = null;
+        java.awt.Point p = e.getPoint();
+        int rowIndex = rowAtPoint(p);
+        int colIndex = columnAtPoint(p);
+        try {
+          tip = getValueAt(rowIndex, colIndex).toString();
+        } catch (RuntimeException e1) {
+        }
+        return tip;
+      }
+    };
     table.setDefaultEditor(Object.class, editor);
     table.setTableHeader(null);
     table.setRowHeight(20);

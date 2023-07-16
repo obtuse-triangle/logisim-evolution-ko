@@ -4,7 +4,7 @@
 
   <lib desc="#Base" name="0">
     <tool name="Text Tool">
-      <a name="font" val="SansSerif plain 12"/>
+      <a name="font" val="java.awt.Font[family=Dialog,name=java.awt.Font[family=Dialog,name=java.awt.Font[family=SansSerif,name=SansSerif,style=plain,size=12],style=plain,size=12],style=plain,size=12]"/>
       <a name="halign" val="center"/>
       <a name="text" val=""/>
       <a name="valign" val="base"/>
@@ -23,9 +23,7 @@
   <lib desc="#Arithmetic" name="4"/>
   <lib desc="#Memory" name="5">
     <tool name="ROM">
-      <a name="contents">addr/data: 8 8
-0
-</a>
+      <a name="contents" val="com.cburch.logisim.std.memory.MemContents@67018989"/>
     </tool>
   </lib>
   <lib desc="#I/O" name="6"/>
@@ -49,7 +47,7 @@
     <tool lib="0" name="Wiring Tool"/>
     <tool lib="0" name="Cutter Tool"/>
     <tool lib="0" name="Text Tool">
-      <a name="font" val="SansSerif plain 12"/>
+      <a name="font" val="java.awt.Font[family=Dialog,name=java.awt.Font[family=Dialog,name=java.awt.Font[family=SansSerif,name=SansSerif,style=plain,size=12],style=plain,size=12],style=plain,size=12]"/>
       <a name="halign" val="center"/>
       <a name="text" val=""/>
       <a name="valign" val="base"/>
@@ -84,18 +82,7 @@
     </comp>
     <comp lib="6" loc="(210,90)" name="FileViewer">
       <a name="addrWidth" val="8"/>
-      <a name="contents">At the California Institute of Technology
-by Richard Brautigan
-
-I don't care how God-damn smart
-these guys are: I'm bored.
-
-It's been raining like hell all day long
-and there's nothing to do.
-
-Written January 24, 1967
-while poet-in-residence
-at the California Institute of Technology.</a>
+      <a name="contents" val="[[[At the California Institute of Technology, by Richard Brautigan, , I don't care how God-damn smart, these guys are: I'm bored., , It's been raining like hell all day long, and there's nothing to do., , Written January 24, 1967, while poet-in-residence, at the California Institute of Technology.]]]"/>
       <a name="lines" val="2"/>
     </comp>
     <wire from="(100,170)" to="(160,170)"/>

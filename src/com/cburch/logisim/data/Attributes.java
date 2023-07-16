@@ -108,27 +108,36 @@ public class Attributes {
     }
 
     public static File relativize(File abs, Window source) {
-      if (abs == null || !abs.isAbsolute() || !(source instanceof Frame))
+      if (abs == null || !abs.isAbsolute() || !(source instanceof Frame)) {
         return abs;
+      }
       Project proj = ((Frame)source).getProject();
       LogisimFile lf = (proj == null ? null : proj.getLogisimFile());
       Loader ld = (lf == null ? null : lf.getLoader());
       File parent = (ld == null ? null : ld.getCurrentDirectory());
       if (parent == null)
         return abs;
-      return parent.toPath().relativize(abs.toPath()).toFile();
+      File rel;
+      try {
+        rel = parent.toPath().toRealPath().relativize(abs.toPath().toRealPath()).toFile();
+      } catch (IOException ex) {
+        rel = parent.toPath().relativize(abs.toPath()).toFile();
+      }
+      return rel;
     }
     
     public static File resolve(File rel, Window source) {
-      if (rel == null || rel.isAbsolute() || !(source instanceof Frame))
+      if (rel == null || rel.isAbsolute() || !(source instanceof Frame)) {
         return rel;
+      }
       Project proj = ((Frame)source).getProject();
       LogisimFile lf = (proj == null ? null : proj.getLogisimFile());
       Loader ld = (lf == null ? null : lf.getLoader());
       File parent = (ld == null ? null : ld.getCurrentDirectory());
       if (parent == null)
         return rel;
-      return parent.toPath().resolve(rel.toPath()).toFile();
+      File abs = parent.toPath().resolve(rel.toPath()).toFile();
+      return abs;
     }
   }
 
@@ -155,7 +164,15 @@ public class Attributes {
     public String toStandardStringRelative(LinkedFile value, String outFilename) {
       if (value == null)
         return "";
-      return new File(outFilename).toPath().relativize(value.absolute.toPath()).toString();
+      if (outFilename == null) {
+        return value.absolute.toString();
+      } else {
+        try {
+          return new File(outFilename).toPath().toRealPath().relativize(value.absolute.toPath().toRealPath()).toString();
+        } catch (IOException e) {
+          return new File(outFilename).toPath().relativize(value.absolute.toPath()).toString();
+        }
+      }
     }
 
     @Override
@@ -186,14 +203,19 @@ public class Attributes {
     public LinkedFile parseFromFilesystem(File directory, String value) {
       if (value == null || value.equals(""))
         return null;
-      if (directory == null) {
-        // ??? should not happen?
+      if (directory == null || directory.toString().equals("")) {
+        // happens when copy-pasting
         File f = new File(value);
         return new LinkedFile(f, f);
       }
       Path parent = directory.toPath();
       Path abs = parent.resolve(new File(value).toPath());
-      Path rel = parent.relativize(abs);
+      Path rel;
+      try {
+        rel = parent.toRealPath().relativize(abs.toRealPath());
+      } catch (IOException ex) {
+        rel = parent.relativize(abs);
+      }
       return new LinkedFile(abs.toFile(), rel.toFile());
     }
 

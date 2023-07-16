@@ -39,6 +39,7 @@ import java.awt.event.KeyEvent;
 import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.circuit.appear.DynamicElement;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
+import com.cburch.logisim.circuit.appear.DynamicValueProvider;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
@@ -59,7 +60,7 @@ import com.cburch.logisim.tools.key.JoinedConfigurator;
 import com.cburch.logisim.util.GraphicsUtil;
 import com.cburch.logisim.util.StringUtil;
 
-public class Counter extends InstanceFactory implements DynamicElementProvider {
+public class Counter extends InstanceFactory implements DynamicElementProvider, DynamicValueProvider {
 
   public static int SymbolWidth(int NrOfBits) {
     return 150 + ((NrOfBits - 8) / 5) * 10;
@@ -451,6 +452,15 @@ public class Counter extends InstanceFactory implements DynamicElementProvider {
     for (int bit = 0; bit < width; bit++) {
       DrawDataBlock(painter, Xpos, Ypos + 110, bit, width);
     }
+  }
+
+  @Override
+  public Value getDynamicValue(Instance instance, Object instanceStateData) {
+    RegisterData data = (RegisterData) instanceStateData;
+    if (data == null)
+      return Value.NIL;
+    BitWidth dataWidth = instance.getAttributeValue(StdAttr.WIDTH);
+    return Value.createKnown(dataWidth, data.value);
   }
 
   @Override

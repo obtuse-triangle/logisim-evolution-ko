@@ -327,6 +327,23 @@ public class LocaleManager {
     return new LocaleFormatterWithGetter(this, key, arg);
   }
 
+  public StringGetter unlocalized(String val) {
+    return new ConstantGetter(val);
+  }
+
+  private static class ConstantGetter implements StringGetter {
+    private String str;
+
+    public ConstantGetter(String str) {
+      this.str = str;
+    }
+
+    public String toString() {
+      return str;
+    }
+  }
+
+
   private void loadDefault() {
     if (settings == null) {
       try {

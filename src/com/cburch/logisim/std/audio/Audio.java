@@ -28,66 +28,43 @@
  *   + Kevin Walsh (kwalsh@holycross.edu, http://mathcs.holycross.edu/~kwalsh)
  */
 
-package com.cburch.logisim.std;
+package com.cburch.logisim.std.audio;
 import static com.cburch.logisim.std.Strings.S;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
-import com.bfh.logisim.library.BFHPraktika;
-import com.cburch.logisim.std.arith.Arithmetic;
-import com.cburch.logisim.std.base.Base;
-import com.cburch.logisim.std.gates.Gates;
-import com.cburch.logisim.std.io.Io;
-import com.cburch.logisim.std.audio.Audio;
-import com.cburch.logisim.std.memory.Memory;
-import com.cburch.logisim.std.plexers.Plexers;
-import com.cburch.logisim.std.wiring.Wiring;
-import com.cburch.logisim.std.wiring.Analog;
+import com.cburch.logisim.tools.FactoryDescription;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.Tool;
 
-public class Builtin extends Library {
-  private List<Library> libraries = null;
+public class Audio extends Library {
 
-  public Builtin() {
-    libraries = Arrays.asList(new Library[] { new Base(), new Gates(),
-      new Wiring(), new Analog(), new Plexers(), new Arithmetic(), new Memory(),
-      new Io(), new Audio(), new BFHPraktika(), });
-  }
+  private static FactoryDescription[] DESCRIPTIONS = {
+    new FactoryDescription("MidiOut", S.getter("audioMidiOutComponent"), "midiout.gif", "MidiOut"),
+  };
 
-  public static boolean isBuiltinLibrary(Class<? extends Library> libClass) {
-    return libClass == Builtin.class
-        || libClass == Base.class
-        || libClass == Gates.class
-        || libClass == Wiring.class
-        || libClass == Analog.class
-        || libClass == Plexers.class
-        || libClass == Arithmetic.class
-        || libClass == Memory.class
-        || libClass == Io.class
-        || libClass == Audio.class
-        || libClass == BFHPraktika.class;
-  }
+  private List<Tool> tools = null;
+
+  public Audio() { }
 
   @Override
   public String getDisplayName() {
-    return S.get("builtinLibrary");
-  }
-
-  @Override
-  public List<Library> getLibraries() {
-    return libraries;
+    return S.get("audioLibrary");
   }
 
   @Override
   public String getName() {
-    return "Builtin";
+    return "Audio";
   }
 
   @Override
   public List<Tool> getTools() {
-    return Collections.emptyList();
+    if (tools == null) {
+      tools = new ArrayList<>();
+      tools.addAll(FactoryDescription.getTools(Audio.class, DESCRIPTIONS));
+    }
+    return tools;
   }
+
 }

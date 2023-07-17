@@ -346,18 +346,6 @@ public class Attributes {
     }
   }
 
-  private static class ConstantGetter implements StringGetter {
-    private String str;
-
-    public ConstantGetter(String str) {
-      this.str = str;
-    }
-
-    public String toString() {
-      return str;
-    }
-  }
-
   private static class DirectionAttribute extends OptionAttribute<Direction> {
     private static Direction[] vals = { Direction.NORTH, Direction.SOUTH,
       Direction.EAST, Direction.WEST, };
@@ -742,7 +730,7 @@ public class Attributes {
   }
 
   private static StringGetter getter(String s) {
-    return new ConstantGetter(s);
+    return S.unlocalized(s);
   }
 
   private Attributes() {

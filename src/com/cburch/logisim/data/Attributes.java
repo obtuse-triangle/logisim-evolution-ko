@@ -164,7 +164,7 @@ public class Attributes {
     public String toStandardStringRelative(LinkedFile value, String outFilename) {
       if (value == null)
         return "";
-      if (outFilename == null) {
+      if (outFilename == null || outFilename.equals("")) {
         return value.absolute.toString();
       } else {
         try {

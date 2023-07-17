@@ -39,8 +39,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -126,8 +126,12 @@ public class FileViewer extends InstanceFactory {
     @Override
     public Object clone() {
       try {
-        return super.clone();
+        State other = (State) super.clone();
+        other.contents = new ArrayList<>(this.contents);
+        other.map = new HashMap<>(this.map);
+        return other;
       } catch (CloneNotSupportedException e) {
+        e.printStackTrace();
         return null;
       }
     }

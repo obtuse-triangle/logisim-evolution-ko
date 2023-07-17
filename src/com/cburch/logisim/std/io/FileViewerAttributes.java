@@ -30,7 +30,6 @@
 
 package com.cburch.logisim.std.io;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -97,21 +96,21 @@ class FileViewerAttributes extends AbstractAttributeSet {
   public <V> void updateAttr(Attribute<V> attr, V value) {
     if (attr == FileViewer.ATTR_WIDTH)
       width = (BitWidth) value;
-    if (attr == FileViewer.ATTR_LINES)
+    else if (attr == FileViewer.ATTR_LINES)
       lines = (Integer) value;
-    if (attr == FileViewer.ATTR_COLS)
+    else if (attr == FileViewer.ATTR_COLS)
       cols = (Integer) value;
-    if (attr == FileViewer.ATTR_SELECT)
+    else if (attr == FileViewer.ATTR_SELECT)
       select = (AttributeOption) value;
-    if (attr == FileViewer.ATTR_STORAGE) {
+    else if (attr == FileViewer.ATTR_STORAGE) {
       if (value != storage) {
         fireAttributeListChanged(); // why before changing value?
         storage = (AttributeOption) value;
       }
     }
-    if (attr == FileViewer.ATTR_CONTENTS )
+    else if (attr == FileViewer.ATTR_CONTENTS )
       contents = (List<String>) value;
-    if (attr == FileViewer.ATTR_FILENAME )
+    else if (attr == FileViewer.ATTR_FILENAME )
       filename = (Attributes.LinkedFile) value;
   }
 

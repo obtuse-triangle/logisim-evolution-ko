@@ -87,6 +87,8 @@ public class Io extends Library {
         "tty.gif", "Tty"),
     new FactoryDescription("FileViewer", S.getter("fileViewerComponent"),
         "fileviewer.gif", "FileViewer"),
+    new FactoryDescription("Slideshow", S.getter("slideShowComponent"),
+        "slideshow.gif", "Slideshow"),
   };
 
   private List<Tool> tools = null;

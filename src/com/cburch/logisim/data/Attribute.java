@@ -81,7 +81,7 @@ public abstract class Attribute<V> {
   }
 
   public String toStandardStringRelative(V value, String outFilepath) {
-    return value.toString();
+    return toStandardString(value);
   }
 
   @Override

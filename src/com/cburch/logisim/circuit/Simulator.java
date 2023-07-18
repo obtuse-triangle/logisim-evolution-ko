@@ -148,6 +148,19 @@ public class Simulator {
     private boolean _oops = false;
     private double _avgTickNanos = -1.0; // nanoseconds, EWMA
 
+    // DEBUGGING
+    // private final long era = lastTick;
+    // private String displayTime(long t) {
+    //   long delta = t - era;
+    //   return String.format("[era+%d.%06dms]", delta/1000000, delta%1000000);
+    // }
+    // private String displayDuration(long delta) {
+    //   return String.format("%.06fms", delta/1000000.0);
+    // }
+    // private String displayDuration(double delta) {
+    //   return String.format("%.06fms", delta/1000000.0);
+    // }
+
     // This last one should be made thread-safe, but it isn't for now.
     private PropagationPoints stepPoints = new PropagationPoints();
 
@@ -320,17 +333,23 @@ public class Simulator {
             long lastNanos = now - lastTick;
             double avg;
             if (_avgTickNanos <= 0 || k <= 1) {
-              // System.out.println("initialize avg to " + lastNanos);
-              avg = lastNanos;
-              deadline = lastTick + _autoTickNanos;
+              avg = _autoTickNanos;
+              deadline = now;
+              // System.out.printf("k=%d, now = %s lastNanos = %s - %s = %s = avg, deadline = %s + %s = now+%s\n",
+              //     k, displayTime(now), displayTime(now), displayTime(lastTick), displayDuration(lastNanos),
+              //     displayTime(lastTick), displayDuration(_autoTickNanos), displayDuration(deadline-now));
             } else {
-              // EWMA with factors 1/k and (k-1)k
+              // EWMA with factors 1/k and (k-1)/k
               avg = ((k - 1.0)/k) * _avgTickNanos + (1.0/k) * lastNanos;
               // Assume last k-1 ticks took about _avgTickNanos each,
               // so set deadline to make this tick bring the average over k
               // ticks be in line with target.
               deadline = lastTick + _autoTickNanos -
                   (long)((k-1)*(_avgTickNanos - _autoTickNanos));
+              // System.out.printf("k=%d, now = %s lastNanos = %s - %s = %s, avg = (k-1)/k*%s + 1/k*%s = %s, deadline = %s + %s - %s = now+%s\n",
+              //     k, displayTime(now), displayTime(now), displayTime(lastTick), displayDuration(lastNanos), displayDuration(_avgTickNanos),
+              //     displayDuration(lastNanos), displayDuration(avg),
+              //     displayTime(lastTick), displayDuration(_autoTickNanos), displayDuration((long)((k-1)*(_avgTickNanos - _autoTickNanos))), displayDuration(deadline-now));
             }
             delta = deadline - now;
             // if (delta > 0 && _autoTickFreq >= 20.0) {
@@ -422,6 +441,7 @@ public class Simulator {
 
       if (doTick || (doTickIfStable && prop != null && !prop.isPending())) {
         lastTick = now;
+        // System.out.printf("TICK: lastTick = now = %s\n", displayTime(lastTick));
         ticked = true;
         if (prop != null)
           hasClocks = prop.toggleClocks();

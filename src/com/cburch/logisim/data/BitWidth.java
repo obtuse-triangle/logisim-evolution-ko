@@ -33,14 +33,14 @@ package com.cburch.logisim.data;
 import com.cburch.logisim.gui.generic.ComboBox;
 import com.cburch.logisim.util.StringGetter;
 
-public class BitWidth implements Comparable<BitWidth> {
+public final class BitWidth implements Comparable<BitWidth> {
+
   static class Attribute extends com.cburch.logisim.data.Attribute<BitWidth> {
     private BitWidth[] choices;
 
     public Attribute(String name, StringGetter disp) {
       super(name, disp);
-      ensurePrefab();
-      choices = prefab;
+      choices = prefab; // 1 to 32
     }
 
     public Attribute(String name, StringGetter disp, int min, int max) {
@@ -57,7 +57,7 @@ public class BitWidth implements Comparable<BitWidth> {
       ComboBox combo = new ComboBox<>(choices);
       if (value != null) {
         int wid = value.getWidth();
-        if (wid <= 0 || wid > prefab.length) {
+        if (wid <= 0 || wid > prefab.length) { // FIXME: should check min/max?
           combo.addItem(value);
         }
         combo.setSelectedItem(value);
@@ -72,7 +72,6 @@ public class BitWidth implements Comparable<BitWidth> {
   }
 
   public static BitWidth create(int width) {
-    ensurePrefab();
     if (width <= 0) {
       if (width == 0) {
         return UNKNOWN;
@@ -83,17 +82,9 @@ public class BitWidth implements Comparable<BitWidth> {
     } else if (width - 1 < prefab.length) {
       return prefab[width - 1];
     } else {
+      // FIXME: should never happen?
+      System.out.println("WARNING: width " + width + " exceeds max 32 supported");
       return new BitWidth(width);
-    }
-  }
-
-  private static void ensurePrefab() {
-    if (prefab == null) {
-      prefab = new BitWidth[Math.min(32, Value.MAX_WIDTH)];
-      prefab[0] = ONE;
-      for (int i = 1; i < prefab.length; i++) {
-        prefab[i] = new BitWidth(i + 1);
-      }
     }
   }
 
@@ -107,12 +98,33 @@ public class BitWidth implements Comparable<BitWidth> {
   }
 
   public static final BitWidth UNKNOWN = new BitWidth(0);
-
   public static final BitWidth ONE = new BitWidth(1);
+  public static final BitWidth TWO = new BitWidth(2);
+  public static final BitWidth THREE = new BitWidth(3);
+  public static final BitWidth FOUR = new BitWidth(4);
+  public static final BitWidth FIVE = new BitWidth(5);
+  public static final BitWidth SIX = new BitWidth(6);
+  public static final BitWidth SEVEN = new BitWidth(7);
+  public static final BitWidth EIGHT = new BitWidth(8);
 
-  private static BitWidth[] prefab = null;
+  private static final BitWidth[] prefab = new BitWidth[] {
+    ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT,
+   new BitWidth(9), new BitWidth(10), new BitWidth(11), new BitWidth(12),
+   new BitWidth(13), new BitWidth(14), new BitWidth(15), new BitWidth(16),
+   new BitWidth(17), new BitWidth(18), new BitWidth(19), new BitWidth(20),
+   new BitWidth(21), new BitWidth(22), new BitWidth(23), new BitWidth(24),
+   new BitWidth(25), new BitWidth(26), new BitWidth(27), new BitWidth(28),
+   new BitWidth(29), new BitWidth(30), new BitWidth(31), new BitWidth(32) };
 
   final int width;
+
+  // This method only supports widths from 1 to 32
+  public static BitWidth of(int width) {
+    if (width <= 0 || width > 32)
+      throw new IllegalArgumentException("width " + width + " must be within 0 to 32");
+    else
+      return prefab[width-1];
+  }
 
   private BitWidth(int width) {
     this.width = width;
@@ -130,6 +142,7 @@ public class BitWidth implements Comparable<BitWidth> {
     return this.width == other.width;
   }
 
+  // does not work if width > 32
   public int getMask() {
     if (width == 0)
       return 0;

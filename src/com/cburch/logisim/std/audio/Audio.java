@@ -41,7 +41,7 @@ import com.cburch.logisim.tools.Tool;
 public class Audio extends Library {
 
   private static FactoryDescription[] DESCRIPTIONS = {
-    new FactoryDescription("MidiOut", S.getter("audioMidiOutComponent"), "midiout.gif", "MidiOut"),
+    new FactoryDescription("MidiSink", S.getter("audioMidiSinkComponent"), "midisink.gif", "MidiSink"),
   };
 
   private List<Tool> tools = null;

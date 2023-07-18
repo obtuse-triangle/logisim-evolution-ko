@@ -426,6 +426,19 @@ public final class Value {
       return FALSE;
   }
 
+  public Value extract(int from /* inclusive */ , int to /* exclusive */) {
+    if (from < 0 || from >= to || to > width) {
+      throw new RuntimeException("Invalid range of bits to extract");
+    } else {
+      int n = to - from;
+      int mask = (n == 32 ? -1 : ((1 << n) - 1)) << from;
+      return Value.create(n,
+          (this.error & mask) >> from,
+          (this.unknown & mask) >> from,
+          (this.value & mask) >> from);
+    }
+  }
+
   public Value[] getAll() {
     Value[] ret = new Value[width];
     for (int i = 0; i < ret.length; i++) {
@@ -525,10 +538,10 @@ public final class Value {
       return val;
     } else {
       int mask = ~(1 << which);
-      return Value.create(this.width, (this.error & mask)
-          | (val.error << which), (this.unknown & mask)
-          | (val.unknown << which), (this.value & mask)
-          | (val.value << which));
+      return Value.create(this.width,
+          (this.error & mask) | (val.error << which),
+          (this.unknown & mask) | (val.unknown << which),
+          (this.value & mask) | (val.value << which));
     }
   }
 

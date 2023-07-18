@@ -697,12 +697,13 @@ public class CircuitWires {
               WireThread[] from_threads = from_bundle.threads;
               if (i >= from_threads.length) {
                 throw new ArrayIndexOutOfBoundsException(
-                    "from " + i + " of "
-                    + from_threads.length);
+                    "computeConnectivity error, out of bounds: "
+                    + "from " + i + " of " + from_threads.length);
               }
               if (thr >= to_threads.length) {
-                throw new ArrayIndexOutOfBoundsException("to "
-                    + thr + " of " + to_threads.length);
+                throw new ArrayIndexOutOfBoundsException(
+                    "computeConnectivity error, out of bounds: "
+                    + "to " + thr + " of " + to_threads.length);
               }
               from_threads[i].unite(to_threads[thr]);
             }

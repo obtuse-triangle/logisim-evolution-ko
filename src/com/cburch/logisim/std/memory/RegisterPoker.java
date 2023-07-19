@@ -50,7 +50,7 @@ public class RegisterPoker extends InstancePoker {
   public boolean init(InstanceState state, MouseEvent e) {
     RegisterData data = (RegisterData) state.getData();
     if (data == null) {
-      data = new RegisterData();
+      data = new RegisterData(state.getAttributeValue(Register.ATTR_INIT));
       state.setData(data);
     }
     initValue = data.value;

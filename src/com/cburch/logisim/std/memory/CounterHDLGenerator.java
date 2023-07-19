@@ -38,6 +38,7 @@ public class CounterHDLGenerator extends HDLGenerator {
     super(ctx, "memory", "Counter", "i_Ctr");
     parameters.add("BitWidth", stdWidth());
     parameters.add("MaxVal", _attrs.getValue(Counter.ATTR_MAX));
+    parameters.add("InitVal", _attrs.getValue(Counter.ATTR_INIT));
     parameters.add("Mode", mode());
 
     inPorts.add("LoadData", "BitWidth", Counter.IN, false);
@@ -136,7 +137,7 @@ public class CounterHDLGenerator extends HDLGenerator {
       out.stmt();
       out.stmt("make_flops : PROCESS( GlobalClock , s_real_enable , Clear , s_next_counter_value )");
       out.stmt("BEGIN");
-      out.stmt("   IF (Clear = '1') THEN s_counter_value <= (OTHERS => '0');");
+      out.stmt("   IF (Clear = '1') THEN s_counter_value <= std_logic_vector(to_unsigned(InitVal,BitWidth));");
       out.stmt("   ELSIF (GlobalClock'event AND (GlobalClock = '1')) THEN");
       out.stmt("      IF (s_real_enable = '1') THEN s_counter_value <= s_next_counter_value;");
       out.stmt("      END IF;");
@@ -174,7 +175,7 @@ public class CounterHDLGenerator extends HDLGenerator {
       out.stmt();
       out.stmt("always @(posedge GlobalClock or posedge Clear)");
       out.stmt("begin");
-      out.stmt("    if (Clear) s_counter_value <= 0;");
+      out.stmt("    if (Clear) s_counter_value <= InitVal;");
       out.stmt("    else if (s_real_enable) s_counter_value <= s_next_counter_value;");
       out.stmt("end");
       out.stmt();

@@ -32,14 +32,19 @@ package com.cburch.logisim.std.memory;
 import static com.cburch.logisim.std.Strings.S;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
+import java.util.List;
 
 import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.circuit.appear.DynamicElement;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
 import com.cburch.logisim.circuit.appear.DynamicValueProvider;
+import com.cburch.logisim.data.AbstractAttributeSet;
 import com.cburch.logisim.data.Attribute;
+import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.Attributes;
 import com.cburch.logisim.data.BitWidth;
@@ -142,21 +147,23 @@ public class Register extends InstanceFactory implements DynamicElementProvider,
 
   public static final Attribute<Boolean> ATTR_SHOW_IN_TAB
       = Attributes.forBoolean("showInTab", S.getter("registerShowInTab"));
+  
+  public static final Attribute<Integer> ATTR_INIT = Attributes
+      .forHexInteger("initial", S.getter("registerInitialValueAttr"));
 
   public Register() {
     super("Register", S.getter("registerComponent"));
-    setAttributes(new Attribute[] { StdAttr.WIDTH, StdAttr.TRIGGER,
-      StdAttr.LABEL, StdAttr.LABEL_LOC, StdAttr.LABEL_FONT, StdAttr.LABEL_COLOR,
-      ATTR_SHOW_IN_TAB, StdAttr.APPEARANCE},
-      new Object[] { BitWidth.create(8), StdAttr.TRIG_RISING, "",
-        Direction.NORTH, StdAttr.DEFAULT_LABEL_FONT, Color.BLACK, true,
-        StdAttr.APPEAR_CLASSIC});
     setKeyConfigurator(JoinedConfigurator.create(
           new BitWidthConfigurator(StdAttr.WIDTH),
           new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK)));
     setIconName("register.gif");
     setInstancePoker(RegisterPoker.class);
     setInstanceLogger(RegisterLogger.class);
+  }
+
+  @Override
+  public AttributeSet createAttributeSet() {
+    return new RegisterAttributes();
   }
 
   @Override
@@ -273,7 +280,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider,
 
       // determine text to draw in label
       String a;
-      int val = state == null ? 0 : state.value;
+      int val = state == null ? painter.getAttributeValue(ATTR_INIT) : state.value;
       a = StringUtil.toHexString(width, val);
       Object Trigger = painter.getAttributeValue(StdAttr.TRIGGER);
       boolean IsLatch = Trigger.equals(StdAttr.TRIG_HIGH)
@@ -308,7 +315,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider,
   public void propagate(InstanceState state) {
     RegisterData data = (RegisterData) state.getData();
     if (data == null) {
-      data = new RegisterData();
+      data = new RegisterData(state.getAttributeValue(ATTR_INIT));
       state.setData(data);
     }
 
@@ -317,7 +324,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider,
     boolean triggered = data.updateClock(state.getPortValue(CK), triggerType);
 
     if (state.getPortValue(CLR) == Value.TRUE) {
-      data.value = 0;
+      data.value = state.getAttributeValue(ATTR_INIT);
     } else if (triggered && state.getPortValue(EN) != Value.FALSE) {
       Value in = state.getPortValue(IN);
       if (in.isFullyDefined())
@@ -340,5 +347,92 @@ public class Register extends InstanceFactory implements DynamicElementProvider,
 
   public DynamicElement createDynamicElement(int x, int y, DynamicElement.Path path) {
     return new RegisterShape(x, y, path);
+  }
+ 
+  private static final List<Attribute<?>> ATTRIBUTES = Arrays.asList(
+      new Attribute<?>[] {
+        StdAttr.WIDTH, ATTR_INIT, StdAttr.TRIGGER,
+        StdAttr.LABEL, StdAttr.LABEL_LOC, StdAttr.LABEL_FONT, StdAttr.LABEL_COLOR,
+        ATTR_SHOW_IN_TAB, StdAttr.APPEARANCE });
+
+
+  private static class RegisterAttributes extends AbstractAttributeSet {
+      BitWidth width = BitWidth.create(8);
+      Value initial = Value.createKnown(width, 0);
+      AttributeOption trigger = StdAttr.TRIG_RISING;
+      String label = "";
+      Direction labelLoc = Direction.NORTH;;
+      Font labelFont = StdAttr.DEFAULT_LABEL_FONT;
+      Color labelColor = Color.BLACK;
+      boolean showInTab = true;
+      AttributeOption appear = StdAttr.APPEAR_CLASSIC;
+
+
+    @Override
+    protected void copyInto(AbstractAttributeSet destObj) {
+      RegisterAttributes dest = (RegisterAttributes) destObj;
+      dest.width = this.width;
+      dest.initial = this.initial;
+      dest.trigger = this.trigger;
+      dest.label = this.label;
+      dest.labelLoc = this.labelLoc;
+      dest.labelFont = this.labelFont;
+      dest.labelColor = this.labelColor;
+      dest.showInTab = this.showInTab;
+      dest.appear = this.appear;
+    }
+
+    @Override
+    public List<Attribute<?>> getAttributes() {
+      return ATTRIBUTES;
+    }
+
+    @Override
+    public <V> V getValue(Attribute<V> attr) {
+      if (attr == StdAttr.WIDTH)
+        return (V) width;
+      if (attr == ATTR_INIT)
+        return (V) Integer.valueOf(initial.toIntValue());
+      if (attr == StdAttr.TRIGGER)
+        return (V) trigger;
+      if (attr == StdAttr.LABEL)
+        return (V) label;
+      if (attr == StdAttr.LABEL_LOC)
+        return (V) labelLoc;
+      if (attr == StdAttr.LABEL_FONT)
+        return (V) labelFont;
+      if (attr == StdAttr.LABEL_COLOR)
+        return (V) labelColor;
+      if (attr == ATTR_SHOW_IN_TAB)
+        return (V) Boolean.valueOf(showInTab);
+      if (attr == StdAttr.APPEARANCE)
+        return (V) appear;
+      return null;
+    }
+
+    @Override
+    public <V> void updateAttr(Attribute<V> attr, V value) {
+      if (attr == StdAttr.WIDTH) {
+        width = (BitWidth) value;
+        initial = initial.extendWidth(width.getWidth(), initial.get(initial.getWidth() - 1));
+      } else if (attr == ATTR_INIT) {
+        int val = ((Integer) value).intValue();
+        initial = Value.createKnown(width, val);
+      } else if (attr == StdAttr.TRIGGER) {
+        trigger = (AttributeOption) value;
+      } else if (attr == StdAttr.LABEL) {
+        label = (String) value;
+      } else if (attr == StdAttr.LABEL_LOC) {
+        labelLoc = (Direction) value;
+      } else if (attr == StdAttr.LABEL_FONT) {
+        labelFont = (Font) value;
+      } else if (attr == StdAttr.LABEL_COLOR) {
+        labelColor = (Color) value;
+      } else if (attr == ATTR_SHOW_IN_TAB) {
+        showInTab = ((Boolean) value);
+      } else if (attr == StdAttr.APPEARANCE) {
+        appear = (AttributeOption) value;
+      }
+    }
   }
 }

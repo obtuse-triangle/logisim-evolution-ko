@@ -37,6 +37,7 @@ public class RegisterHDLGenerator extends HDLGenerator {
   public RegisterHDLGenerator(ComponentContext ctx) {
     super(ctx, "memory", "${TRIGGER}Register", "REGISTER");
     parameters.add("BitWidth", stdWidth());
+    parameters.add("InitVal", _attrs.getValue(Register.ATTR_INIT));
     inPorts.add("D", "BitWidth", Register.IN, false);
     inPorts.add("Reset", 1, Register.CLR, false);
     inPorts.add("Load", 1, Register.EN, true);
@@ -53,7 +54,7 @@ public class RegisterHDLGenerator extends HDLGenerator {
       out.stmt("");
       out.stmt("   make_memory : PROCESS( GlobalClock , Reset , Load , ClockEnable , D )");
       out.stmt("   BEGIN");
-      out.stmt("      IF (Reset = '1') THEN s_state_reg <= (OTHERS => '0');");
+      out.stmt("      IF (Reset = '1') THEN s_state_reg <= std_logic_vector(to_unsigned(InitVal,BitWidth));");
       if (edgeTriggered()) {
         out.stmt("      ELSIF (GlobalClock'event AND (GlobalClock = '1')) THEN");
         out.stmt("         IF (Load = '1' AND ClockEnable = '1') THEN");
@@ -74,13 +75,13 @@ public class RegisterHDLGenerator extends HDLGenerator {
       if (edgeTriggered()) {
         out.stmt("   always @(posedge GlobalClock or posedge Reset)");
         out.stmt("   begin");
-        out.stmt("      if (Reset) s_state_reg <= 0;");
+        out.stmt("      if (Reset) s_state_reg <= InitVal;");
         out.stmt("      else if (Load&ClockEnable) s_state_reg <= D;");
         out.stmt("   end");
       } else {
         out.stmt("   always @(*)");
         out.stmt("   begin");
-        out.stmt("      if (Reset) s_state_reg <= 0;");
+        out.stmt("      if (Reset) s_state_reg <= InitVal;");
         out.stmt("      else if ((GlobalClock==1)&Load&ClockEnable) s_state_reg <= D;");
         out.stmt("   end");
       }

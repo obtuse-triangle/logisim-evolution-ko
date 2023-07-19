@@ -40,6 +40,7 @@ import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.circuit.appear.DynamicElement;
 import com.cburch.logisim.circuit.appear.DynamicElementProvider;
 import com.cburch.logisim.circuit.appear.DynamicValueProvider;
+import com.cburch.logisim.data.AbstractAttributeSet;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.data.AttributeSet;
@@ -77,6 +78,8 @@ public class Counter extends InstanceFactory implements DynamicElementProvider, 
       "load", S.getter("counterGoalLoad"));
   static final Attribute<Integer> ATTR_MAX = Attributes.forHexInteger("max",
       S.getter("counterMaxAttr"));
+
+  static final Attribute<Integer> ATTR_INIT = Register.ATTR_INIT;
 
   static final Attribute<AttributeOption> ATTR_ON_GOAL = Attributes
       .forOption("ongoal", S.getter("counterGoalAttr"),
@@ -467,7 +470,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider, 
   public void propagate(InstanceState state) {
     RegisterData data = (RegisterData) state.getData();
     if (data == null) {
-      data = new RegisterData();
+      data = new RegisterData(state.getAttributeValue(ATTR_INIT));
       state.setData(data);
     }
 
@@ -480,7 +483,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider, 
     Value newValue;
     boolean carry;
     if (state.getPortValue(CLR) == Value.TRUE) {
-      newValue = Value.createKnown(dataWidth, 0);
+      newValue = Value.createKnown(dataWidth, state.getAttributeValue(ATTR_INIT));
       carry = false;
     } else {
       boolean ld = state.getPortValue(LD) == Value.TRUE;

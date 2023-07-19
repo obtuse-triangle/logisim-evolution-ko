@@ -34,16 +34,17 @@ import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSets;
 import com.cburch.logisim.data.BitWidth;
 import com.cburch.logisim.data.Direction;
+import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.StdAttr;
 
 class CounterAttributes extends AttributeSets.ArrayBacked {
 
   public CounterAttributes() {
-    super(new Attribute<?>[] { StdAttr.WIDTH,
+    super(new Attribute<?>[] { StdAttr.WIDTH, Counter.ATTR_INIT, 
       Counter.ATTR_MAX, Counter.ATTR_ON_GOAL, StdAttr.EDGE_TRIGGER,
       StdAttr.LABEL, StdAttr.LABEL_FONT, StdAttr.LABEL_LOC, 
       Register.ATTR_SHOW_IN_TAB, StdAttr.APPEARANCE },
-      new Object[] { BitWidth.create(8), Integer.valueOf(0xFF),
+      new Object[] { BitWidth.create(8), 0, Integer.valueOf(0xFF),
         Counter.ON_GOAL_WRAP, StdAttr.TRIG_RISING, "",
         StdAttr.DEFAULT_LABEL_FONT, Direction.NORTH,
         true, StdAttr.APPEAR_CLASSIC});
@@ -54,8 +55,11 @@ class CounterAttributes extends AttributeSets.ArrayBacked {
     if (attr == StdAttr.WIDTH) {
       BitWidth oldWidth = getValue(StdAttr.WIDTH);
       super.updateAttr(attr, value);
-      // if width changes, update max accordingly
+      // if width changes, update initial and max accordingly
       BitWidth newWidth = (BitWidth) value;
+      Value oldInitial = Value.createKnown(oldWidth, getValue(Counter.ATTR_INIT));
+      Value newInitial = oldInitial.extendWidth(newWidth.getWidth(), oldInitial.get(oldInitial.getWidth() - 1));
+      setAttr(Counter.ATTR_INIT, newInitial.toIntValue());
       int oldMax = getValue(Counter.ATTR_MAX);
       int newMax;
       if (newWidth.getWidth() > oldWidth.getWidth())
@@ -68,6 +72,11 @@ class CounterAttributes extends AttributeSets.ArrayBacked {
       BitWidth width = getValue(StdAttr.WIDTH);
       int newVal = ((Integer) value).intValue() & width.getMask();
       super.updateAttr(Counter.ATTR_MAX, newVal);
+    } else if (attr == Counter.ATTR_INIT) {
+      // if initial changes, ensure it fits within existing width
+      BitWidth width = getValue(StdAttr.WIDTH);
+      int newVal = ((Integer) value).intValue() & width.getMask();
+      super.updateAttr(Counter.ATTR_INIT, newVal);
     } else {
       super.updateAttr(attr, value);
     }

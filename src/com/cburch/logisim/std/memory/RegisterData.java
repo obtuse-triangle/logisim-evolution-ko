@@ -35,8 +35,8 @@ import com.cburch.logisim.instance.InstanceData;
 class RegisterData extends ClockState implements InstanceData {
   int value;
 
-  public RegisterData() {
-    value = 0;
+  public RegisterData(int initial) {
+    value = initial;
   }
 
   public int getValue() {

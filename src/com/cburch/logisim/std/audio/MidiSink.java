@@ -57,6 +57,8 @@ import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.instance.StdAttr;
+import com.cburch.logisim.util.EventScheduler;
+import com.cburch.logisim.util.QNode;
 
 public class MidiSink extends InstanceFactory {
 
@@ -520,63 +522,22 @@ public class MidiSink extends InstanceFactory {
 
   }
 
-  static class Release {
-    long time;
+  static class Release extends QNode {
     int chan, note, velo;
     Release(long hold, int chan, int note, int velo) {
-      this.time = System.currentTimeMillis() + hold;
+      super(System.currentTimeMillis() + hold);
       this.chan = chan;
       this.note = note;
       this.velo = velo;
     }
   }
 
-  static class Releaser extends Thread {
-    LinkedList<Release> q = new LinkedList<>();
-    Object lock = new Object();
+  static class Releaser extends EventScheduler<Release> {
 
-    public void run() {
-      while (true) {
-        Release r = null;
-        synchronized(lock) {
-          while (true) {
-            if (q.isEmpty()) {
-              try { lock.wait(); }
-              catch (InterruptedException e) { }
-            } else {
-              r = q.getFirst();
-              long now = System.currentTimeMillis();
-              if (r.time <= now) {
-                q.remove();
-                break;
-              }
-              try { lock.wait(r.time - now); }
-              catch (InterruptedException e) { }
-            }
-          }
-        }
-        play(256 - r.note, r.velo, 0, r.chan, 0);
-      }
-    }
+    Releaser() { super("MidiNoteReleaser"); }
 
-    void schedule(Release r) {
-      synchronized(lock) {
-        if (q.isEmpty()) { // common case
-          q.addLast(r);
-          lock.notifyAll();
-        } else if (q.getLast().time <= r.time) { // common case
-          q.addLast(r);
-          // no need to notify, releaser is waiting for earlier event
-        } else { // rare case: insert earlier in queue
-          ListIterator<Release> it = q.listIterator(q.size() - 1);
-          while (it.hasPrevious())
-            if (it.previous().time <= r.time)
-              break;
-          it.add(r);
-          if (it.previousIndex() == 0)
-            lock.notifyAll();
-        }
-      }
+    public void fire(Release r) {
+      play(256 - r.note, r.velo, 0, r.chan, 0);
     }
 
   }

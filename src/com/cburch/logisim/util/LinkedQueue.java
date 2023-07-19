@@ -28,32 +28,34 @@
  *   + Kevin Walsh (kwalsh@holycross.edu, http://mathcs.holycross.edu/~kwalsh)
  */
 
-package com.cburch.logisim.circuit;
-import static com.cburch.logisim.circuit.SplayQueue.Node;
+package com.cburch.logisim.util;
 
 // A simple linked-list queue implementation, using keys of type long, and
-// values that extend type SplayQueue.Node. This supports (approximately) a
+// values that extend type QNode. This supports (approximately) a
 // subset of the java.util.PriorityQueue API, but only enough to support
 // Propagator.
-public class LinkedQueue<T extends SplayQueue.Node> {
+public class LinkedQueue<T extends QNode> {
 
-  // Objects in the queue must be subclasses of SplayQueue.Node.
+  // Objects in the queue must be subclasses of QNode.
 
-  private Node head, tail;
+  private QNode head, tail;
   private int size;
 
-  // add(t) inserts a new node into the queue.
-  public void add(T t) {
+  // add(t) inserts a new node into the queue. Returns true if new node is the
+  // new head, i.e. if t has the lowest key in queue. Returns false otherwise,
+  // i.e. if t is not the new head because some other node in queue comes before
+  // new node's key.
+  public boolean add(T t) {
     size++;
 
     if (tail == null) {
       head = tail = t;
       t.left = t.right = null;
-      return;
+      return true; // head is now t
     }
 
     // Find node p that should preceed t.
-    Node p = tail;
+    QNode p = tail;
     while (p != null && t.key < p.key)
       p = p.left;
 
@@ -62,6 +64,7 @@ public class LinkedQueue<T extends SplayQueue.Node> {
       t.left = null;
       head.left = t;
       head = t;
+      return true; // head is now t
     } else {
       t.right = p.right;
       t.left = p;
@@ -70,6 +73,7 @@ public class LinkedQueue<T extends SplayQueue.Node> {
       else
         p.right.left = t;
       p.right = t;
+      return false; // head is unchanged
     }
   }
 
@@ -105,11 +109,5 @@ public class LinkedQueue<T extends SplayQueue.Node> {
     return t;
   }
 
-  String id(Node n) {
-    if (n == null)
-      return "null";
-    else
-      return "@"+n.hashCode();
-  }
 
 }

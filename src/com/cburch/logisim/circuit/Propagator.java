@@ -41,6 +41,9 @@ import com.cburch.logisim.data.AttributeListener;
 import com.cburch.logisim.data.Location;
 import com.cburch.logisim.data.Value;
 import com.cburch.logisim.file.Options;
+import com.cburch.logisim.util.QNode;
+import com.cburch.logisim.util.SplayQueue;
+import com.cburch.logisim.util.LinkedQueue;
 
 public class Propagator {
   // static class ComponentPoint {
@@ -95,7 +98,7 @@ public class Propagator {
   //   DrivenValue(Component c, Value v) { driver = c; val = v; }
   // }
 
-  public static class SimulatorEvent extends SplayQueue.Node
+  public static class SimulatorEvent extends QNode
     implements Comparable<SimulatorEvent> {
 
     int time;

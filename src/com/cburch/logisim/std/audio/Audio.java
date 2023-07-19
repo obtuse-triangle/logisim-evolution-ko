@@ -42,6 +42,7 @@ public class Audio extends Library {
 
   private static FactoryDescription[] DESCRIPTIONS = {
     new FactoryDescription("MidiSink", S.getter("audioMidiSinkComponent"), "midisink.gif", "MidiSink"),
+    new FactoryDescription("MidiIn", S.getter("audioMidiInComponent"), "midiin.gif", "MidiIn"),
   };
 
   private List<Tool> tools = null;

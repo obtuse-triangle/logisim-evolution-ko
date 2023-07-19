@@ -97,6 +97,7 @@ public class MidiSink extends InstanceFactory {
 
   public MidiSink() {
     super("MidiSink", S.getter("audioMidiSinkComponent"));
+    setIconName("midisink.gif");
     setOffsetBounds(Bounds.create(-30, -30, 30, 60));
     setPorts(makePorts(IFACE_LOGISIM5));
   }
@@ -132,7 +133,7 @@ public class MidiSink extends InstanceFactory {
       ps[CK] = new Port(-10, 30, Port.INPUT, BitWidth.ONE);
       ps[CK].setToolTip(S.getter("midiClock"));
       ps[WE] = new Port(-20, 30, Port.INPUT, BitWidth.ONE);
-      ps[WE].setToolTip(S.getter("midiEnable"));
+      ps[WE].setToolTip(S.getter("midiWriteEnable"));
       ps[NOTE] = new Port(-30, 0, Port.INPUT, BitWidth.EIGHT);
       ps[NOTE].setToolTip(S.getter("midiNote"));
       ps[VELO] = new Port(-30, 10, Port.INPUT, BitWidth.SEVEN);

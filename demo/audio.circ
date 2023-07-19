@@ -40,7 +40,7 @@
   <lib desc="#BFH-Praktika" name="7"/>
   <lib desc="#Analog" name="8"/>
   <lib desc="#Audio" name="9"/>
-  <main name="main"/>
+  <main name="midi-in"/>
   <options>
     <a name="gateUndefined" val="ignore"/>
     <a name="simlimit" val="1000"/>
@@ -813,5 +813,40 @@ BesWrFvrd9f7un/KV8uw</a>
     <wire from="(390,320)" to="(430,320)"/>
     <wire from="(430,260)" to="(430,320)"/>
     <wire from="(440,260)" to="(440,330)"/>
+  </circuit>
+  <circuit name="midi-in">
+    <comp lib="1" loc="(140,110)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data Available"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(210,170)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(60,290)" name="Clock"/>
+    <comp lib="9" loc="(120,180)" name="MidiIn"/>
+    <comp lib="9" loc="(420,180)" name="MidiSink">
+      <a name="interface" val="serial"/>
+    </comp>
+    <wire from="(100,210)" to="(100,250)"/>
+    <wire from="(110,130)" to="(110,150)"/>
+    <wire from="(110,130)" to="(140,130)"/>
+    <wire from="(110,210)" to="(110,290)"/>
+    <wire from="(110,290)" to="(410,290)"/>
+    <wire from="(120,180)" to="(210,180)"/>
+    <wire from="(140,110)" to="(140,130)"/>
+    <wire from="(140,130)" to="(320,130)"/>
+    <wire from="(210,170)" to="(210,180)"/>
+    <wire from="(210,180)" to="(390,180)"/>
+    <wire from="(320,130)" to="(320,230)"/>
+    <wire from="(320,230)" to="(400,230)"/>
+    <wire from="(400,210)" to="(400,230)"/>
+    <wire from="(410,210)" to="(410,290)"/>
+    <wire from="(50,130)" to="(110,130)"/>
+    <wire from="(50,130)" to="(50,250)"/>
+    <wire from="(50,250)" to="(100,250)"/>
+    <wire from="(60,290)" to="(110,290)"/>
   </circuit>
 </project>

@@ -849,4 +849,179 @@ BesWrFvrd9f7un/KV8uw</a>
     <wire from="(50,250)" to="(100,250)"/>
     <wire from="(60,290)" to="(110,290)"/>
   </circuit>
+  <circuit name="midi-in-parallel4">
+    <comp lib="1" loc="(140,110)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data Available"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(210,170)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(60,290)" name="Clock"/>
+    <comp lib="9" loc="(120,180)" name="MidiIn">
+      <a name="interface" val="parallel3"/>
+    </comp>
+    <comp lib="9" loc="(420,180)" name="MidiSink">
+      <a name="interface" val="parallel3"/>
+    </comp>
+    <wire from="(100,210)" to="(100,250)"/>
+    <wire from="(110,130)" to="(110,150)"/>
+    <wire from="(110,130)" to="(140,130)"/>
+    <wire from="(110,210)" to="(110,290)"/>
+    <wire from="(110,290)" to="(410,290)"/>
+    <wire from="(120,180)" to="(210,180)"/>
+    <wire from="(140,110)" to="(140,130)"/>
+    <wire from="(140,130)" to="(320,130)"/>
+    <wire from="(210,170)" to="(210,180)"/>
+    <wire from="(210,180)" to="(390,180)"/>
+    <wire from="(320,130)" to="(320,230)"/>
+    <wire from="(320,230)" to="(400,230)"/>
+    <wire from="(400,210)" to="(400,230)"/>
+    <wire from="(410,210)" to="(410,290)"/>
+    <wire from="(50,130)" to="(110,130)"/>
+    <wire from="(50,130)" to="(50,250)"/>
+    <wire from="(50,250)" to="(100,250)"/>
+    <wire from="(60,290)" to="(110,290)"/>
+  </circuit>
+  <circuit name="midi-in-parallel3">
+    <comp lib="1" loc="(140,110)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data Available"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(210,170)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(60,290)" name="Clock"/>
+    <comp lib="9" loc="(120,180)" name="MidiIn">
+      <a name="interface" val="parallel3"/>
+    </comp>
+    <comp lib="9" loc="(420,180)" name="MidiSink">
+      <a name="interface" val="parallel3"/>
+    </comp>
+    <wire from="(100,210)" to="(100,250)"/>
+    <wire from="(110,130)" to="(110,150)"/>
+    <wire from="(110,130)" to="(140,130)"/>
+    <wire from="(110,210)" to="(110,290)"/>
+    <wire from="(110,290)" to="(410,290)"/>
+    <wire from="(120,180)" to="(210,180)"/>
+    <wire from="(140,110)" to="(140,130)"/>
+    <wire from="(140,130)" to="(320,130)"/>
+    <wire from="(210,170)" to="(210,180)"/>
+    <wire from="(210,180)" to="(390,180)"/>
+    <wire from="(320,130)" to="(320,230)"/>
+    <wire from="(320,230)" to="(400,230)"/>
+    <wire from="(400,210)" to="(400,230)"/>
+    <wire from="(410,210)" to="(410,290)"/>
+    <wire from="(50,130)" to="(110,130)"/>
+    <wire from="(50,130)" to="(50,250)"/>
+    <wire from="(50,250)" to="(100,250)"/>
+    <wire from="(60,290)" to="(110,290)"/>
+  </circuit>
+  <circuit name="midi-in-logisim5">
+    <comp lib="1" loc="(110,110)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data Available"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(180,60)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="Channel"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(210,100)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="Damping"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(270,130)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="Note"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(330,90)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="Velocity"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(410,140)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="Instrument"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(60,290)" name="Clock"/>
+    <comp lib="9" loc="(120,180)" name="MidiIn">
+      <a name="interface" val="logisim5"/>
+    </comp>
+    <comp lib="9" loc="(530,180)" name="MidiSink"/>
+    <wire from="(100,210)" to="(100,250)"/>
+    <wire from="(100,250)" to="(510,250)"/>
+    <wire from="(110,110)" to="(110,130)"/>
+    <wire from="(110,130)" to="(110,150)"/>
+    <wire from="(110,210)" to="(110,290)"/>
+    <wire from="(110,290)" to="(520,290)"/>
+    <wire from="(120,160)" to="(180,160)"/>
+    <wire from="(120,170)" to="(210,170)"/>
+    <wire from="(120,180)" to="(270,180)"/>
+    <wire from="(120,190)" to="(330,190)"/>
+    <wire from="(120,200)" to="(410,200)"/>
+    <wire from="(180,160)" to="(500,160)"/>
+    <wire from="(180,60)" to="(180,160)"/>
+    <wire from="(210,100)" to="(210,170)"/>
+    <wire from="(210,170)" to="(500,170)"/>
+    <wire from="(270,130)" to="(270,180)"/>
+    <wire from="(270,180)" to="(500,180)"/>
+    <wire from="(330,190)" to="(500,190)"/>
+    <wire from="(330,90)" to="(330,190)"/>
+    <wire from="(410,140)" to="(410,200)"/>
+    <wire from="(410,200)" to="(500,200)"/>
+    <wire from="(50,130)" to="(110,130)"/>
+    <wire from="(50,130)" to="(50,250)"/>
+    <wire from="(50,250)" to="(100,250)"/>
+    <wire from="(510,210)" to="(510,250)"/>
+    <wire from="(520,210)" to="(520,290)"/>
+    <wire from="(60,290)" to="(110,290)"/>
+  </circuit>
+  <circuit name="midi-in-logisim1">
+    <comp lib="1" loc="(140,110)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data Available"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(210,170)" name="Probe">
+      <a name="facing" val="south"/>
+      <a name="label" val="MIDI Data"/>
+      <a name="labelloc" val="north"/>
+    </comp>
+    <comp lib="1" loc="(60,290)" name="Clock"/>
+    <comp lib="9" loc="(120,180)" name="MidiIn">
+      <a name="interface" val="logisim1"/>
+    </comp>
+    <comp lib="9" loc="(420,180)" name="MidiSink">
+      <a name="interface" val="logisim1"/>
+    </comp>
+    <wire from="(100,210)" to="(100,250)"/>
+    <wire from="(110,130)" to="(110,150)"/>
+    <wire from="(110,130)" to="(140,130)"/>
+    <wire from="(110,210)" to="(110,290)"/>
+    <wire from="(110,290)" to="(410,290)"/>
+    <wire from="(120,180)" to="(210,180)"/>
+    <wire from="(140,110)" to="(140,130)"/>
+    <wire from="(140,130)" to="(320,130)"/>
+    <wire from="(210,170)" to="(210,180)"/>
+    <wire from="(210,180)" to="(390,180)"/>
+    <wire from="(320,130)" to="(320,230)"/>
+    <wire from="(320,230)" to="(400,230)"/>
+    <wire from="(400,210)" to="(400,230)"/>
+    <wire from="(410,210)" to="(410,290)"/>
+    <wire from="(50,130)" to="(110,130)"/>
+    <wire from="(50,130)" to="(50,250)"/>
+    <wire from="(50,250)" to="(100,250)"/>
+    <wire from="(60,290)" to="(110,290)"/>
+  </circuit>
 </project>

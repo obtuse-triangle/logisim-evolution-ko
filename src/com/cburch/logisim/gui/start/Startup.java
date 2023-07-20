@@ -683,6 +683,13 @@ public class Startup {
 
     if (exitAfterStartup)
       System.exit(0);
+
+    // check for stray auto-backup files
+    try {
+      Loader.checkForAutoBackups();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   private static void fail(String msg) {

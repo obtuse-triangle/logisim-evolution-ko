@@ -35,7 +35,9 @@ import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -46,6 +48,7 @@ import javax.swing.filechooser.FileFilter;
 
 import com.cburch.hdl.HdlFile;
 import com.cburch.logisim.Main;
+import com.cburch.logisim.proj.Project;
 import com.cburch.logisim.std.Builtin;
 import com.cburch.logisim.tools.AddTool;
 import com.cburch.logisim.tools.Library;
@@ -191,6 +194,97 @@ public class Loader implements LibraryLoader {
 
   public File getMainFile() {
     return mainFile;
+  }
+  
+  public File getAutoBackupFile(Project project) {
+    File bak = getAutoBackupFile(mainFile);
+    if (bak == null) {
+      try {
+        Date date = new Date(project.windowCreationTime);
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
+        String when = fmt.format(date);
+        File home = new File(System.getProperty("user.home"));
+        File save = new File(home, ".logisim-backups");
+        if (!save.exists())
+          save.mkdir();
+        bak = new File(save, "autosave-" + when + ".circ");
+      } catch (Exception e) {
+        return null;
+      }
+    }
+    return bak;
+  }
+
+  public static void checkForAutoBackups() throws Exception {
+    File home = new File(System.getProperty("user.home"));
+    File save = new File(home, ".logisim-backups");
+    if (!save.exists() || !save.isDirectory())
+      return;
+    File[] backups = save.listFiles();
+    int n = backups == null ? 0 : backups.length;
+    if (n == 0)
+      return;
+    String message = S.fmt("autobackupFilesFoundMessage", n, save);
+    String[] options = {
+      S.get("autobackupFilesDiscardOption"),
+      S.get("autobackupFilesRecoverOption"),
+      S.get("autobackupFilesIgnoreOption"), };
+    int result = JOptionPane.showOptionDialog(null, message,
+        S.get("autobackupFilesFoundTitle"), 0,
+        JOptionPane.QUESTION_MESSAGE, null, options,
+        options[1]);
+    if (result == 0) { // discard
+      for (File bak : backups) {
+        try { bak.delete(); }
+        catch (Exception e) { }
+      }
+    } else if (result == 2) { // ignore
+      return;
+    } else { // recover
+      JFileChooser chooser = JFileChoosers.create();
+      chooser.setAcceptAllFileFilterUsed(false);
+      chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+      chooser.setDialogTitle(S.get("autobackupFilesRecoverTitle"));
+      int returnVal = chooser.showDialog(null,
+          S.get("autobackupFilesRecoverButton"));
+      if (returnVal != JFileChooser.APPROVE_OPTION)
+        return; // cancel recovery, ignore instead
+      File dest = chooser.getSelectedFile();
+      int success = 0;
+      String names = "";
+      for (File bak : backups) {
+        String name = bak.getName();
+        if (name.startsWith("autosave-"))
+          name = name.substring("autosave-".length());
+        if (name.endsWith(".circ"))
+          name = name.substring(0, name.length() - ".circ".length());
+        name = "recovered-" + name;
+        for (int i = 0; i < 20; i++) {
+          File recovered = new File(dest, (i > 0 ? name+"-"+i : name) + ".circ");
+          if (recovered.exists())
+            continue;
+          try {
+            bak.renameTo(recovered);
+            if (recovered.exists()) {
+              success++;
+              names += "\n ("+success+") " + recovered.getName();
+              break;
+            }
+          } catch (Exception e) {
+          }
+        }
+      }
+      JOptionPane.showMessageDialog(null,
+          S.fmt("autobackupFilesRecoverDoneMessage", success, n) + names,
+          S.get("autobackupFilesRecoverDoneTitle"), JOptionPane.OK_OPTION);
+    }
+  }
+
+  public static File getAutoBackupFile(File mainFile) {
+    File f = mainFile;
+    if (f == null)
+      return null;
+    return new File(f.getParent(), "." + f.getName() + ".autosave");
   }
 
   Library loadJarFile(File actual, String className)

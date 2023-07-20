@@ -621,6 +621,40 @@ public class LogisimFile extends Library implements LibraryEventSource {
     }
   }
 
+  // same as save(f, proj), but with aggressive deletion, no warnings, etc.
+  public boolean autoBackup(File dest, Project proj) {
+    Library reference = LibraryManager.instance.findReference(this, dest);
+    if (reference != null)
+      return false;
+
+    FileOutputStream fwrite = null;
+    try {
+      fwrite = new FileOutputStream(dest);
+      write(fwrite, dest, proj);
+    } catch (IOException e) {
+      if (dest.exists() && dest.length() == 0)
+        dest.delete();
+      return false;
+    } finally {
+      if (fwrite != null) {
+        try {
+          fwrite.close();
+        } catch (IOException e) {
+          if (dest.exists() && dest.length() == 0)
+            dest.delete();
+          return false;
+        }
+      }
+    }
+
+    if (dest.exists() && dest.length() == 0) {
+      dest.delete();
+      return false;
+    }
+
+    return true;
+  }
+
   public boolean save(File dest, Project proj) {
     Library reference = LibraryManager.instance.findReference(this, dest);
     if (reference != null) {

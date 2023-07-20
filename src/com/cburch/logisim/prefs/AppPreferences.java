@@ -409,6 +409,8 @@ public class AppPreferences {
   }
 
   // Experimental preferences
+  public static final PrefMonitor<Boolean> AUTO_BACKUP = new PrefMonitor("autobackup", true);
+  public static final PrefMonitor<Integer> AUTO_BACKUP_FREQ = new PrefMonitor("autobackupFreq", 7);
   public static final String ACCEL_DEFAULT = "default";
   public static final String ACCEL_NONE = "none";
   public static final String ACCEL_OPENGL = "opengl";

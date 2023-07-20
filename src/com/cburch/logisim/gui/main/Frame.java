@@ -517,6 +517,7 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
       ret = ProjectActions.doSave(project);
     } else if (result == 1) {
       dispose(); // close the current project
+      ProjectActions.removeAutoBackup(project);
       ret = true;
     } else {
       ret = false;

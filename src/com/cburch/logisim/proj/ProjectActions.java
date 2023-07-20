@@ -38,7 +38,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -229,6 +231,143 @@ public class ProjectActions {
     return doOpen(parent, baseProject, selected);
   }
 
+  private static String formatTime(long ts, long now) {
+    Date date = new Date(ts);
+    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    String when = fmt.format(date);
+    String suffix = "ago";
+    long delta = now - ts;
+    if (delta < 0) {
+      suffix = "in the future";
+      delta = -delta;
+    }
+    if (delta < 10000) // under 10 seconds
+      return String.format("%s (%.3f seconds %s)", when, delta/1000.0, suffix);
+    delta /= 1000;
+    if (delta < 60) // under a minute
+      return String.format("%s (%d seconds %s)", when, delta, suffix);
+    else if (delta < 5*60) // under 5 mintues
+      return String.format("%s (%.1f minutes %s)", when, delta/60.0, suffix);
+    else if (delta < 60*60) // under an hour
+      return String.format("%s (%.0f minutes %s)", when, delta/60.0, suffix);
+    else if (delta < 24*60*60) // under a day
+      return String.format("%s (%.1f hours %s)", when, delta/60.0/60, suffix);
+    else if (delta < 7*24*60*60) // under a week
+      return String.format("%s (%.1f days %s)", when, delta/60.0/60/24, suffix);
+    else // a week or more
+      return String.format("%s (%.0f days %s)", when, delta/60.0/60/24, suffix);
+  }
+
+  private static File checkForAutoBackups(Component parent, File src) {
+    // Check for auto-backup file
+    // Check timestamps
+    File bak = Loader.getAutoBackupFile(src);
+    if (bak == null || !bak.exists())
+      return src;
+    // Check timestamps, delete, confirm, and/or restore.
+    try {
+      long bakTime = bak.lastModified();
+      long srcTime = src.lastModified();
+      if (bakTime <= srcTime) {
+        bak.delete();
+        return src;
+      }
+      long now = System.currentTimeMillis();
+      String bakWhen = formatTime(bakTime, now);
+      String srcWhen = formatTime(srcTime, now);
+      String message = S.fmt("openAutoBackupFoundMessage", src.getName(), srcWhen, bakWhen);
+      String[] options = {
+        S.get("openAutoBackupDiscardOption"),
+        S.get("openAutoBackupReplaceOption"),
+        S.get("openAutoBackupKeepOption"), };
+      int result = JOptionPane.showOptionDialog(parent, message,
+          S.get("openAutoBackupFoundTitle"), 0,
+          JOptionPane.QUESTION_MESSAGE, null, options,
+          options[1]);
+      if (result == 0) { // discard backup
+        bak.delete();
+        return src;
+      } else if (result == 1) { // replace with backup
+        File restored = restore(bak);
+        if (restored != null) {
+          JOptionPane.showMessageDialog(
+              parent,
+              S.fmt("autoBackupReplacedMessage",
+                restored.getName(), src.getName()),
+              S.get("openAutoBackupFoundTitle"),
+              JOptionPane.INFORMATION_MESSAGE);
+          return restored;
+        } else {
+          JOptionPane.showMessageDialog(
+              parent,
+              S.fmt("autoBackupFailedMessage",
+                bak, src.getName()),
+              S.get("openAutoBackupFoundTitle"),
+              JOptionPane.INFORMATION_MESSAGE);
+          return src;
+        }
+      } else { // keep both
+        File restored = restore(bak);
+        if (restored != null) {
+          JOptionPane.showMessageDialog(
+              parent,
+              S.fmt("autoBackupKeptMessage",
+                restored.getName(), src.getName()),
+              S.get("openAutoBackupFoundTitle"),
+              JOptionPane.INFORMATION_MESSAGE);
+        } else {
+          JOptionPane.showMessageDialog(
+              parent,
+              S.fmt("autoBackupFailedMessage",
+                bak, src.getName()),
+              S.get("openAutoBackupFoundTitle"),
+              JOptionPane.INFORMATION_MESSAGE);
+        }
+        return src;
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      if (bak != null && bak.exists()) {
+        File restored = restore(bak);
+        if (restored != null)
+          System.out.println("auto-backup file restored to: " + restored);
+        else
+          System.out.println("auto-backup file could not be restored.");
+      }
+      return src;
+    }
+  }
+
+  private static File restore(File bak) {
+    String name = bak.getName();
+    if (name.startsWith("."))
+      name = name.substring(1);
+    if (name.toLowerCase().endsWith(".autosave"))
+      name = name.substring(0, name.length() - ".autosave".length());
+    if (name.toLowerCase().endsWith(".xml"))
+      name = name.substring(0, name.length() - ".xml".length());
+    if (name.toLowerCase().endsWith(".circ"))
+      name = name.substring(0, name.length() - ".circ".length());
+    if (name.equals(""))
+      name = "project";
+    name = name + "-restored";
+    for (int i = 0; i < 20; i++) {
+      File restored = new File(bak.getParent(), (i > 0 ? name+i : name) + ".circ");
+      try {
+        if (!restored.exists()) {
+          bak.renameTo(restored);
+          if (!restored.exists())
+            throw new Exception("Could not move " + bak + " to " + restored);
+          return restored;
+        }
+      } catch (Exception e) {
+        if (i == 0)
+          e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
   public static Project doOpen(Component parent, Project baseProject, File f) {
     Project proj = Projects.findProjectFor(f);
     Loader loader = null;
@@ -253,6 +392,9 @@ public class ProjectActions {
           return proj;
         }
       }
+    } else {
+      // only check for auto-backups if the file wasn't already open
+      f = checkForAutoBackups(parent, f);
     }
 
     if (proj == null && baseProject != null && baseProject.isStartupScreen()) {
@@ -299,6 +441,7 @@ public class ProjectActions {
       Map<String, String> substitutions) throws LoadFailedException, LoadCanceledByUser {
     if (monitor != null)
       monitor.setProgress(SplashScreen.FILE_LOAD);
+    source = checkForAutoBackups(monitor, source);
     Loader loader = new Loader(monitor);
     LogisimFile.FileWithSimulations file = loader.openLogisimFile(source, substitutions);
     AppPreferences.updateRecentFile(source);
@@ -339,13 +482,61 @@ public class ProjectActions {
   private static boolean doSave(Project proj, File f) {
     Tool oldTool = proj.getTool();
     proj.setTool(null);
+    File bak = proj.getLogisimFile().getLoader().getAutoBackupFile(proj);
     boolean ret = proj.getLogisimFile().save(f, proj);
     if (ret) {
+      if (bak != null) {
+        try {
+          bak.delete();
+          // System.out.println("auto-backup removed for " + bak);
+        } catch (Exception e) {
+        }
+      }
       AppPreferences.updateRecentFile(f);
       proj.setFileAsClean();
+      removeAutoBackup(proj);
     }
     proj.setTool(oldTool);
     return ret;
+  }
+
+  public static void removeAutoBackup(Project proj) {
+    try {
+      File bak = proj.getLogisimFile().getLoader().getAutoBackupFile(proj);
+      if (bak != null) {
+        bak.delete();
+        // System.out.println("auto-backup removed for " + bak);
+      }
+    } catch (Exception e) {
+    }
+  }
+
+  public static void doAutoBackup(Project proj) {
+    if (!AppPreferences.AUTO_BACKUP.get()) {
+      // System.out.println("auto-backup not enabled");
+      return;
+    }
+    if (proj == null) {
+      // System.out.println("auto-backup not needed, project was closed");
+      return;
+    }
+    if (!proj.isFileDirty()) {
+      // System.out.println("auto-backup not needed, project is not dirty");
+      return;
+    }
+    Loader loader = proj.getLogisimFile().getLoader();
+    File f = loader.getAutoBackupFile(proj);
+    if (f == null) {
+      // System.out.println("auto-backup failed");
+      return;
+    }
+    boolean ret = proj.getLogisimFile().autoBackup(f, proj);
+    if (ret) {
+      // proj.setFileAsSafe();
+      // System.out.println("auto-backup done for " + f);
+    } else {
+      // System.out.println("auto-backup failed for " + f);
+    }
   }
 
   /**

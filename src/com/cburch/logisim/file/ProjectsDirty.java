@@ -33,12 +33,80 @@ package com.cburch.logisim.file;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.WeakHashMap;
 
+import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.proj.Project;
+import com.cburch.logisim.proj.ProjectActions;
 import com.cburch.logisim.proj.Projects;
+import com.cburch.logisim.util.EventScheduler;
+import com.cburch.logisim.util.QNode;
 
-class ProjectsDirty {
+public class ProjectsDirty {
+
+  private static class AutoBackup extends QNode {
+
+    WeakReference<Project> projRef;
+    boolean cancelled, fired;
+
+    AutoBackup(Project proj) {
+      super(autoBackupTime());
+      projRef = new WeakReference<>(proj);
+    }
+
+    static long autoBackupTime() {
+      long minutes = AppPreferences.AUTO_BACKUP_FREQ.get();
+      if (minutes < 1) minutes = 10;
+      if (minutes > 120) minutes = 120;
+      long now = System.currentTimeMillis();
+      return now + minutes*60*1000;
+    }
+
+  }
+
+  private static class AutoBackupScheduler extends EventScheduler<AutoBackup> {
+    private Object lock = new Object();
+    WeakHashMap<Project, AutoBackup> scheduled = new WeakHashMap<>();
+
+    AutoBackupScheduler() { super("Auto-Backup"); }
+  
+    @Override
+    public void fire(AutoBackup event) {
+      Project proj = event.projRef.get();
+      if (proj == null)
+        return;
+      synchronized(lock) {
+        if (event.cancelled || event.fired)
+          return;
+        event.fired = true;
+        scheduled.remove(proj);
+      }
+      ProjectActions.doAutoBackup(proj);
+    }
+    
+    public void schedule(Project proj) {
+      if (proj == null)
+        return;
+      AutoBackup event = new AutoBackup(proj);
+      synchronized(lock) {
+        AutoBackup pending = scheduled.get(proj);
+        if (pending != null && !pending.cancelled
+            && !pending.fired && pending.key <= event.key)
+          return;
+        if (pending != null)
+          pending.cancelled = true;
+        scheduled.put(proj, event); // replaces pending in hashmap
+      }
+      // System.out.println("auto-backup scheduled");
+      super.schedule(event);
+    }
+  };
+  
+  private static AutoBackupScheduler autobackup = new AutoBackupScheduler();
+
+
   private static class DirtyListener implements LibraryListener {
     Project proj;
 
@@ -53,6 +121,11 @@ class ProjectsDirty {
         LibraryManager.instance.setDirty(file, lib.isDirty());
       }
     }
+  }
+
+  public static void needsBackup(Project proj) {
+    if (AppPreferences.AUTO_BACKUP.get())
+      autobackup.schedule(proj);
   }
 
   private static class ProjectListListener implements PropertyChangeListener {
@@ -76,6 +149,7 @@ class ProjectsDirty {
   public static void initialize() {
     Projects.propertyChangeProducer.addPropertyChangeListener(
         Projects.projectListProperty, projectListListener);
+    autobackup.start();
   }
 
   private static ProjectListListener projectListListener = new ProjectListListener();

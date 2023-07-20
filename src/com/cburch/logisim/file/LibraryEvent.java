@@ -42,6 +42,7 @@ public class LibraryEvent {
   public final static int SET_MAIN = 6;
   public final static int SET_NAME = 7;
   public static final int DIRTY_STATE = 8;
+  public static final int NEEDS_BACKUP = 9;
 
   private Library source;
   private int action;
@@ -77,6 +78,7 @@ public class LibraryEvent {
     case SET_MAIN: return "SET_MAIN";
     case SET_NAME: return "SET_NAME";
     case DIRTY_STATE: return "DIRTY_STATE";
+    case NEEDS_BACKUP: return "NEEDS_BACKUP";
     default: return "LibraryEvent<?>";
     }
   }

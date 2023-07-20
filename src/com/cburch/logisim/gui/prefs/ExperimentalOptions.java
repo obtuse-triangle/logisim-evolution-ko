@@ -43,13 +43,51 @@ import com.cburch.logisim.prefs.AppPreferences;
 
 class ExperimentalOptions extends OptionsPanel {
   private static final long serialVersionUID = 1L;
+  // private JLabel autobackupRestart = new JLabel();
   private JLabel accelRestart = new JLabel();
+  private PrefBoolean autobackup;
+  private PrefInteger autobackupFreq;
   private PrefOptionList accel;
   // private JLabel dualScreenRestart = new JLabel();
   private PrefOptionList dualScreen;
 
   public ExperimentalOptions(PreferencesFrame window) {
     super(window);
+
+    autobackup = new PrefBoolean(AppPreferences.AUTO_BACKUP, S.getter("autobackupLabel"));
+    autobackupFreq = new PrefInteger(AppPreferences.AUTO_BACKUP_FREQ, 1, 60);
+
+    JPanel autobackupSubpanel1 = new JPanel();
+    autobackupSubpanel1.setLayout(new BoxLayout(autobackupSubpanel1, BoxLayout.LINE_AXIS));
+    autobackupSubpanel1.add(autobackup);
+    autobackupSubpanel1.add(Box.createGlue());
+
+    JPanel autobackupSubpanel2 = new JPanel();
+    autobackupSubpanel2.setLayout(new BoxLayout(autobackupSubpanel2, BoxLayout.LINE_AXIS));
+    autobackupSubpanel2.add(new JLabel(S.get("autobackupFreqLabel")));
+    autobackupSubpanel2.add(Box.createGlue());
+    autobackupSubpanel2.add(autobackupFreq);
+    autobackupFreq.setEnabled(autobackup.isSelected());
+    autobackupSubpanel2.add(Box.createGlue());
+
+    JPanel autobackupPanel3 = new JPanel();
+    autobackupPanel3.setLayout(new BoxLayout(autobackupPanel3, BoxLayout.PAGE_AXIS));
+    autobackupPanel3.add(autobackupSubpanel1);
+    autobackupPanel3.add(autobackupSubpanel2);
+    
+    JPanel autobackupPanel = new JPanel();
+    autobackupPanel.setLayout(new BoxLayout(autobackupPanel, BoxLayout.PAGE_AXIS));
+    autobackupPanel.add(autobackupPanel3);
+    // autobackupPanel.add(autobackupRestart);
+    // autobackupRestart.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+    // autobackupRestart.setFont(autobackupRestart.getFont().deriveFont(Font.ITALIC));
+    // autobackupRestart.setVisible(false);
+    autobackup.addActionListener((ae) -> {
+      // autobackupRestart.setVisible(true);
+      autobackupFreq.setEnabled(autobackup.isSelected());
+    });
+    JPanel autobackupPanel2 = new JPanel();
+    autobackupPanel2.add(autobackupPanel);
 
     accel = new PrefOptionList(AppPreferences.GRAPHICS_ACCELERATION,
         S.getter("accelLabel"), new PrefOption[] {
@@ -99,6 +137,7 @@ class ExperimentalOptions extends OptionsPanel {
 
     setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     add(Box.createGlue());
+    add(autobackupPanel2);
     add(accelPanel2);
     add(dualScreenPanel2);
     add(Box.createGlue());
@@ -117,6 +156,7 @@ class ExperimentalOptions extends OptionsPanel {
   @Override
   public void localeChanged() {
     accel.localeChanged();
+    // autobackupRestart.setText(S.get("autobackupRestartLabel"));
     accelRestart.setText(S.get("accelRestartLabel"));
     dualScreen.localeChanged();
     // dualScreenRestart.setText(S.get("dualScreenRestartLabel"));

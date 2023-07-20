@@ -47,8 +47,10 @@ import com.cburch.logisim.file.LibraryEvent;
 import com.cburch.logisim.file.LibraryListener;
 import com.cburch.logisim.file.LogisimFile;
 import com.cburch.logisim.file.Options;
+import com.cburch.logisim.file.ProjectsDirty;
 import com.cburch.logisim.file.XmlProjectReader;
 import com.cburch.logisim.gui.log.LogFrame;
+// import com.cburch.logisim.std.hdl.VhdlSimulator;
 import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.gui.main.Frame;
 import com.cburch.logisim.gui.main.Selection;
@@ -56,11 +58,10 @@ import com.cburch.logisim.gui.main.SelectionActions;
 import com.cburch.logisim.gui.opts.OptionsFrame;
 import com.cburch.logisim.gui.test.TestFrame;
 import com.cburch.logisim.gui.test.TestThread;
-// import com.cburch.logisim.std.hdl.VhdlSimulator;
 import com.cburch.logisim.tools.AddTool;
+import com.cburch.logisim.tools.EditTool;
 import com.cburch.logisim.tools.Library;
 import com.cburch.logisim.tools.SelectTool;
-import com.cburch.logisim.tools.EditTool;
 import com.cburch.logisim.tools.Tool;
 import com.cburch.logisim.util.Errors;
 import com.cburch.logisim.util.EventSourceWeakSupport;
@@ -215,6 +216,7 @@ public class Project {
     ++undoMods;
     file.setDirty(isFileDirty());
     fireEvent(new ProjectEvent(ProjectEvent.ACTION_COMPLETE, this, act));
+    ProjectsDirty.needsBackup(this);
   }
 
   public int doTestVector(String vectorname, String name) {
@@ -558,6 +560,8 @@ public class Project {
     undoMods = 0;
     file.setDirty(isFileDirty());
   }
+
+  public final long windowCreationTime = System.currentTimeMillis();
 
   public void setFrame(Frame value) {
     if (value == null || frame != null) {

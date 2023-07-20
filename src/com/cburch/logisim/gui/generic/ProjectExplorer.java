@@ -105,6 +105,20 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     }
   }
 
+  private class SelectAction extends AbstractAction {
+
+    private static final long serialVersionUID = 1L;
+
+    public void actionPerformed(ActionEvent event) {
+      proj.doAction(SelectionActions.clear(proj.getSelection())); // only needed here for lib selection
+      TreePath path = getSelectionPath();
+      if (path != null && listener != null) {
+        listener.doubleClicked(new Event(path));
+      }
+      // ProjectExplorer.this.requestFocus();
+    }
+  }
+
   private class MyCellRenderer extends DefaultTreeCellRenderer {
 
     private static final long serialVersionUID = 1L;
@@ -295,6 +309,7 @@ public class ProjectExplorer extends JTree implements LocaleListener {
   private MyListener myListener = new MyListener();
   private MyCellRenderer renderer = new MyCellRenderer();
   private DeleteAction deleteAction = new DeleteAction();
+  private SelectAction selectAction = new SelectAction();
   private Listener listener = null;
   private Tool haloedTool = null;
 
@@ -327,11 +342,14 @@ public class ProjectExplorer extends JTree implements LocaleListener {
     TransferHandler ccp = new ProjectTransferHandler();
     setTransferHandler(ccp);
 
+    ActionMap amap = getActionMap();
+    amap.put(deleteAction, deleteAction);
+    amap.put(selectAction, selectAction);
     InputMap imap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), deleteAction);
     imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), deleteAction);
-    ActionMap amap = getActionMap();
-    amap.put(deleteAction, deleteAction);
+    imap.put(KeyStroke.getKeyStroke("released SPACE"), selectAction);
+    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), selectAction);
    
     AppPreferences.GATE_SHAPE.addPropertyChangeListener(myListener);
     LocaleManager.addLocaleListener(this);

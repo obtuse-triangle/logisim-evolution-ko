@@ -50,11 +50,12 @@ import com.cburch.logisim.gui.generic.ProjectExplorer;
 public class SimulationTreeRenderer extends DefaultTreeCellRenderer {
   private static class RendererIcon implements Icon {
     private ComponentFactory factory;
-    private boolean isCurrentView;
+    private boolean isCurrentView, onCurrentPath;
 
-    RendererIcon(ComponentFactory factory, boolean isCurrentView) {
+    RendererIcon(ComponentFactory factory, boolean isCurrentView, boolean onCurrentPath) {
       this.factory = factory;
       this.isCurrentView = isCurrentView;
+      this.onCurrentPath = onCurrentPath;
     }
 
     public int getIconHeight() { return 20; }
@@ -64,8 +65,8 @@ public class SimulationTreeRenderer extends DefaultTreeCellRenderer {
       ComponentDrawContext context = new ComponentDrawContext(c, null,
           null, g, g);
       
-      // draw current-viewed-halo if appropriate
-      if (isCurrentView) {
+      // draw current-path-halo if appropriate
+      if (onCurrentPath) {
         Shape s = g.getClip();
         g.clipRect(x, y, 20, 20);
         g.setColor(ProjectExplorer.VIEWED_TOOL_HALO_COLOR);
@@ -120,13 +121,14 @@ public class SimulationTreeRenderer extends DefaultTreeCellRenderer {
       ComponentFactory factory = node.getComponentFactory();
       if (factory != null) {
         boolean viewed = node.isCurrentView(model);
+        boolean onpath = node.onCurrentViewPath(model);
         if (viewed) {
           label.setFont(boldFont);
           // label.setBackground(ProjectExplorer.VIEWED_TOOL_COLOR);
           // label.setOpaque(true);
         }
         label.setText(node.toString()); // resizes when bold
-        label.setIcon(new RendererIcon(factory, viewed));
+        label.setIcon(new RendererIcon(factory, viewed, onpath));
         label.setToolTipText(S.fmt("simulationToolTip", factory.getDisplayName()));
       }
     }

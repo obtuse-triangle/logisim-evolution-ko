@@ -47,11 +47,12 @@ import com.cburch.logisim.comp.Component;
 public class SimulationTreeModel implements TreeModel {
   private EventListenerList listeners = new EventListenerList();
   private SimulationTreeTopNode root;
-  private CircuitState currentView;
+  private CircuitState currentView, bottomView;
 
   public SimulationTreeModel(List<CircuitState> allRootStates) {
     this.root = new SimulationTreeTopNode(this, allRootStates);
     this.currentView = null;
+    this.bottomView = null;
   }
 
   public void addTreeModelListener(TreeModelListener l) {
@@ -84,6 +85,10 @@ public class SimulationTreeModel implements TreeModel {
 
   public CircuitState getCurrentView() {
     return currentView;
+  }
+
+  public CircuitState getBottomView() {
+    return bottomView;
   }
 
   public int getIndexOfChild(Object parent, Object child) {
@@ -163,16 +168,36 @@ public class SimulationTreeModel implements TreeModel {
 
   public void setCurrentView(CircuitState value) {
     CircuitState oldView = currentView;
+    CircuitState oldBottomView = bottomView;
     if (oldView != value) {
       currentView = value;
+      if (bottomView == null) {
+        bottomView = currentView;
+      } else if (currentView != bottomView) {
+        if (!bottomView.hasAncestorState(currentView))
+          bottomView = currentView;
+      }
 
-      SimulationTreeCircuitNode node1 = mapToNode(oldView);
-      if (node1 != null)
-        node1.fireAppearanceChanged();
-
-      SimulationTreeCircuitNode node2 = mapToNode(value);
-      if (node2 != null)
-        node2.fireAppearanceChanged();
+      // we could udpate only up to a common ancestor, but full path is simpler
+      SimulationTreeCircuitNode node;
+      node = mapToNode(oldBottomView);
+      while (node != null) {
+        node.fireAppearanceChanged();
+        TreeNode parent = node.getParent();
+        if (parent instanceof SimulationTreeCircuitNode)
+          node = (SimulationTreeCircuitNode) parent;
+        else
+          node = null;
+      }
+      node = mapToNode(bottomView);
+      while (node != null) {
+        node.fireAppearanceChanged();
+        TreeNode parent = node.getParent();
+        if (parent instanceof SimulationTreeCircuitNode)
+          node = (SimulationTreeCircuitNode) parent;
+        else
+          node = null;
+      }
     }
   }
 

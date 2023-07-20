@@ -81,6 +81,10 @@ public class SimulationTreeNode implements TreeNode {
   public boolean isCurrentView(SimulationTreeModel model) {
     return false;
   }
+  
+  public boolean onCurrentViewPath(SimulationTreeModel model) {
+    return false;
+  }
 
   public boolean isLeaf() {
     return false;

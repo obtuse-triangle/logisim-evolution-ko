@@ -36,8 +36,6 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -46,7 +44,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Ellipse2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -55,7 +52,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -201,6 +197,10 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
 
   // This code is disabled as it is not maintained and does not currently work.
   // private class VhdlSimState extends JPanel implements VhdlSimulatorListener {
+  // import java.awt.Graphics2D;
+  // import java.awt.Graphics;
+  // import java.awt.geom.Ellipse2D;
+  // import javax.swing.border.EmptyBorder;
 
   //   private static final long serialVersionUID = 1L;
   //   Ellipse2D.Double circle;

@@ -474,8 +474,10 @@ public class MenuSimulate extends Menu {
   }
 
   private void recreateStateMenus() {
-    recreateStateMenu(downStateMenu, downStateItems, KeyEvent.VK_RIGHT);
-    recreateStateMenu(upStateMenu, upStateItems, KeyEvent.VK_LEFT);
+    // recreateStateMenu(downStateMenu, downStateItems, KeyEvent.VK_RIGHT);
+    // recreateStateMenu(upStateMenu, upStateItems, KeyEvent.VK_LEFT);
+    recreateStateMenu(downStateMenu, downStateItems, KeyEvent.VK_DOWN);
+    recreateStateMenu(upStateMenu, upStateItems, KeyEvent.VK_UP);
   }
 
   public void setCurrentState(Simulator sim, CircuitState value) {

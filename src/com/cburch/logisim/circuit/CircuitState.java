@@ -396,6 +396,14 @@ public class CircuitState implements InstanceData {
     return ancestor;
   }
 
+  public boolean hasAncestorState(CircuitState other) {
+    for (CircuitState cur = parentState; cur != null; cur = cur.parentState) {
+      if (cur == other)
+        return true;
+    }
+    return false;
+  }
+
   public Project getProject() {
     return proj;
   }

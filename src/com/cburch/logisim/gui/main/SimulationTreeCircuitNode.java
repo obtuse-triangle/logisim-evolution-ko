@@ -159,6 +159,15 @@ class SimulationTreeCircuitNode extends SimulationTreeNode
   }
 
   @Override
+  public boolean onCurrentViewPath(SimulationTreeModel model) {
+    CircuitState bottom = model.getBottomView();
+    if (bottom == null)
+      return false;
+    else
+      return bottom == circuitState || bottom.hasAncestorState(circuitState);
+  }
+
+  @Override
   public String toString() {
     if (subcircComp != null) {
       String label = subcircComp.getAttributeSet()

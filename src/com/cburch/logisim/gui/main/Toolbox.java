@@ -55,6 +55,7 @@ class Toolbox extends JPanel {
     add(toolbar, BorderLayout.NORTH);
 
     explorer = new ProjectExplorer(proj);
+    // explorer.setToggleClickCount(2);
     explorer.setListener(new ToolboxManip(proj, explorer));
     add(new JScrollPane(explorer), BorderLayout.CENTER);
 

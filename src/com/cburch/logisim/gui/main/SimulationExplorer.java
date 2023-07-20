@@ -31,16 +31,24 @@
 package com.cburch.logisim.gui.main;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 
 import com.cburch.draw.toolbar.Toolbar;
 import com.cburch.logisim.circuit.CircuitState;
@@ -70,7 +78,26 @@ class SimulationExplorer extends JPanel
     tree = new JTree(model);
     tree.setCellRenderer(new SimulationTreeRenderer());
     tree.addMouseListener(this);
-    tree.setToggleClickCount(3);
+    // tree.setToggleClickCount(3);
+
+    tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+    AbstractAction selectAction = new AbstractAction() {
+      private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent event) {
+        Object last = tree.getLastSelectedPathComponent();
+        if (last instanceof SimulationTreeCircuitNode) {
+          CircuitState cs = ((SimulationTreeCircuitNode)last).getCircuitState();
+          if (cs != null)
+            project.setCircuitState(cs);
+        }
+      }
+    };
+    ActionMap amap = tree.getActionMap();
+    amap.put(selectAction, selectAction);
+    InputMap imap = tree.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    imap.put(KeyStroke.getKeyStroke("released SPACE"), selectAction);
+    imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), selectAction);
+
     add(new JScrollPane(tree), BorderLayout.CENTER);
     proj.addProjectWeakListener(null, this);
 
@@ -99,7 +126,6 @@ class SimulationExplorer extends JPanel
     return null;
   }
 
-
   private void checkForPopup(MouseEvent e) {
     if (e.isPopupTrigger()) {
       SwingUtilities.convertMouseEvent(this, e, tree);
@@ -125,7 +151,9 @@ class SimulationExplorer extends JPanel
   public void mouseExited(MouseEvent e) { }
 
   public void mousePressed(MouseEvent e) {
-    requestFocus();
+    // Calling requestFocus() makes this JPanel steal focus from our JTree,
+    // breaking JTree keyboard navigation. Why was requestFocus() called here?
+    // requestFocus();
     checkForPopup(e);
   }
 

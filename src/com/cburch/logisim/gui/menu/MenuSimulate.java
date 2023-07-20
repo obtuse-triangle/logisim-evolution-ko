@@ -242,7 +242,7 @@ public class MenuSimulate extends Menu {
           hzStr = "" + f;
         }
         setText(S.fmt("simulateTickFreqItem", hzStr));
-      } else {
+      } else if (f < 1000000) {
         String kHzStr;
         double kf = Math.round(f / 100) / 10.0;
         if (kf == Math.round(kf)) {
@@ -251,6 +251,15 @@ public class MenuSimulate extends Menu {
           kHzStr = "" + kf;
         }
         setText(S.fmt("simulateTickKFreqItem", kHzStr));
+      } else {
+        String mHzStr;
+        double mf = Math.round(f / 100000) / 10.0;
+        if (mf == Math.round(mf)) {
+          mHzStr = "" + (int) mf;
+        } else {
+          mHzStr = "" + mf;
+        }
+        setText(S.fmt("simulateTickMFreqItem", mHzStr));
       }
     }
   }
@@ -267,7 +276,7 @@ public class MenuSimulate extends Menu {
           hzStr = "" + SupportedTickFrequencies[i];
         }
         result.add(S.fmt("simulateTickFreqItem", hzStr));
-      } else {
+      } else if (SupportedTickFrequencies[i] < 1000000) {
         String kHzStr;
         double kf = Math.round(SupportedTickFrequencies[i] / 100) / 10.0;
         if (kf == Math.round(kf)) {
@@ -276,6 +285,15 @@ public class MenuSimulate extends Menu {
           kHzStr = "" + kf;
         }
         result.add(S.fmt("simulateTickKFreqItem", kHzStr));
+      } else {
+        String mHzStr;
+        double mf = Math.round(SupportedTickFrequencies[i] / 100000) / 10.0;
+        if (mf == Math.round(mf)) {
+          mHzStr = "" + (int) mf;
+        } else {
+          mHzStr = "" + mf;
+        }
+        result.add(S.fmt("simulateTickMFreqItem", mHzStr));
       }
 
     }
@@ -283,9 +301,9 @@ public class MenuSimulate extends Menu {
   }
 
   public static final Double[] SupportedTickFrequencies = {
-    1024000.0, 512000.0, 256000.0, 128000.0, 64000.0,
-    32000.0, 16000.0, 8000.0, 4000.0, 2000.0, 1000.0,
-    512.0, 256.0, 128.0, 64.0, 32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 0.5, 0.25
+    8000000.0, 4000000.0, 2000000.0, 1000000.0, // up to 8MHz
+    500000.0, 250000.0, 125000.0, 64000.0, 32000.0, 16000.0, 8000.0, 4000.0, 2000.0, 1000.0,
+    500.0, 250.0, 125.0, 64.0, 32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 0.5, 0.25
   };
   private LogisimMenuBar menubar;
   private MyListener myListener = new MyListener();

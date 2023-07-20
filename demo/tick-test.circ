@@ -75,6 +75,15 @@
   </toolbar>
   <circuit name="main">
     <a name="appearance" val="classic"/>
+    <comp lib="0" loc="(113,252)" name="Text">
+      <a name="halign" val="left"/>
+      <a name="text">kwalsh notes:
+Mac laptop reaches 1.7 MHz
+old Linux desktop reches 650 kHz
+Windows laptop reaches 250 kHz
+
+</a>
+    </comp>
     <comp lib="1" loc="(150,150)" name="Pin"/>
     <comp lib="1" loc="(220,190)" name="Clock"/>
     <comp lib="1" loc="(320,80)" name="Probe"/>

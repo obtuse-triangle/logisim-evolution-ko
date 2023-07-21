@@ -1,697 +1,204 @@
 {
   "logFormatVersion": 1,
-  "jobId": "fc87278a-2f0b-4fa5-8b85-bf3eee8cedc5",
+  "jobId": "09924f03-3179-4221-8bcf-9ef7952964a4",
   "status": "Accepted",
   "statusSummary": "Ready for distribution",
   "statusCode": 0,
-  "archiveFilename": "Logisim-Evolution-4.0.4-HC.pkg",
-  "uploadDate": "2020-01-20T01:33:04Z",
-  "sha256": "9be39587e89b3d885076225076b7f2c7696736e20443a099c48c1f0fda26a15a",
+  "archiveFilename": "Logisim-Evolution-5.0.0-HC.pkg",
+  "uploadDate": "2023-07-21T03:21:44Z",
+  "sha256": "1a3834a1cd2e486a3a8b8c0808dc3468ae896fce86bf60d55e95afa3d104d0c9",
   "ticketContents": [
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg",
       "digestAlgorithm": "SHA-1",
-      "cdhash": "46fe645c6b7b6e8d8502ded2f993754185a38554"
+      "cdhash": "ec2fbf71b8d589eb5b861018cf32556fed3a2715"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/MacOS/libapplauncher.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "a0a592d2e19b980692d181997d9eb90580bbffce",
-      "arch": "x86_64"
+      "cdhash": "90fe28922156121cc7ee4f5e37618c822b2317cd",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/MacOS/Logisim-Evolution",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "ccb45039c42586f880bb8b5c56ece71b6b91814e",
-      "arch": "x86_64"
+      "cdhash": "90fe28922156121cc7ee4f5e37618c822b2317cd",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/MacOS/Logisim-Evolution",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/java",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "ccb45039c42586f880bb8b5c56ece71b6b91814e",
-      "arch": "x86_64"
+      "cdhash": "86a3167eabd96e4d492ec8a2118c1192f6709a76",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/MacOS/libapplauncher.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/keytool",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "a0a592d2e19b980692d181997d9eb90580bbffce",
-      "arch": "x86_64"
+      "cdhash": "eaad5466aab38431a26ca24bc465dfd612e5fcab",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/java",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnet.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "de91eb6f51e9283755287dc63881459cc16608d2",
-      "arch": "x86_64"
+      "cdhash": "0bacffbd114f1181b40031d570d35ae2e2e7eeee",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/keytool",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnio.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "e4d73e1b18e1c6eea5f319224eec42dd3cb3f240",
-      "arch": "x86_64"
+      "cdhash": "6e8f351e15c80339825563280096dc5892ae763c",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnet.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libzip.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "2c2b739e6c7bffa1dd9b97e1cf34af7aef3b35eb",
-      "arch": "x86_64"
+      "cdhash": "8e52dc7f25759f7a8730171d9fc343692a53a00b",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnio.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfreetype.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "6c582d8e41da92ca1c75693a7cd2fc025c46d4cc",
-      "arch": "x86_64"
+      "cdhash": "9fc0848ef0689fe5931a60b20d7307b7bdc9bc22",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libzip.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjli.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "230a0bb5aec8eb1c0ae5a07ef281d7a5b1397717",
-      "arch": "x86_64"
+      "cdhash": "f99b2fe92077efffd643c30372a668ca1ba70655",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfreetype.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libsplashscreen.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "4f97cefcc6ea638fcdcd232dba1d9034fbf8fdbd",
-      "arch": "x86_64"
+      "cdhash": "2960a008adb22a7fa73923156ef10c236732b6fa",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libsplashscreen.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjimage.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "70da7c18210a2126fb13ded0a34494085235936d",
-      "arch": "x86_64"
+      "cdhash": "92a25b5ff35fe5f28d9151a3444f73b51b112372",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjimage.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxui.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "456651635a136139cf5e131c58d61271d9bd2c44",
-      "arch": "x86_64"
+      "cdhash": "1280757bf304d88eb15e1e344691d5769bf3a0f9",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxui.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt_lwawt.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "42e208c5193001968c6f46dfec356668cef7036f",
-      "arch": "x86_64"
+      "cdhash": "d78074daed4c0fc25f67b7b33c67711505c14daa",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt_lwawt.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjavajpeg.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "7f8ec034b6cfab46a1c2893bb4d45e6ece2a7cc1",
-      "arch": "x86_64"
+      "cdhash": "f2f1e0691fb6040d4cea3158c228a2bdbf61a7ff",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjavajpeg.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libmlib_image.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "0c83071280953322fc9815899fc6dadeea8cf404",
-      "arch": "x86_64"
+      "cdhash": "667ffdd21eaced7bd5e3c548d29b7c8e5240a066",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libmlib_image.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsound.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "69ff2a75b0d379e971756cbed12c69fd17ea30b3",
-      "arch": "x86_64"
+      "cdhash": "aa0fd15c3b4849d23831d67c10e016e5cea84bc9",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsound.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsig.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "fa6e5609462e0afac37b44cfb7e03bfda010eb51",
-      "arch": "x86_64"
+      "cdhash": "aeaaaec258dbd6ff48c05dc3a7770b21ce3a66a9",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsig.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libprefs.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "1e5864a2aacbe401f7edb7e34a5aded294114e1b",
-      "arch": "x86_64"
+      "cdhash": "7536d58ed583cd67d608f782ef0a9ec84e407ce7",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libprefs.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjawt.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "7e3971a2c466bed5964f00d4b7e6a1f999fedb9a",
-      "arch": "x86_64"
+      "cdhash": "beeb7438f3de7b56957e06b01fdd510728f93ae7",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjawt.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfontmanager.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "c7dce0734c81a7f75531a19f8d18041aeb1d23dc",
-      "arch": "x86_64"
+      "cdhash": "b51592c6897e2da21046c1255dae65c6536548c6",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfontmanager.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jspawnhelper",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "9b664c0fcb26414a5416fe860d294348ae5ca911",
-      "arch": "x86_64"
+      "cdhash": "3fa3d1d84e90c098d91086530a9106c5442c1563",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jspawnhelper",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxsecurity.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "4c05ee5167fa205eab4f92de4b373dcb62acbfb8",
-      "arch": "x86_64"
+      "cdhash": "8ffb6d4158f1dc8bc28ee263017ac7de111e32dc",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxsecurity.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/liblcms.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "dee401543a33e77bb5f2205532d8143bbcf89622",
-      "arch": "x86_64"
+      "cdhash": "4799a26fb565e4de38114c60706961dd06125143",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/liblcms.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libverify.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "0469ea196c250a4ab460178af7960c29aa2156f3",
-      "arch": "x86_64"
+      "cdhash": "5a9ff0c68482ae5c49058337fe72448e3aaaac02",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libverify.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjava.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "1aa1e22e149ef5ee767f01a528e26f6149ba8998",
-      "arch": "x86_64"
+      "cdhash": "208b810a4b8c03dadcc22d046eb7fa21a7138f83",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjava.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "b2a1573cf2d199ece7072c4346e40e23f6123a1f",
-      "arch": "x86_64"
+      "cdhash": "af468728d47c056c632c674c01395e556e34ad7c",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosx.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "b574b439bd86057a58a5829a1056bae527b72f2a",
-      "arch": "x86_64"
+      "cdhash": "d4dd998a4a01cb9172c421e7d63d0848a15e4ed3",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosx.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxapp.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "a11a452b9f329bce5f08e705af3bf2011efd5dd7",
-      "arch": "x86_64"
+      "cdhash": "a39cebc37a592cbcc464c1d1b09a6e584ceba362",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxapp.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "f957cce5f1b86242d3c96dd6147357bcf94bd5d1",
-      "arch": "x86_64"
+      "cdhash": "4bcbcfc83841eb5cc7101ae45ff9484dd544e736",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jli/libjli.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjsig.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "c5fcfb626f2b62e70ae67d01ef1db34e014cc8c9",
-      "arch": "x86_64"
+      "cdhash": "aeaaaec258dbd6ff48c05dc3a7770b21ce3a66a9",
+      "arch": "arm64"
     },
     {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
+      "path": "Logisim-Evolution-5.0.0-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/MacOS/libjli.dylib",
       "digestAlgorithm": "SHA-256",
-      "cdhash": "359ad7d1e07a0a9f77dda4db4d3a49a33066a86e",
-      "arch": "x86_64"
-    },
-    {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjsig.dylib",
-      "digestAlgorithm": "SHA-256",
-      "cdhash": "1e5864a2aacbe401f7edb7e34a5aded294114e1b",
-      "arch": "x86_64"
-    },
-    {
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/MacOS/libjli.dylib",
-      "digestAlgorithm": "SHA-256",
-      "cdhash": "fae45af22762a667abf80d527c95bba34b811e36",
-      "arch": "x86_64"
+      "cdhash": "de0359d836cf5098b3b1d0c2c7002cf3b668168b",
+      "arch": "arm64"
     }
   ],
-  "issues": [
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/MacOS/Logisim-Evolution",
-      "message": "The executable does not have the hardened runtime enabled.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/java",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/java",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/java",
-      "message": "The executable does not have the hardened runtime enabled.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/keytool",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/keytool",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/bin/keytool",
-      "message": "The executable does not have the hardened runtime enabled.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnet.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnet.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnio.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libnio.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libzip.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libzip.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfreetype.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfreetype.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libsplashscreen.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libsplashscreen.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjimage.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjimage.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxui.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxui.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt_lwawt.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt_lwawt.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjavajpeg.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjavajpeg.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libmlib_image.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libmlib_image.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsound.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsound.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsig.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjsig.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libprefs.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libprefs.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjawt.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjawt.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfontmanager.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libfontmanager.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jspawnhelper",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jspawnhelper",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jspawnhelper",
-      "message": "The executable does not have the hardened runtime enabled.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxsecurity.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxsecurity.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/liblcms.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/liblcms.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libverify.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libverify.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjava.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libjava.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libawt.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosx.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosx.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxapp.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/libosxapp.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jli/libjli.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/jli/libjli.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjvm.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjsig.dylib",
-      "message": "The binary is not signed.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    },
-    {
-      "severity": "warning",
-      "code": null,
-      "path": "Logisim-Evolution-4.0.4-HC.pkg/Logisim-Evolution-app.pkg Contents/Payload/Applications/Logisim-Evolution.app/Contents/runtime/Contents/Home/lib/server/libjsig.dylib",
-      "message": "The signature does not include a secure timestamp.",
-      "docUrl": null,
-      "architecture": "x86_64"
-    }
-  ]
+  "issues": null
 }

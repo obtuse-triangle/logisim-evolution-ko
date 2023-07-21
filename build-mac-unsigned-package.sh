@@ -22,7 +22,7 @@
 #   which come with a new jpackage tool, which apparently can be used to package
 #   files created with JDK 11. Both of these appear to be broken in various
 #   ways: the backport can't deal with license files correctly, and neither sets
-#   the permissions correctly on the installed files
+#   the permissions correctly on the installed files.
 #   However, this appears to be broken in several ways: 
 # - MacOS is becoming increasingly (and rapidly) more strict about running code
 #   from unsigned/unofficial sources. It seems that the most recent versions of
@@ -87,7 +87,7 @@ fi
 INSTALLER_TYPE="pkg" # Options: dmg or pkg
 OUTPUT="."
 JAR="logisim-evolution.jar"
-VERSION="4.0.1" # must be numerical x.y.z
+VERSION="5.0.0" # must be numerical x.y.z
 FILE_ASSOCIATIONS="file-associations.properties"
 APP_ICON="logisim.icns"
 JAVA_APP_IDENTIFIER="edu.holycross.cs.kwalsh.logisim"
@@ -121,7 +121,7 @@ ${PACKAGER} \
   --main-class com.cburch.logisim.Main \
   --main-jar "${JAR}" \
   --app-version "${VERSION}" \
-  --copyright "(c) 2019 Kevin Walsh" \
+  --copyright "(c) 2023 Kevin Walsh" \
   --description "Digital logic designer and simulator." \
   --vendor "Kevin Walsh" \
   --add-modules "${MODULES}" \

@@ -79,7 +79,7 @@
 #   	at jdk.incubator.jpackage/jdk.incubator.jpackage.internal.IOUtils.exec(IOUtils.java:150)
 #   	at jdk.incubator.jpackage/jdk.incubator.jpackage.internal.MacAppImageBuilder.lambda$signAppBundle$16(MacAppImageBuilder.java:804)
 #   This, however, just means that the Developer ID Application and Developer ID Installer keys (not the certificates)
-#   are missing fro mthe keychain. This can be fixed by going into XCode, preferences, Keys, and create a new one of each.
+#   are missing from the keychain. This can be fixed by going into XCode, preferences, Keys, and create a new one of each.
 
 set -e # die on error
 #set -x # debug output
@@ -92,7 +92,7 @@ set -e # die on error
 # Using print-module-deps appears to be the correct way to get the dependencies.
 echo "Detecting java module dependencies..."
 DETECTED_MODULES=`jdeps --print-module-deps logisim-evolution.jar`
-MODULES="java.base,java.desktop,java.logging,java.prefs"
+MODULES="java.base,java.desktop,java.logging,java.prefs,jdk.httpserver"
 echo "Detected java module dependencies: ${DETECTED_MODULES}"
 
 JAVA_RUNTIME="java-runtime-mac"
@@ -116,7 +116,7 @@ fi
 INSTALLER_TYPE="pkg" # Options: dmg or pkg
 OUTPUT="."
 JAR="logisim-evolution.jar"
-VERSION="4.0.4" # must be numerical x.y.z
+VERSION="5.0.0" # must be numerical x.y.z
 FILE_ASSOCIATIONS="file-associations.properties"
 APP_ICON="logisim.icns"
 JAVA_APP_IDENTIFIER="edu.holycross.cs.kwalsh.logisim"
@@ -141,8 +141,7 @@ chmod a+rx mac-resources/postinstall
 
 # Build the app and installer package
 echo "Building ${INSTALLER_TYPE} ..."
-PACKAGER=/Library/Java/JavaVirtualMachines/jdk-14.jdk/Contents/Home/bin/jpackage
-#PACKAGER=/Library/Java/JavaVirtualMachines/jdk-15-ea-6.jdk/Contents/Home/bin/jpackage
+PACKAGER=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/jpackage
 ${PACKAGER} \
   --type ${INSTALLER_TYPE} \
   --input mac-staging \
@@ -151,7 +150,7 @@ ${PACKAGER} \
   --main-class com.cburch.logisim.Main \
   --main-jar "${JAR}" \
   --app-version "${VERSION}" \
-  --copyright "(c) 2019 Kevin Walsh" \
+  --copyright "(c) 2023 Kevin Walsh" \
   --description "Digital logic designer and simulator." \
   --vendor "Kevin Walsh" \
   --runtime-image "${JAVA_RUNTIME}" \

@@ -45,7 +45,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.DefaultBoundedRangeModel;
-import javax.swing.SwingConstants;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -305,10 +304,15 @@ public class ZoomControl extends JPanel {
   }
 
   private boolean showCoords = false;
-  private JLabel coords = new JLabel("");
+  private JLabel coords = new JLabel("") {
+    @Override
+    public Dimension getMinimumSize() {
+      return new Dimension(20, 24);
+    }
+  };
   private int coords_x = 0, coords_y = 0;
   private void updateCoordinates() {
-    coords.setText(String.format("   zoom = %s   x, y = (%4d, %4d)",
+    coords.setText(String.format("  zoom: %s  pos: %d, %d",
           zoomString(), coords_x, coords_y));
   }
   private MouseAdapter coordListener = new MouseAdapter() {

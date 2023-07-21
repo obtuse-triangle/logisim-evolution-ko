@@ -67,9 +67,14 @@ public class DynamicCondition {
     public String toSvgString() { return S.get(key); }
     public String toDisplayString() { return S.get(key); }
   }
+ 
+  // This is a sentinel value to represent "no condition"
+  public static final DynamicCondition NONE = new DynamicCondition();
+  private DynamicCondition() { }
+
 
   // DynamicCondition is always bound to a circuit, and is never null.
-  // That way the circuit can be propagated from one 
+  // That way the circuit can be propagated from one element to another.
   private DynamicElement.Path path;
   private String op;
   private int numericValue;
@@ -94,10 +99,10 @@ public class DynamicCondition {
 
   public static DynamicCondition fromSvgString(String svgString, Circuit circuit) {
     if (svgString == null)
-      return null;
+      return NONE; // null?
     String x = svgString.trim();
     if (x.equals(""))
-      return null;
+      return NONE; // null?
 
     int numericValue = 0;
     Status statusValue = null;
@@ -145,10 +150,13 @@ public class DynamicCondition {
   }
 
   public void replaceInstance(InstanceComponent c, InstanceComponent r) {
-    // todo
+    if (path != null)
+      path.replaceInstance(c, r);
   }
 
   public boolean evaluateCondition(CircuitState state) {
+    if (this == NONE)
+      return true;
     if (state == null)
       return false; // invisible by default during any errors
     Object data = DynamicElement.getData(path, state);
@@ -249,6 +257,8 @@ public class DynamicCondition {
   public String toString() { return toSvgString(); }
 
   public String toSvgString() {
+    if (this == NONE)
+      return "";
     if (op.equals("has"))
       return path.toSvgString() + " " + op + " " + statusValue.toSvgString();
     else
@@ -256,6 +266,8 @@ public class DynamicCondition {
   }
 
   public String toDisplayString() {
+    if (this == NONE)
+      return "None";
     if (op.equals("has"))
       return path.toSvgString() + " " + op + " " + statusValue.toDisplayString();
     else

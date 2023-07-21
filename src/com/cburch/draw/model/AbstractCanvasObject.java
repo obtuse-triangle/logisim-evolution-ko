@@ -189,7 +189,7 @@ public abstract class AbstractCanvasObject extends AbstractDrawingAttributeSet
     if (elt == null)
       return null;
     DynamicCondition dyn = getValue(DrawAttr.DYNAMIC_CONDITION);
-    if (dyn != null)
+    if (dyn != null && dyn != DynamicCondition.NONE)
       elt.setAttribute("visibility", dyn.toSvgString());
     return elt;
   }
@@ -198,7 +198,8 @@ public abstract class AbstractCanvasObject extends AbstractDrawingAttributeSet
 
   @Override
   public DynamicCondition getDynamicCondition() {
-    return getValue(DrawAttr.DYNAMIC_CONDITION);
+    DynamicCondition dyn = getValue(DrawAttr.DYNAMIC_CONDITION);
+    return (dyn == DynamicCondition.NONE) ? null : dyn;
   }
 
   @Override

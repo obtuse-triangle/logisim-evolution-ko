@@ -42,6 +42,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -76,10 +77,12 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
   JButton ok, cancel;
   DefaultMutableTreeNode root;
   JTree tree;
-  JComboBox<String> operation;
+  JComboBox<String> operation, enable;
   JTextField numericValue;
   JComboBox<DynamicCondition.Status> statusValue;
   JPanel valuePanel; // "status" or "numeric"
+
+  String[] enableOptions;
 
   DynamicCondition result;
 
@@ -110,6 +113,22 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
     JPanel buttonPanel = new JPanel();
     buttonPanel.add(ok);
     buttonPanel.add(cancel);
+   
+    enableOptions = new String[] {
+      S.get("dynamicConditionDialogVisibleDynamic"),
+      S.get("dynamicConditionDialogVisibleAlways") };
+    enable = new JComboBox<>();
+    for (String op : enableOptions)
+      enable.addItem(op);
+    enable.setSelectedItem(enableOptions[0]);
+    enable.setEditable(false);
+    enable.addItemListener((event) -> enableChanged((String)event.getItem()));
+    enable.setPreferredSize(new Dimension(300, 24));
+
+    JPanel topPanel = new JPanel();
+    // topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.LINE_AXIS));
+    topPanel.add(new JLabel(S.get("dynamicConditionDialogEnableTitle") + "  "));
+    topPanel.add(enable);
 
     tree = new JTree(root);
     tree.addTreeSelectionListener((event) -> ok.setEnabled(validateAllInput()));
@@ -221,7 +240,7 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
 
     Container contents = this.getContentPane();
     contents.setLayout(new BorderLayout());
-    // contents.add(top, BorderLayout.PAGE_START);
+    contents.add(topPanel, BorderLayout.PAGE_START);
     contents.add(body, BorderLayout.CENTER);
     contents.add(buttonPanel, BorderLayout.PAGE_END);
     this.pack();
@@ -272,6 +291,15 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
   public DynamicCondition getValue() {
     return result;
   }
+  
+  private void enableChanged(String op) {
+    boolean dynamic = enable.equals(enableOptions[0]);
+    tree.setEnabled(dynamic);
+    operation.setEnabled(dynamic);
+    numericValue.setEnabled(dynamic);
+    statusValue.setEnabled(dynamic);
+    ok.setEnabled(validateAllInput());
+  }
 
   private void operationChanged(String op) {
     CardLayout cards = (CardLayout)valuePanel.getLayout();
@@ -299,6 +327,8 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
   }
 
   private boolean validateAllInput() {
+    if (!enable.getSelectedItem().equals(enableOptions[0]))
+      return true;
     if (!validateTreePath(tree.getSelectionPath()))
       return false;
     String op = (String)operation.getSelectedItem();
@@ -322,6 +352,13 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
       dispose();
       return;
     }
+
+    if (!enable.getSelectedItem().equals(enableOptions[0])) {
+      result = DynamicCondition.NONE;
+      dispose();
+      return;
+    }
+
     DynamicElement.Path path = ShowStateDialog.toComponentPath(tree.getSelectionPath());
 
     String op = (String)operation.getSelectedItem();

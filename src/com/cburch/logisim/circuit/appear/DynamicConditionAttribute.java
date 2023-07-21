@@ -67,4 +67,9 @@ public class DynamicConditionAttribute extends CanvasBoundAttribute<DynamicCondi
     return DynamicConditionDialog.makeDialog(parent, circuit, value);
   }
 
+  @Override
+  public String toDisplayString(DynamicCondition value) {
+    return value == null ? DynamicCondition.NONE.toDisplayString() : value.toDisplayString();
+  }
+
 }

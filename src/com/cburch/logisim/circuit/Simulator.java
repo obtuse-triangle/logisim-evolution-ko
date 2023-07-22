@@ -29,8 +29,10 @@
  */
 package com.cburch.logisim.circuit;
 
-import java.util.ArrayList;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -44,6 +46,7 @@ import com.cburch.logisim.gui.log.ClockSource;
 import com.cburch.logisim.gui.log.ComponentSelector;
 import com.cburch.logisim.gui.log.SignalInfo;
 import com.cburch.logisim.prefs.AppPreferences;
+import com.cburch.logisim.util.Debug;
 import com.cburch.logisim.util.UniquelyNamedThread;
 
 public class Simulator {
@@ -79,7 +82,7 @@ public class Simulator {
     public void propagationInProgress(Event e);
   }
 
-  private static class OptionsListener implements AttributeListener {
+  /* private static class OptionsListener implements AttributeListener {
     // weak reference here, to allow prop to be garbage collected
     WeakReference<Simulator> sim;
 
@@ -97,6 +100,7 @@ public class Simulator {
         s.updateSmoothingFactor();
     }
   }
+  */
 
   // This thread keeps track of the current stepPoints (when running in step
   // mode), and it invokes various Propagator methods:
@@ -131,22 +135,42 @@ public class Simulator {
   private static class SimThread extends UniquelyNamedThread {
 
     private Simulator sim;
-    private volatile long lastTick = System.nanoTime(); // time of last propagation start
-    private volatile int smoothingFactor = 1; // for WEMA
 
+    private ReentrantLock simStateLock = new ReentrantLock();
+    private Condition simStateUpdated = simStateLock.newCondition();
     // NOTE: These variables must only be accessed with lock held.
     private Propagator _propagator = null;
     private boolean _autoPropagating = true;
     private boolean _autoTicking = false;
     private double _autoTickFreq = 1.0; // Hz
+    private int _smoothingFactor = 1; // for WEMA
     private long _autoTickNanos = (long)Math.round(1e9 / (2*_autoTickFreq));
     private int _manualTicksRequested = 0;
     private int _manualStepsRequested = 0;
     private boolean _nudgeRequested = false;
     private boolean _resetRequested = false;
     private boolean _complete = false;
-    private boolean _oops = false;
     private double _avgTickNanos = -1.0; // nanoseconds, EWMA
+
+    // These are copies of some of the above variables that can be read without
+    // the lock if synchronization with other variables is not needed.
+    private volatile Propagator propagatorUnsynchronized = null;
+    private volatile boolean autoPropagatingUnsynchronized = true;
+    private volatile boolean autoTickingUnsynchronized = false;
+    private volatile double autoTickFreqUnsynchronized = 1.0; // Hz
+
+    // These next ones are written only by the simulation thread, and read by
+    // the repaining thread. They can be read without locks as they do not need
+    // to be kept consistent with other variables.
+    private volatile boolean exceptionEncountered = false;
+    private volatile boolean oscillating = false;
+
+    // stepPoints should be made thread-safe, but it isn't for now.
+    private PropagationPoints stepPoints = new PropagationPoints();
+
+    // lastTick is used only within loop() by a single thread.
+    // No synchronization needed.
+    private long lastTick = System.nanoTime(); // time of last propagation start
 
     // DEBUGGING
     // private final long era = lastTick;
@@ -161,118 +185,157 @@ public class Simulator {
     //   return String.format("%.06fms", delta/1000000.0);
     // }
 
-    // This last one should be made thread-safe, but it isn't for now.
-    private PropagationPoints stepPoints = new PropagationPoints();
-
     SimThread(Simulator s) {
       super("SimThread");
       sim = s;
     }
 
-    synchronized Propagator getPropagator() { return _propagator; }
-    synchronized boolean isExceptionEncountered() { return _oops; }
-    synchronized boolean isAutoTicking() { return _autoTicking; }
-    synchronized boolean isAutoPropagating() { return _autoPropagating; }
-    synchronized double getTickFrequency() { return _autoTickFreq; }
-  
-    synchronized void drawStepPoints(ComponentDrawContext context) {
-      if (!_autoPropagating)
+    Propagator getPropagatorUnsynchronized() { return propagatorUnsynchronized; }
+    boolean isAutoTickingUnsynchronized() { return autoTickingUnsynchronized; }
+    boolean isAutoPropagatingUnsynchronized() { return autoPropagatingUnsynchronized; }
+    double getTickFrequencyUnsynchronized() { return autoTickFreqUnsynchronized; }
+
+    // This should be made thread-safe, but stepPoints is not yet so.
+    void drawStepPoints(ComponentDrawContext context) {
+      // simStateLock.lock(); try {
+      if (!autoPropagatingUnsynchronized)
         stepPoints.draw(context);
+      // } finally { simStateLock.unlock(); }
     }
 
-    synchronized void drawPendingInputs(ComponentDrawContext context) {
-      if (!_autoPropagating)
+    // This should be made thread-safe, but stepPoints is not yet so.
+    void drawPendingInputs(ComponentDrawContext context) {
+      // simStateLock.lock(); try {
+      if (!autoPropagatingUnsynchronized)
         stepPoints.drawPendingInputs(context);
+      // } finally { simStateLock.unlock(); }
     }
   
-    synchronized void addPendingInput(CircuitState state, Component comp) {
-      if (!_autoPropagating)
+    // This should be made thread-safe, but stepPoints is not yet so.
+    void addPendingInput(CircuitState state, Component comp) {
+      // simStateLock.lock(); try {
+      if (!autoPropagatingUnsynchronized)
         stepPoints.addPendingInput(state, comp);
+      // } finally { simStateLock.unlock(); }
     }
 
-    synchronized String getSingleStepMessage() {
-      return _autoPropagating ? "" : stepPoints.getSingleStepMessage();
+    // This should be made thread-safe, but stepPoints is not yet so.
+    String getSingleStepMessage() {
+      // simStateLock.lock(); try {
+      return autoPropagatingUnsynchronized ? "" : stepPoints.getSingleStepMessage();
+      // } finally { simStateLock.unlock(); }
     }
 
-    synchronized boolean setPropagator(Propagator value) {
-      if (_propagator == value)
-        return false;
-      _propagator = value;
-      _manualTicksRequested = 0;
-      _manualStepsRequested = 0;
-      sim.updateSmoothingFactor();
-      if (Thread.currentThread() != this)
-        notifyAll();
-      return true;
+    boolean setPropagator(Propagator prop) {
+      int f = 1;
+      if (prop != null) {
+        Options opts = prop.getRootState().getProject().getOptions();
+        f = opts.getAttributeSet().getValue(Options.ATTR_SIM_SMOOTHING);
+        if (f < 1)
+          f = 1;
+      }
+      simStateLock.lock(); try {
+        if (_propagator == prop)
+          return false;
+        _propagator = prop;
+        propagatorUnsynchronized = prop;
+        _smoothingFactor = f;
+        _manualTicksRequested = 0;
+        _manualStepsRequested = 0;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+        return true;
+      } finally { simStateLock.unlock(); }
     }
     
-    synchronized boolean setAutoPropagation(boolean value) {
-      if (_autoPropagating == value)
-        return false;
-      _autoPropagating = value;
-      if (_autoPropagating)
-        _manualStepsRequested = 0; // manual steps not allowed in autoPropagating mode
-      else
-        _nudgeRequested = false; // nudges not allowed in single-step mode
-      if (Thread.currentThread() != this)
-        notifyAll();
-      return true;
+    boolean setAutoPropagation(boolean value) {
+      simStateLock.lock(); try {
+        if (_autoPropagating == value)
+          return false;
+        _autoPropagating = value;
+        autoPropagatingUnsynchronized = value;
+        if (_autoPropagating)
+          _manualStepsRequested = 0; // manual steps not allowed in autoPropagating mode
+        else
+          _nudgeRequested = false; // nudges not allowed in single-step mode
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+        return true;
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized boolean setAutoTicking(boolean value) {
-      if (_autoTicking == value)
-        return false;
-      _autoTicking = value;
-      if (Thread.currentThread() != this)
-        notifyAll();
-      return true;
+    boolean setAutoTicking(boolean value) {
+      simStateLock.lock(); try {
+        if (_autoTicking == value)
+          return false;
+        _autoTicking = value;
+        autoTickingUnsynchronized = value;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+        return true;
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized boolean setTickFrequency(double freq) {
-      if (_autoTickFreq == freq)
-        return false;
-      _autoTickFreq = freq;
-      _autoTickNanos = freq <= 0 ? 0 : (long)Math.round(1e9 / (2*_autoTickFreq));
-      _avgTickNanos = -1.0; // reset
-      if (Thread.currentThread() != this)
-        notifyAll();
-      return true;
+    boolean setTickFrequency(double freq) {
+      simStateLock.lock(); try {
+        if (_autoTickFreq == freq)
+          return false;
+        Debug.println(1, "Auto-tick frequency set to " + freq);
+        _autoTickFreq = freq;
+        autoTickFreqUnsynchronized = freq;
+        _autoTickNanos = freq <= 0 ? 0 : (long)Math.round(1e9 / (2*_autoTickFreq));
+        _avgTickNanos = -1.0; // reset
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+        return true;
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized void requestStep() {
-      _manualStepsRequested++;
-      _autoPropagating = false;
-      if (Thread.currentThread() != this)
-        notifyAll();
+    void requestStep() {
+      simStateLock.lock(); try {
+        _manualStepsRequested++;
+        _autoPropagating = false;
+        autoPropagatingUnsynchronized = false;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized void requestTick(int count) {
-      _manualTicksRequested += count;
-      if (Thread.currentThread() != this)
-        notifyAll();
+    void requestTick(int count) {
+      simStateLock.lock(); try {
+        _manualTicksRequested += count;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized void requestReset() {
-      _resetRequested = true;
-      _manualTicksRequested = 0;
-      _manualStepsRequested = 0;
-      if (Thread.currentThread() != this)
-        notifyAll();
+    void requestReset() {
+      simStateLock.lock(); try {
+        _resetRequested = true;
+        _manualTicksRequested = 0;
+        _manualStepsRequested = 0;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized boolean requestNudge() {
-      if (!_autoPropagating)
-        return false;
-      _nudgeRequested = true;
-      if (Thread.currentThread() != this)
-        notifyAll();
-      return true;
+    boolean requestNudge() {
+      simStateLock.lock(); try {
+        if (!_autoPropagating)
+          return false;
+        _nudgeRequested = true;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+        return true;
+      } finally { simStateLock.unlock(); }
     }
 
-    synchronized void requestShutDown() {
-      _complete = true;
-      if (Thread.currentThread() != this)
-        notifyAll();
+    void requestShutDown() {
+      simStateLock.lock(); try {
+        _complete = true;
+        if (Thread.currentThread() != this)
+          simStateUpdated.signalAll();
+      } finally { simStateLock.unlock(); }
     }
 
     // int cnt; // Debugging
@@ -287,10 +350,11 @@ public class Simulator {
       boolean doProp = false;
       long now = 0;
 
-      synchronized (this) {
+      simStateLock.lock(); try {
 
         boolean ready = false;
-        do {
+        do { // while not ready
+          
           if (_complete)
             return false;
 
@@ -301,126 +365,99 @@ public class Simulator {
             _resetRequested = false;
             doReset = true;
             doProp = _autoPropagating;
+            _avgTickNanos = -1.0; // reset
             ready = true;
-          }
-
-          if (_nudgeRequested) {
+          } else if (_nudgeRequested) {
             _nudgeRequested = false;
             doNudge = true;
+            _avgTickNanos = -1.0; // reset
             ready = true;
-          }
-
-          if (_manualStepsRequested > 0) {
+          } else if (_manualStepsRequested > 0) {
             _manualStepsRequested--;
             doTickIfStable = _autoTicking;
             doStep = true;
+            _avgTickNanos = -1.0; // reset
             ready = true;
-          }
-          
-          if (_manualTicksRequested > 0) {
+          } else if (_manualTicksRequested > 0) {
             // variable is decremented below
             doTick = true;
             doProp = _autoPropagating;
             doStep = !_autoPropagating;
-            ready = true;
-          }
-         
-          long delta = 0;
-          long deadline = now;
-          if (_autoTicking && _autoPropagating && _autoTickNanos > 0) {
-            // see if it is time to do an auto-tick
-            int k = smoothingFactor;
-            long lastNanos = now - lastTick;
-            double avg;
-            if (_avgTickNanos <= 0 || k <= 1) {
-              avg = _autoTickNanos;
-              deadline = now;
-              // System.out.printf("k=%d, now = %s lastNanos = %s - %s = %s = avg, deadline = %s + %s = now+%s\n",
-              //     k, displayTime(now), displayTime(now), displayTime(lastTick), displayDuration(lastNanos),
-              //     displayTime(lastTick), displayDuration(_autoTickNanos), displayDuration(deadline-now));
-            } else {
-              // EWMA with factors 1/k and (k-1)/k
-              avg = ((k - 1.0)/k) * _avgTickNanos + (1.0/k) * lastNanos;
-              // Assume last k-1 ticks took about _avgTickNanos each,
-              // so set deadline to make this tick bring the average over k
-              // ticks be in line with target.
-              deadline = lastTick + _autoTickNanos -
-                  (long)((k-1)*(_avgTickNanos - _autoTickNanos));
-              // System.out.printf("k=%d, now = %s lastNanos = %s - %s = %s, avg = (k-1)/k*%s + 1/k*%s = %s, deadline = %s + %s - %s = now+%s\n",
-              //     k, displayTime(now), displayTime(now), displayTime(lastTick), displayDuration(lastNanos), displayDuration(_avgTickNanos),
-              //     displayDuration(lastNanos), displayDuration(avg),
-              //     displayTime(lastTick), displayDuration(_autoTickNanos), displayDuration((long)((k-1)*(_avgTickNanos - _autoTickNanos))), displayDuration(deadline-now));
-            }
-            delta = deadline - now;
-            // if (delta > 0 && _autoTickFreq >= 20.0) {
-            //   // for fast simulation (faster than human visible animation),
-            //   // wait here then tick+propagate below, without checking all
-            //   // the variables for possible user-initiated changes.
-            //   System.out.println("fast ahead by " + delta + ", last = " + lastNanos + ", avg = " + _avgTickNanos + ", goal = " + _autoTickNanos);
-            //   try {
-            //     if (delta > 1000000) {
-            //       long t;
-            //       do {
-            //         t = System.nanoTime();
-            //       } while (t < deadline);
-            //       System.out.println("fast busy overshot by " + (t) - delta));
-            //     } else if (delta > 0) {
-            //       long ta = System.nanoTime();
-            //       do {
-            //         wait(delta/1000000, (int)(delta%1000000));
-            //         long tb = System.nanoTime();
-            //         System.out.println("fast wrong by " + ((tb - ta) - delta));
-            //       } else
-            //         wait();
-            //     }
-            //     catch (InterruptedException e) { } // yes, we swallow the interrupt
-            //   }
-            //   now = System.nanoTime();
-            //   doTick = true;
-            //   doProp = true;
-            //   ready = true;
-            // } else
-            if (delta <= 1000) { // within 1 usec, close enough
-              _avgTickNanos = avg;
-              doTick = true;
-              doProp = true;
-              ready = true;
-            //   System.out.printf("missed by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
-            //       delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
-            // } else {
-            //   System.out.printf("ahead  by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
-            //       delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
-            }
-          } else {
             _avgTickNanos = -1.0; // reset
-          }
-         
-          if (!ready) {
-            // LockSupport.parkNanos(delta);
-            try {
-              if (delta > 0 && delta < 1000000) {
-                // less than 1 ms, busy wait
-                long t;
-                do {
-                  t = System.nanoTime();
-                } while (t < deadline);
-                // System.out.println("busy overshot by " + (t - deadline));
-              } else if (delta > 0) {
-                long ta = System.nanoTime();
-                wait(delta/1000000, (int)(delta%1000000));
-                long tb = System.nanoTime();
-                // System.out.println("wrong by " + ((tb - ta) - delta));
-              } else
-                wait();
+            ready = true;
+          } else {
+            // wait, but perhaps not long (depending on auto-tick), so calculate deadline
+            if (_autoTicking && _autoPropagating && _autoTickNanos > 0) {
+              // see if it is time to do an auto-tick
+              int k = _smoothingFactor;
+              long lastNanos = now - lastTick;
+              double avg;
+              if (_avgTickNanos <= 0) {
+                // don't wait, we just started auto-tick and have no baseline
+                // simulation tick frequency history yet
+                _avgTickNanos = _autoTickNanos;
+                doTick = true;
+                doProp = true;
+                ready = true;
+                // System.out.printf("k=%d, now = %s lastNanos = %s - %s = %s = avg, deadline = %s + %s = now+%s\n",
+                //     k, displayTime(now), displayTime(now), displayTime(lastTick), displayDuration(lastNanos),
+                //     displayTime(lastTick), displayDuration(_autoTickNanos), displayDuration(deadline-now));
+              } else {
+                // calculate deadline using
+                // EWMA with factors 1/k and (k-1)/k
+                avg = ((k - 1.0)/k) * _avgTickNanos + (1.0/k) * lastNanos;
+                // Assume last k-1 ticks took about _avgTickNanos each,
+                // so set deadline to make this tick bring the average over k
+                // ticks be in line with target.
+                long deadline = lastTick + _autoTickNanos -
+                    (long)((k-1)*(_avgTickNanos - _autoTickNanos));
+                // System.out.printf("k=%d, now = %s lastNanos = %s - %s = %s, avg = (k-1)/k*%s + 1/k*%s = %s, deadline = %s + %s - %s = now+%s\n",
+                //     k, displayTime(now), displayTime(now), displayTime(lastTick), displayDuration(lastNanos), displayDuration(_avgTickNanos),
+                //     displayDuration(lastNanos), displayDuration(avg),
+                //     displayTime(lastTick), displayDuration(_autoTickNanos), displayDuration((long)((k-1)*(_avgTickNanos - _autoTickNanos))), displayDuration(deadline-now));
+                long delta = deadline - now;
+                if (delta <= 1000) {
+                  // within 1 usec, close enough, dont wait
+                  _avgTickNanos = avg;
+                  doTick = true;
+                  doProp = true;
+                  ready = true;
+                  // System.out.printf("missed by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
+                  //     delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
+                } else if (delta < 1000000) {
+                  // less than 1 ms, busy wait
+                  simStateLock.unlock(); try {
+                    long t;
+                    do {
+                      t = System.nanoTime();
+                    } while (t < deadline);
+                  } finally { simStateLock.lock(); }
+                  // System.out.printf("busy   by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
+                  //     delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
+                } else {
+                  // longer delay, put thread to sleep
+                  try { simStateUpdated.awaitNanos(delta); }
+                  catch (InterruptedException e) { } // yes, we swallow the interrupt
+                  // System.out.printf("ahead  by %10d, last = %10d, avg = %10.1f, goal = %10d, k = %d\n",
+                  //     delta, lastNanos, _avgTickNanos, _autoTickNanos, k);
+                }
+              }
+            } else {
+              // System.out.printf("no work to do, awaiting update");
+              // // not auto-ticking, so reset sim tick frequency history
+              // and wait for update before trying again
+              _avgTickNanos = -1.0; // reset
+              try { simStateUpdated.await(); }
+              catch (InterruptedException e) { } // yes, we swallow the interrupt
             }
-            catch (InterruptedException e) { } // yes, we swallow the interrupt
           }
         } while (!ready);
 
-        _oops = false;
-      }
+      } finally { simStateLock.unlock(); }
       // DEBUGGING
       // System.out.printf("%d nudge %s tick %s prop %s step %s\n", cnt++, doNudge, doTick, doProp, doStep);
+      
+      exceptionEncountered = false; // volatile, but not synchronized
 
       boolean oops = false;
       boolean osc = false;
@@ -475,19 +512,22 @@ public class Simulator {
       osc = prop != null && prop.isOscillating();
 
       boolean clockDied = false;
-      synchronized (this) {
-        _oops = oops;
+      exceptionEncountered = oops; // volatile, but not synchronized
+      oscillating = osc; // volatile, but not synchronized
+      simStateLock.lock(); try {
         if (osc) {
           _autoPropagating = false;
+          autoPropagatingUnsynchronized = false;
           _nudgeRequested = false;
         }
         if (ticked && _manualTicksRequested > 0)
           _manualTicksRequested--;
         if (_autoTicking && !hasClocks) {
           _autoTicking = false;
+          autoTickingUnsynchronized = false;
           clockDied = true;
         }
-      }
+      } finally { simStateLock.unlock(); }
    
       // We report nudges, but we report them as no-ops, unless they were
       // accompanied by a tick, step, or propagate. That allows for a repaint in
@@ -508,14 +548,16 @@ public class Simulator {
             return;
         } catch (Throwable e) {
           e.printStackTrace();
-          synchronized(this) {
-            _oops = true;
+          exceptionEncountered = true; // volatile, but not synchronized
+          simStateLock.lock(); try {
             _autoPropagating = false;
+            autoPropagatingUnsynchronized = false;
             _autoTicking = false;
+            autoTickingUnsynchronized = false;
             _manualTicksRequested = 0;
             _manualStepsRequested = 0;
             _nudgeRequested = false;
-          }
+          } finally { simStateLock.unlock(); }
           SwingUtilities.invokeLater(new Runnable() {
             public void run() {
               JOptionPane.showMessageDialog(null,
@@ -718,29 +760,30 @@ public class Simulator {
   }
 
   public double getTickFrequency() {
-    return simThread.getTickFrequency();
+    return simThread.getTickFrequencyUnsynchronized();
   }
 
   public boolean isExceptionEncountered() {
-    return simThread.isExceptionEncountered();
+    return simThread.exceptionEncountered; // volatile, but not synchronized
   }
 
   public boolean isOscillating() {
-    Propagator prop = simThread.getPropagator();
-    return prop != null && prop.isOscillating();
+    // Propagator prop = simThread.getPropagatorUnsynchronized();
+    // return prop != null && prop.isOscillating();
+    return simThread.oscillating;  // volatile, but not synchronized
   }
 
   public CircuitState getCircuitState() {
-    Propagator prop = simThread.getPropagator();
+    Propagator prop = simThread.getPropagatorUnsynchronized();
     return prop == null ? null : prop.getRootState();
   }
 
   public boolean isAutoPropagating() {
-    return simThread.isAutoPropagating();
+    return simThread.isAutoPropagatingUnsynchronized();
   }
 
   public boolean isAutoTicking() {
-    return simThread.isAutoTicking();
+    return simThread.isAutoTickingUnsynchronized();
   }
 
   public void setCircuitState(CircuitState state) {
@@ -811,20 +854,6 @@ public class Simulator {
       return false;
     fireSimulatorStateChanged();
     return true;
-  }
-
-  private void updateSmoothingFactor() {
-    Propagator prop = simThread.getPropagator();
-    if (prop == null) {
-      simThread.smoothingFactor = 1;
-    } else {
-      Options opts = prop.getRootState().getProject().getOptions();
-      Object limit = opts.getAttributeSet().getValue(Options.ATTR_SIM_SMOOTHING);
-      int val = ((Integer) limit).intValue();
-      if (val < 1)
-        val = 1;
-      simThread.smoothingFactor = val;
-    }
   }
 
 }

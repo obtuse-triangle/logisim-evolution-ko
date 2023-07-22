@@ -443,8 +443,6 @@ public class Canvas extends JPanel
     @Override
     public void propagationCompleted(Simulator.Event e) {
       paintCoordinator.requestRepaint();
-      // if (e.didTick())
-      //   waitForRepaintDone();
     }
 
     @Override
@@ -558,7 +556,6 @@ public class Canvas extends JPanel
       }
 
       g.setColor(Color.BLACK);
-
     }
 
     private int paintString(Graphics g, int y, String msg) {

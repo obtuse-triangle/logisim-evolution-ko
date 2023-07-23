@@ -293,7 +293,7 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
   }
   
   private void enableChanged(String op) {
-    boolean dynamic = enable.equals(enableOptions[0]);
+    boolean dynamic = enable.getSelectedItem().equals(enableOptions[0]);
     tree.setEnabled(dynamic);
     operation.setEnabled(dynamic);
     numericValue.setEnabled(dynamic);

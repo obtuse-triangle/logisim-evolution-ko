@@ -270,7 +270,7 @@ public class DynamicConditionDialog extends JDialog implements JInputDialog<Dyna
 
   @Override
   public void setValue(DynamicCondition dyn) {
-    if (dyn == null) {
+    if (dyn == null || dyn == DynamicCondition.NONE) {
       tree.clearSelection();
     } else {
       TreePath path = ShowStateDialog.toTreePath(root, dyn.getPath());

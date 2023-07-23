@@ -338,7 +338,7 @@ public class Simulator {
       } finally { simStateLock.unlock(); }
     }
 
-    // int cnt; // Debugging
+    // private int cnt; // Debugging
     private boolean loop() {
 
       Propagator prop = null;
@@ -362,28 +362,32 @@ public class Simulator {
           now = System.nanoTime();
 
           if (_resetRequested) {
+            // System.out.println("reset requested");
             _resetRequested = false;
             doReset = true;
             doProp = _autoPropagating;
             _avgTickNanos = -1.0; // reset
             ready = true;
           } else if (_nudgeRequested) {
+            // System.out.println("nudge requested");
             _nudgeRequested = false;
             doNudge = true;
-            _avgTickNanos = -1.0; // reset
+            // _avgTickNanos = -1.0; // reset
             ready = true;
           } else if (_manualStepsRequested > 0) {
+            // System.out.println("manual step requested");
             _manualStepsRequested--;
             doTickIfStable = _autoTicking;
             doStep = true;
-            _avgTickNanos = -1.0; // reset
+            // _avgTickNanos = -1.0; // reset
             ready = true;
           } else if (_manualTicksRequested > 0) {
+            // System.out.println("manual tick requested");
             // variable is decremented below
             doTick = true;
             doProp = _autoPropagating;
             doStep = !_autoPropagating;
-            _avgTickNanos = -1.0; // reset
+            // _avgTickNanos = -1.0; // reset
             ready = true;
           } else {
             // wait, but perhaps not long (depending on auto-tick), so calculate deadline
@@ -455,7 +459,7 @@ public class Simulator {
 
       } finally { simStateLock.unlock(); }
       // DEBUGGING
-      // System.out.printf("%d nudge %s tick %s prop %s step %s\n", cnt++, doNudge, doTick, doProp, doStep);
+      // //iSystem.out.printf("%d nudge %s tick %s prop %s step %s\n", cnt++, doNudge, doTick, doProp, doStep);
       
       exceptionEncountered = false; // volatile, but not synchronized
 

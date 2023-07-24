@@ -639,13 +639,13 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
       }
       toolbar.setToolbarModel(app.getToolbarModel());
       app.getAttrTableDrawManager(attrTable).attributesSelected();
-      zoom.setZoomModel(app.getZoomModel());
+      zoom.setZoomModel(app.getZoomModel(), app.getCanvas());
       menuListener.setEditHandler(app.getEditHandler());
       mainPanel.setView(view);
       app.getCanvas().requestFocus();
     } else { // layout view
       toolbar.setToolbarModel(layoutToolbarModel);
-      zoom.setZoomModel(layoutZoomModel);
+      zoom.setZoomModel(layoutZoomModel, layoutCanvas);
       menuListener.setEditHandler(layoutEditHandler);
       viewAttributes(null, project.getTool(), true);
       mainPanel.setView(view);

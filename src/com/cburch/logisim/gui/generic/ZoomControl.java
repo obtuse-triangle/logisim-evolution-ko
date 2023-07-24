@@ -54,7 +54,6 @@ import javax.swing.JSlider;
 import java.awt.event.MouseAdapter;
 import java.awt.Insets;
 
-import com.cburch.logisim.gui.main.Canvas;
 import com.cburch.logisim.prefs.AppPreferences;
 import com.cburch.logisim.util.Icons;
 
@@ -157,7 +156,7 @@ public class ZoomControl extends JPanel {
   private SliderModel sliderModel;
   private JSlider slider;
   private GridIcon grid;
-  private Canvas canvas;
+  private JComponent canvas;
 
   private int nearestZoomOption() {
     double[] choices = model.getZoomOptions();
@@ -200,7 +199,7 @@ public class ZoomControl extends JPanel {
     }
   }
 
-  public ZoomControl(ZoomModel model, Canvas canvas) {
+  public ZoomControl(ZoomModel model, JComponent canvas) {
     super(new BorderLayout());
     this.model = model;
     this.canvas = canvas;
@@ -228,8 +227,6 @@ public class ZoomControl extends JPanel {
 
     model.addPropertyChangeListener(ZoomModel.SHOW_GRID, grid);
     model.addPropertyChangeListener(ZoomModel.ZOOM, sliderModel);
-    // model.addPropertyChangeListener(ZoomModel.ZOOM, label);
-    model.addPropertyChangeListener(ZoomModel.ZOOM, e -> updateCoordinates());
 
     showCoordinates(AppPreferences.SHOW_COORDS.get());
     AppPreferences.SHOW_COORDS.addPropertyChangeListener(
@@ -281,26 +278,35 @@ public class ZoomControl extends JPanel {
   //   public void update() { setText(zoomString()); }
   // }
 
-  public void setZoomModel(ZoomModel value) {
+  public void setZoomModel(ZoomModel newModel, JComponent newCanvas) {
     ZoomModel oldModel = model;
-    if (oldModel != value) {
+    JComponent oldCanvas = canvas;
+    if (oldModel == newModel && oldCanvas == newCanvas)
+      return;
+    if (oldCanvas != newCanvas) {
+      if (oldCanvas != null)
+        oldCanvas.removeMouseMotionListener(coordListener);
+      canvas = newCanvas;
+      if (newCanvas != null)
+        newCanvas.addMouseMotionListener(coordListener);
+    }
+    if (oldModel != newModel) {
       if (oldModel != null) {
         oldModel.removePropertyChangeListener(ZoomModel.SHOW_GRID, grid);
         oldModel.removePropertyChangeListener(ZoomModel.ZOOM, sliderModel);
-        // oldModel.removePropertyChangeListener(ZoomModel.ZOOM, label);
+        newModel.removePropertyChangeListener(ZoomModel.ZOOM, zoomListener);
       }
-      model = value;
+      model = newModel;
       sliderModel = new SliderModel(model);
       slider.setModel(sliderModel);
       grid.update();
-      // label.update();
-      updateCoordinates();
-      if (value != null) {
-        value.addPropertyChangeListener(ZoomModel.SHOW_GRID, grid);
-        value.addPropertyChangeListener(ZoomModel.ZOOM, sliderModel);
-        // value.addPropertyChangeListener(ZoomModel.ZOOM, label);
+      if (newModel != null) {
+        newModel.addPropertyChangeListener(ZoomModel.SHOW_GRID, grid);
+        newModel.addPropertyChangeListener(ZoomModel.ZOOM, sliderModel);
+        newModel.addPropertyChangeListener(ZoomModel.ZOOM, zoomListener);
       }
     }
+    updateCoordinates();
   }
 
   private boolean showCoords = false;
@@ -325,6 +331,13 @@ public class ZoomControl extends JPanel {
     @Override
     public void mouseExited(MouseEvent e) { coords.setText(" "); } // this does not work
   };
+  private PropertyChangeListener zoomListener = new PropertyChangeListener() {
+    @Override
+    public void propertyChange(PropertyChangeEvent event) {
+      updateCoordinates();
+    }
+  };
+
 
   public void showCoordinates(boolean value) {
     if (showCoords == value)
@@ -334,9 +347,11 @@ public class ZoomControl extends JPanel {
       updateCoordinates();
       add(coords, BorderLayout.SOUTH);
       canvas.addMouseMotionListener(coordListener);
+      model.addPropertyChangeListener(ZoomModel.ZOOM, zoomListener);
     } else {
       remove(coords);
       canvas.removeMouseMotionListener(coordListener);
+      model.removePropertyChangeListener(ZoomModel.ZOOM, zoomListener);
     }
     revalidate();
   }

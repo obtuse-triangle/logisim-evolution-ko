@@ -58,6 +58,7 @@ import javax.swing.event.MouseInputListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import com.cburch.logisim.Main;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitEvent;
 import com.cburch.logisim.circuit.CircuitListener;
@@ -246,12 +247,14 @@ public class Canvas extends JPanel
     @Override
     public void mouseWheelMoved(MouseWheelEvent mwe) {
       Tool tool = proj.getTool();
-      if (!mwe.isControlDown() &&
+      if (!(mwe.isControlDown() || (Main.MacOS && mwe.isMetaDown())) &&
           tool != null && tool instanceof PokeTool && ((PokeTool)tool).isScrollable()) {
-        int id = (mwe.getWheelRotation() < 0) ? KeyEvent.VK_UP : KeyEvent.VK_DOWN;
-        KeyEvent e = new KeyEvent(mwe.getComponent(), KeyEvent.KEY_PRESSED,
-            mwe.getWhen(), 0, id, '\0');
-        tool.keyPressed(Canvas.this, e);
+        if (mwe.getWheelRotation() != 0) {
+          int id = (mwe.getWheelRotation() < 0) ? KeyEvent.VK_UP : KeyEvent.VK_DOWN;
+          KeyEvent e = new KeyEvent(mwe.getComponent(), KeyEvent.KEY_PRESSED,
+              mwe.getWhen(), 0, id, '\0');
+          tool.keyPressed(Canvas.this, e);
+        }
       } else {
         canvasPane.mouseWheelMoved(mwe, true);
       }

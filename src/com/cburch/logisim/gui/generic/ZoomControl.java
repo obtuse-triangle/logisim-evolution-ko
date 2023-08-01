@@ -235,6 +235,7 @@ public class ZoomControl extends JPanel {
             showCoordinates(AppPreferences.SHOW_COORDS.get());
           }
         });
+
   }
 
   public String zoomString() {

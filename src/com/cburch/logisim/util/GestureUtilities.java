@@ -30,11 +30,12 @@
 
 package com.cburch.logisim.util;
 
-import java.lang.reflect.Constructor;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.JComponent;
 
@@ -163,14 +164,14 @@ public class GestureUtilities {
   private static Class com_apple_eawt_event_GestureListener;
   private static Class com_apple_eawt_event_MagnificationListener;
   private static Class com_apple_eawt_event_RotationListener;
-  private static Object appleGestureUtilities; // com.apple.eawt.event.GestureUtilities
+  private static boolean appleGestureSupported;
   static {
     try {
       initialize();
     } catch (Throwable t) {
-      appleGestureUtilities = null;
+      appleGestureSupported = false;
+      System.out.println("Apple gesture support: failed to initialize: " + t.getMessage());
       t.printStackTrace();
-      System.out.println("Apple gesture support: failed to initialize");
     }
   }
 
@@ -185,22 +186,7 @@ public class GestureUtilities {
     com_apple_eawt_event_RotationListener = Class.forName("com.apple.eawt.event.RotationListener");
     com_apple_eawt_event_GestureListener = Class.forName("com.apple.eawt.event.GestureListener");
 
-    // Object o = null;
-    // for (Constructor c : com_apple_eawt_event_GestureUtilities.getDeclaredConstructors()) {
-    //   try {
-    //     c.setAccessible(true);
-    //     o = c.newInstance();
-    //     break;
-    //   } catch (Throwable t) {
-    //     continue;
-    //   }
-    // }
-    // if (o == null) {
-    //   System.out.println("Missing constructor for com.apple.eawt.event.GestureUtilities");
-    //   return;
-    // }
-
-    appleGestureUtilities = new Object();
+    appleGestureSupported = true;
     Debug.println(1, "Apple gesture support initialized");
   }
 
@@ -208,8 +194,27 @@ public class GestureUtilities {
 
   private static Object lock = new Object();
 
+  private static void reportError(Throwable t) {
+    synchronized(lock) {
+      if (!appleGestureSupported)
+        return;
+      appleGestureSupported = false;
+      if (t instanceof IllegalAccessException) {
+        String opt = "--add-opens=java.desktop/com.apple.eawt.event=ALL-UNNAMED";
+        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        if (!jvmArgs.contains(opt)) {
+          System.out.printf("Note: To enable Apple gesture support, use JVM option '%s'.\n", opt);
+          return;
+        }
+      }
+      Debug.println(0, "Apple gesture support failed, will be disabled: " + t.getMessage());
+      if (Debug.verbose > 0)
+        t.printStackTrace();
+    }
+  }
+
   public static void addMagnificationListenerTo(JComponent comp, MagnificationListener listener) { 
-    if (appleGestureUtilities == null)
+    if (!appleGestureSupported)
       return;
     try {
       synchronized (lock) {
@@ -232,15 +237,15 @@ public class GestureUtilities {
         com_apple_eawt_event_GestureUtilities.getMethod(
             "addGestureListenerTo",
             javax_swing_JComponent,
-            com_apple_eawt_event_GestureListener).invoke(appleGestureUtilities, comp, proxy);
+            com_apple_eawt_event_GestureListener).invoke(null, comp, proxy);
       }
     } catch (Throwable t) {
-      t.printStackTrace();
+      reportError(t);
     }
   }
 
   public static void removeMagnificationListenerFrom(JComponent comp, MagnificationListener listener) { 
-    if (appleGestureUtilities == null)
+    if (!appleGestureSupported)
       return;
     try {
       synchronized (lock) {
@@ -256,15 +261,15 @@ public class GestureUtilities {
         com_apple_eawt_event_GestureUtilities.getMethod(
             "removeGestureListenerFrom",
             javax_swing_JComponent,
-            com_apple_eawt_event_GestureListener).invoke(appleGestureUtilities, comp, proxy);
+            com_apple_eawt_event_GestureListener).invoke(null, comp, proxy);
       }
     } catch (Throwable t) {
-      t.printStackTrace();
+      reportError(t);
     }
   }
 
   public static void addRotationListenerTo(JComponent comp, RotationListener listener) { 
-    if (appleGestureUtilities == null)
+    if (!appleGestureSupported)
       return;
     try {
       synchronized (lock) {
@@ -287,16 +292,16 @@ public class GestureUtilities {
         com_apple_eawt_event_GestureUtilities.getMethod(
             "addGestureListenerTo",
             javax_swing_JComponent,
-            com_apple_eawt_event_GestureListener).invoke(appleGestureUtilities, comp, proxy);
+            com_apple_eawt_event_GestureListener).invoke(null, comp, proxy);
       }
 
     } catch (Throwable t) {
-      t.printStackTrace();
+      reportError(t);
     }
   }
 
   public static void removeRotationListenerFrom(JComponent comp, RotationListener listener) { 
-    if (appleGestureUtilities == null)
+    if (!appleGestureSupported)
       return;
     try {
       synchronized (lock) {
@@ -312,10 +317,10 @@ public class GestureUtilities {
         com_apple_eawt_event_GestureUtilities.getMethod(
             "removeGestureListenerFrom",
             javax_swing_JComponent,
-            com_apple_eawt_event_GestureListener).invoke(appleGestureUtilities, comp, proxy);
+            com_apple_eawt_event_GestureListener).invoke(null, comp, proxy);
       }
     } catch (Throwable t) {
-      t.printStackTrace();
+      reportError(t);
     }
   }
 

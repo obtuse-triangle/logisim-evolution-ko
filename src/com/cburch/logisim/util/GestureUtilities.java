@@ -34,8 +34,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import javax.swing.JComponent;
 
@@ -201,8 +201,8 @@ public class GestureUtilities {
       appleGestureSupported = false;
       if (t instanceof IllegalAccessException) {
         String opt = "--add-opens=java.desktop/com.apple.eawt.event=ALL-UNNAMED";
-        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        if (!jvmArgs.contains(opt)) {
+        String jvmCmd = ProcessHandle.current().info().commandLine().orElse("error");
+        if (!Arrays.asList(jvmCmd.split(" ")).contains(opt)) { // not perfect, but good enough
           System.out.printf("Note: To enable Apple gesture support, use JVM option '%s'.\n", opt);
           return;
         }

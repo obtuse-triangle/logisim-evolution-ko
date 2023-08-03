@@ -116,7 +116,7 @@ fi
 INSTALLER_TYPE="pkg" # Options: dmg or pkg
 OUTPUT="."
 JAR="logisim-evolution.jar"
-VERSION="5.0.0" # must be numerical x.y.z
+VERSION="5.0.1" # must be numerical x.y.z
 FILE_ASSOCIATIONS="file-associations.properties"
 APP_ICON="logisim.icns"
 JAVA_APP_IDENTIFIER="edu.holycross.cs.kwalsh.logisim"
@@ -149,6 +149,7 @@ ${PACKAGER} \
   --name "Logisim-Evolution" \
   --main-class com.cburch.logisim.Main \
   --main-jar "${JAR}" \
+  --java-options "--add-opens=java.desktop/com.apple.eawt.event=ALL-UNNAMED" \
   --app-version "${VERSION}" \
   --copyright "(c) 2023 Kevin Walsh" \
   --description "Digital logic designer and simulator." \
@@ -169,7 +170,7 @@ rm -rf mac-staging
 rm -rf mac-resources
 mv "Logisim-Evolution-${VERSION}.pkg" "Logisim-Evolution-${VERSION}-HC.pkg"
 
-cat <<END
+cat <<ENDNOTE
 
 # To notarize, run this command:
 
@@ -193,3 +194,4 @@ cat mac-notarize.log
 # Check for warnings and errors, then finally:
 xcrun stapler staple Logisim-Evolution-${VERSION}-HC.pkg
 
+ENDNOTE

@@ -69,7 +69,7 @@ rem   rem installer type can be exe or msi, but exe does not seem to work
 rem   set INSTALLER_TYPE="msi"
 rem   set OUTPUT=.
 rem   set JAR=logisim-evolution.jar
-rem   set VERSION=5.0.0
+rem   set VERSION=5.0.1
 rem   rem FILE_ASSOCIATIONS="file-associations.properties"
 rem   set APP_ICON="logisim.ico"
 rem   rem JAVA_APP_IDENTIFIER="edu.holycross.cs.kwalsh.logisim"
@@ -119,18 +119,18 @@ echo Creating executable wrapper...
 %LAUNCH4J% logisim-l4j.xml || goto :error
 
 echo Creating ZIP package for distribution...
-IF EXIST Logisim-Evolution-5.0.0hc-windows.zip del Logisim-Evolution-5.0.0hc-windows.zip || goto :error
-IF EXIST Logisim-Evolution-5.0.0hc rmdir /S /Q Logisim-Evolution-5.0.0hc || goto :error
-mkdir Logisim-Evolution-5.0.0hc || goto :error
-copy LICENSE Logisim-Evolution-5.0.0hc\LICENSE.txt || goto :error
-copy logisim-evolution-5.0.0hc.exe Logisim-Evolution-5.0.0hc || goto :error
-xcopy /s logisim-evolution-runtime Logisim-Evolution-5.0.0hc\logisim-evolution-runtime\ || goto :error
-powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('Logisim-Evolution-5.0.0hc', 'Logisim-Evolution-5.0.0hc-windows.zip'); }" || goto :error
-IF EXIST logisim-evolution-5.0.0hc.exe del logisim-evolution-5.0.0hc.exe || goto :error
-rmdir /S /Q Logisim-Evolution-5.0.0hc || goto :error
+IF EXIST Logisim-Evolution-5.0.1hc-windows.zip del Logisim-Evolution-5.0.1hc-windows.zip || goto :error
+IF EXIST Logisim-Evolution-5.0.1hc rmdir /S /Q Logisim-Evolution-5.0.1hc || goto :error
+mkdir Logisim-Evolution-5.0.1hc || goto :error
+copy LICENSE Logisim-Evolution-5.0.1hc\LICENSE.txt || goto :error
+copy logisim-evolution-5.0.1hc.exe Logisim-Evolution-5.0.1hc || goto :error
+xcopy /s logisim-evolution-runtime Logisim-Evolution-5.0.1hc\logisim-evolution-runtime\ || goto :error
+powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('Logisim-Evolution-5.0.1hc', 'Logisim-Evolution-5.0.1hc-windows.zip'); }" || goto :error
+IF EXIST logisim-evolution-5.0.1hc.exe del logisim-evolution-5.0.1hc.exe || goto :error
+rmdir /S /Q Logisim-Evolution-5.0.1hc || goto :error
 
 echo Creating self-contained executable...
-copy logisim-evolution.jar logisim-evolution-5.0.0hc.jar || goto :error
+copy logisim-evolution.jar logisim-evolution-5.0.1hc.jar || goto :error
 %NSIS% logisim-win-install.nsi || goto :error
 
 echo =======================================

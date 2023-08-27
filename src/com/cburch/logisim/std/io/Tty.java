@@ -103,7 +103,7 @@ public class Tty extends InstanceFactory {
             StdAttr.TRIG_RISING, Color.BLACK, DEFAULT_BACKGROUND,
             "", Direction.NORTH, StdAttr.DEFAULT_LABEL_FONT});
     setIconName("tty.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
   }
 
   public static int getWidth(Object widthAttr) {

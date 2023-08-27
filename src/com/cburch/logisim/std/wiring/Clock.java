@@ -187,7 +187,7 @@ public class Clock extends InstanceFactory {
     setFacingAttribute(StdAttr.FACING);
     setInstanceLogger(ClockLogger.class);
     setInstancePoker(ClockPoker.class);
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
   }
 
   @Override

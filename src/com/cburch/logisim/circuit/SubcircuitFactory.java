@@ -113,7 +113,7 @@ public class SubcircuitFactory extends InstanceFactory {
     setFacingAttribute(StdAttr.FACING);
     setDefaultToolTip(new CircuitFeature(null));
     setInstancePoker(SubcircuitPoker.class);
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
   }
 
   void computePorts(Instance instance) {

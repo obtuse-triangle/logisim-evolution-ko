@@ -73,7 +73,7 @@ public class HexDigit extends InstanceFactory implements DynamicElementProvider 
     setPorts(ps);
     setOffsetBounds(Bounds.create(-15, -60, 40, 60));
     setIconName("hexdig.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
   }
 
   @Override

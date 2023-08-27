@@ -155,7 +155,7 @@ public class Register extends InstanceFactory implements DynamicElementProvider,
     super("Register", S.getter("registerComponent"));
     setKeyConfigurator(JoinedConfigurator.create(
           new BitWidthConfigurator(StdAttr.WIDTH),
-          new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK)));
+          new DirectionConfigurator(StdAttr.LABEL_LOC)));
     setIconName("register.gif");
     setInstancePoker(RegisterPoker.class);
     setInstanceLogger(RegisterLogger.class);

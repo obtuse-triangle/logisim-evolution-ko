@@ -90,7 +90,7 @@ public class Led extends InstanceFactory implements DynamicElementProvider, Dyna
         StdAttr.DEFAULT_LABEL_FONT, Color.BLACK });
     setFacingAttribute(StdAttr.FACING);
     setIconName("led.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
     setPorts(new Port[] { new Port(0, 0, Port.INPUT, 1) });
     setInstanceLogger(Logger.class);
   }

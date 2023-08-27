@@ -139,7 +139,7 @@ public class DipSwitch extends InstanceFactory {
     setIconName("dipswitch.gif");
     setKeyConfigurator(JoinedConfigurator.create(
           new BitWidthConfigurator(ATTR_SIZE),
-          new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK)));
+          new DirectionConfigurator(StdAttr.LABEL_LOC)));
     setInstancePoker(Poker.class);
   }
 

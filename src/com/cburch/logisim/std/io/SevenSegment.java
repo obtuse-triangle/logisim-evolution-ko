@@ -134,7 +134,7 @@ public class SevenSegment extends InstanceFactory implements DynamicElementProvi
         Boolean.TRUE, "", Direction.EAST, StdAttr.DEFAULT_LABEL_FONT });
     setOffsetBounds(Bounds.create(-5, 0, 40, 60));
     setIconName("7seg.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
     Port[] ps = new Port[8];
     ps[Segment_A] = new Port(20, 0, Port.INPUT, 1);
     ps[Segment_B] = new Port(30, 0, Port.INPUT, 1);

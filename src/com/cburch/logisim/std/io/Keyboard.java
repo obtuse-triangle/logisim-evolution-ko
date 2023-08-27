@@ -210,7 +210,7 @@ public class Keyboard extends InstanceFactory {
         new Object[] { Integer.valueOf(32), Integer.valueOf(7), StdAttr.TRIG_RISING, "", Direction.NORTH, StdAttr.DEFAULT_LABEL_FONT});
     setOffsetBounds(Bounds.create(0, -15, WIDTH, HEIGHT));
     setIconName("keyboard.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
     setInstancePoker(Poker.class);
   }
 

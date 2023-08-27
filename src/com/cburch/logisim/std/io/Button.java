@@ -116,7 +116,7 @@ public class Button extends InstanceFactory {
         Color.BLACK });
     setFacingAttribute(StdAttr.FACING);
     setIconName("button.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
     setPorts(new Port[] { new Port(0, 0, Port.OUTPUT, 1) });
     setInstancePoker(Poker.class);
     setInstanceLogger(Logger.class);

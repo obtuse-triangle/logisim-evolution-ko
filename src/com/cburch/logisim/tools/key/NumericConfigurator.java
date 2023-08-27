@@ -30,6 +30,7 @@
 
 package com.cburch.logisim.tools.key;
 
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 import com.cburch.logisim.data.Attribute;
@@ -88,10 +89,21 @@ public abstract class NumericConfigurator<V>
   }
 
   public KeyConfigurationResult keyEventReceived(KeyConfigurationEvent event) {
-    if (event.getType() == KeyConfigurationEvent.KEY_TYPED) {
-      KeyEvent e = event.getKeyEvent();
-      int digit = Character.digit(e.getKeyChar(), radix);
-      if (digit >= 0 && e.getModifiersEx() == modsEx) {
+    KeyEvent e = event.getKeyEvent();
+    // Using KEY_TYPED with ALT_DOWN_MASK is problematic on MacOS. For example,
+    // MacOS treats Option+4 as the cents symbol, so e.getKeyChar() would return
+    // the unicode for cents, rather than the character '4' in that case. This
+    // problem occurs for all digits and probably many characters too. So we use
+    // KEY_PRESSED here instead, and manually handle the SHIFT modifier.
+    if (event.getType() == KeyConfigurationEvent.KEY_PRESSED) {
+      int eventMods = e.getModifiersEx();
+      char key = (char)e.getKeyCode();
+      if ((eventMods & InputEvent.SHIFT_DOWN_MASK) != 0 && 'A' <= key && key <= 'Z') {
+        // Handle uppercase, e.g. converting ALT+SHIFT+'F' into ALT+'F'
+        eventMods &= ~InputEvent.SHIFT_DOWN_MASK;
+      }
+      int digit = Character.digit(key, radix);
+      if (digit >= 0 && eventMods == modsEx) {
         long now = System.currentTimeMillis();
         long sinceLast = now - whenTyped;
         AttributeSet attrs = event.getAttributeSet();

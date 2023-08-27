@@ -565,7 +565,7 @@ public class Pin extends InstanceFactory implements DynamicValueProvider {
     setFacingAttribute(StdAttr.FACING);
     setKeyConfigurator(JoinedConfigurator.create(
           new BitWidthConfigurator(StdAttr.WIDTH),
-          new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK)));
+          new DirectionConfigurator(StdAttr.LABEL_LOC)));
     setInstanceLogger(PinLogger.class);
     setInstancePoker(PinPoker.class);
   }

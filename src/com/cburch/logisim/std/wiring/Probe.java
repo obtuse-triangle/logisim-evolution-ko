@@ -179,7 +179,7 @@ public class Probe extends InstanceFactory implements DynamicValueProvider {
   public Probe() {
     super("Probe", S.getter("probeComponent"));
     setIconName("probe.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
     setFacingAttribute(StdAttr.FACING);
     setInstanceLogger(ProbeLogger.class);
   }

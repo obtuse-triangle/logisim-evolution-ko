@@ -105,7 +105,7 @@ public class Counter extends InstanceFactory implements DynamicElementProvider, 
     setInstanceLogger(RegisterLogger.class);
     setKeyConfigurator(JoinedConfigurator.create(
           new BitWidthConfigurator(StdAttr.WIDTH),
-          new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK)));
+          new DirectionConfigurator(StdAttr.LABEL_LOC)));
   }
 
   @Override

@@ -30,6 +30,7 @@
 
 package com.cburch.logisim.tools.key;
 
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 import com.cburch.logisim.data.Attribute;
@@ -38,6 +39,11 @@ import com.cburch.logisim.data.Direction;
 public class DirectionConfigurator implements KeyConfigurator, Cloneable {
   private Attribute<? extends Object> attr;
   private int modsEx;
+  
+  public DirectionConfigurator(Attribute<? extends Object> attr) {
+    this.attr = attr;
+    this.modsEx = InputEvent.ALT_DOWN_MASK;
+  }
 
   public DirectionConfigurator(Attribute<? extends Object> attr, int modifiersEx) {
     this.attr = attr;

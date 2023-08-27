@@ -96,7 +96,7 @@ public class RGBLed extends InstanceFactory implements DynamicElementProvider {
         StdAttr.DEFAULT_LABEL_FONT, Color.BLACK });
     setFacingAttribute(StdAttr.FACING);
     setIconName("rgbled.gif");
-    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC, KeyEvent.ALT_DOWN_MASK));
+    setKeyConfigurator(new DirectionConfigurator(StdAttr.LABEL_LOC));
     setInstanceLogger(Logger.class);
   }
 

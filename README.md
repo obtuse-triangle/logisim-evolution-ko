@@ -7,7 +7,14 @@ You can get the latest *stable version* of Logisim-Evolution (Holy Cross Edition
 [![Download for Mac](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-mac.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.2/Logisim-Evolution-5.0.2-HC.pkg)
 [![Download for Linux](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-linux.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.2/logisim-evolution-5.0.2hc.jar)
 
-**MAC Security Warning**: On some recent MacOS versions, the OS security
+**Older Mac Notice**: On older intel-based Macs, please use
+[Mac OS Version 4.0.4-HC](https://mathcs.holycross.edu/~kwalsh/Logisim-Evolution-4.0.4-HC.pkg),
+a slightly older version of the package. The newer 5.x version is not yet
+compiled in a format usable by older Macs.
+
+the 5.x version of Logisim will
+
+**Mac Security Warning**: On some recent MacOS versions, the OS security
 gatekeeper may prevent you from opening the PKG file above directly. Instead,
 right-click and "Save As..." to save the PKG file to your download folder. Then
 go to your download folder in the finder, right click the PKG file and "Open

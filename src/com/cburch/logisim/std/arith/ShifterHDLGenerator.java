@@ -65,7 +65,7 @@ public class ShifterHDLGenerator extends HDLGenerator {
       out.stmt("          (others => s_%d_out(%d)) WHEN Mode = 3 ELSE", stage-1, w-1);
       out.stmt("          s_%d_out(%d DOWNTO 0) WHEN Mode = 4 ELSE", stage-1, amt-1);
       out.stmt("          (others => '0');");
-      out.stmt("s_%d_out <= s_%d_out WHEN SHift(%d) = '0' ELSE", stage, stage-1, stage);
+      out.stmt("s_%d_out <= s_%d_out WHEN Shift(%d) = '0' ELSE", stage, stage-1, stage);
       out.stmt("           s_%d_out(%d DOWNTO 0) & s_%d_in WHEN Mode = 0 OR Mode = 1 ELSE", stage-1, w-amt-1, stage);
       out.stmt("           s_%d_in & s_%d_out(%d DOWNTO %d);", stage, stage-1, w-1, amt);
     }

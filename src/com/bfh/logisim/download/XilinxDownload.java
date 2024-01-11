@@ -63,6 +63,19 @@ public class XilinxDownload extends FPGADownload {
 		return new File(sandboxPath + TOP_HDL + bitFileExt).exists();
   }
 
+  private ArrayList<String> externalSynthesisScript() {
+    // If XilinxToolPath is an executable file, rather than a directory, then
+    // use that as a single-file script to do the entire synthesis rather than
+    // using the multi-step synthesis using xst.exe, etc.
+    String tool = settings.GetXilinxToolPath();
+    File script = new File(tool);
+    if (!script.exists() || script.isDirectory() || !script.canExecute())
+      return null;
+    ArrayList<String> command = new ArrayList<>();
+    command.add(tool);
+    return command;
+  }
+
   private ArrayList<String> cmd(String prog, String ...args) {
     ArrayList<String> command = new ArrayList<>();
     command.add(settings.GetXilinxToolPath() + File.separator + prog);
@@ -76,52 +89,60 @@ public class XilinxDownload extends FPGADownload {
     ArrayList<Stage> stages = new ArrayList<>();
 
 		if (!readyForDownload()) {
-      String script = scriptPath.replace(projectPath, "../") + script_file;
-      stages.add(new Stage(
-            "synthesize", "Synthesizing (may take a while)",
-            cmd(XILINX_XST, "-ifn", script, "-ofn", "logisim.log"),
-            "Failed to synthesize Xilinx project, cannot download"));
-      String ucf = ucfPath.replace(projectPath, "../") + ucf_file;
-      stages.add(new Stage(
-            "constrain", "Adding Constraints",
-            cmd(XILINX_NGDBUILD, "-intstyle", "ise", "-uc", ucf, "logisim.ngc", "logisim.ngd"),
-            "Failed to add Xilinx constraints, cannot download"));
-      if (!isCPLD(board.fpga)) {
+      ArrayList<String> tool = externalSynthesisScript();
+      if (tool != null) {
+        tool.add(projectPath);
         stages.add(new Stage(
-              "mapping", "Mapping Design (may take a while)",
-              cmd(XILINX_MAP, "-intstyle", "ise", "-o", "logisim_map", "logisim.ngd"),
-              "Failed to map design, cannot download"));
-        stages.add(new Stage(
-              "place & route", "Place & Route Design (may take a while)",
-              cmd(XILINX_PAR, "-w", "-intstyle", "ise", "-ol", "high", "logisim_map", "logisim_par", "logisim_map.pcf"),
-              "Failed to place & route design, cannot download"));
-        PullBehavior dir = board.fpga.UnusedPinsBehavior;
-        if (dir == PullBehavior.PULL_UP || dir == PullBehavior.PULL_DOWN) {
-          stages.add(new Stage(
-                "generate", "Generating Bitfile",
-                cmd(XILINX_BITGEN, "-w", "-g", "UnusedPin:"+dir.xilinx.toUpperCase(),
-                  "-g", "StartupClk:CCLK", "logisim_par", TOP_HDL + ".bit"),
-              "Failed to place & route design, cannot download"));
-        } else {
-          stages.add(new Stage(
-                "generate", "Generating Bitfile",
-                cmd(XILINX_BITGEN, "-w", "-g", "StartupClk:CCLK", "logisim_par", TOP_HDL + ".bit"),
-              "Failed to generate bitfile, cannot download"));
-        }
+              "synthesis", "Synthesizing (may take a while)",
+              tool, "Failed to synthesize design, cannot download"));
       } else {
-        String part = board.fpga.Part.toUpperCase() + "-"
+        String script = scriptPath.replace(projectPath, "../") + script_file;
+        stages.add(new Stage(
+              "synthesize", "Synthesizing (may take a while)",
+              cmd(XILINX_XST, "-ifn", script, "-ofn", "logisim.log"),
+              "Failed to synthesize Xilinx project, cannot download"));
+        String ucf = ucfPath.replace(projectPath, "../") + ucf_file;
+        stages.add(new Stage(
+              "constrain", "Adding Constraints",
+              cmd(XILINX_NGDBUILD, "-intstyle", "ise", "-uc", ucf, "logisim.ngc", "logisim.ngd"),
+              "Failed to add Xilinx constraints, cannot download"));
+        if (!isCPLD(board.fpga)) {
+          stages.add(new Stage(
+                "mapping", "Mapping Design (may take a while)",
+                cmd(XILINX_MAP, "-intstyle", "ise", "-o", "logisim_map", "logisim.ngd"),
+                "Failed to map design, cannot download"));
+          stages.add(new Stage(
+                "place & route", "Place & Route Design (may take a while)",
+                cmd(XILINX_PAR, "-w", "-intstyle", "ise", "-ol", "high", "logisim_map", "logisim_par", "logisim_map.pcf"),
+                "Failed to place & route design, cannot download"));
+          PullBehavior dir = board.fpga.UnusedPinsBehavior;
+          if (dir == PullBehavior.PULL_UP || dir == PullBehavior.PULL_DOWN) {
+            stages.add(new Stage(
+                  "generate", "Generating Bitfile",
+                  cmd(XILINX_BITGEN, "-w", "-g", "UnusedPin:"+dir.xilinx.toUpperCase(),
+                    "-g", "StartupClk:CCLK", "logisim_par", TOP_HDL + ".bit"),
+                  "Failed to place & route design, cannot download"));
+          } else {
+            stages.add(new Stage(
+                  "generate", "Generating Bitfile",
+                  cmd(XILINX_BITGEN, "-w", "-g", "StartupClk:CCLK", "logisim_par", TOP_HDL + ".bit"),
+                  "Failed to generate bitfile, cannot download"));
+          }
+        } else {
+          String part = board.fpga.Part.toUpperCase() + "-"
             + board.fpga.SpeedGrade + "-"
             + board.fpga.Package.toUpperCase();
-        stages.add(new Stage(
-              "CPLD fit", "Fit CPLD Design (may take a while)",
-              cmd(XILINX_CPLDFIT, "-p", part, "-intstyle", "ise",
-                "-terminate", board.fpga.UnusedPinsBehavior.xilinx, // TODO: do correct termination type
-                "-loc", "on", "-log", "logisim_cpldfit.log", "logisim.ngd"),
-              "Failed to fit CPLD design, cannot download"));
-        stages.add(new Stage(
-              "generate", "Generating Bitfile",
-              cmd(XILINX_HPREP6, "-i", "logisim.vm6"),
-              "Failed to generate bitfile, cannot download"));
+          stages.add(new Stage(
+                "CPLD fit", "Fit CPLD Design (may take a while)",
+                cmd(XILINX_CPLDFIT, "-p", part, "-intstyle", "ise",
+                  "-terminate", board.fpga.UnusedPinsBehavior.xilinx, // TODO: do correct termination type
+                  "-loc", "on", "-log", "logisim_cpldfit.log", "logisim.ngd"),
+                "Failed to fit CPLD design, cannot download"));
+          stages.add(new Stage(
+                "generate", "Generating Bitfile",
+                cmd(XILINX_HPREP6, "-i", "logisim.vm6"),
+                "Failed to generate bitfile, cannot download"));
+        }
       }
     }
 

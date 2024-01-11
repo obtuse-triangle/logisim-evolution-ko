@@ -31,6 +31,7 @@
 package com.bfh.logisim.download;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.bfh.logisim.fpga.Chipset;
@@ -49,6 +50,21 @@ public class AlteraDownload extends FPGADownload {
     return new File(sandboxPath + TOP_HDL + ".sof").exists()
         || new File(sandboxPath + TOP_HDL + ".pof").exists();
   }
+ 
+  private ArrayList<String> externalSynthesisScript() {
+    // If AlteraToolPath is an executable file, rather than a directory, then
+    // use that as a single-file script to do the entire synthesis rather than
+    // using the multi-step synthesis using quartus_sh, quartus_map, etc.
+    String tool = settings.GetAlteraToolPath();
+    File script = new File(tool);
+    if (!script.exists() || script.isDirectory() || !script.canExecute())
+      return null;
+    ArrayList<String> command = new ArrayList<>();
+    command.add(tool);
+    if (settings.GetAltera64Bit())
+      command.add("--64bit");
+    return command;
+  }
 
   private ArrayList<String> cmd(String prog, String ...args) {
     ArrayList<String> command = new ArrayList<>();
@@ -60,27 +76,50 @@ public class AlteraDownload extends FPGADownload {
     return command;
   }
 
-  private String bitfile;
+  private String bitfile, flashfile;
   private String cablename;
 
   @Override
   public ArrayList<Stage> initiateDownload(Commander cmdr) {
     ArrayList<Stage> stages = new ArrayList<>();
 
+    boolean flash = (writeToFlash && board.fpga.FlashDefined);
+
     if (!readyForDownload()) {
-      String script = scriptPath.replace(projectPath, ".." + File.separator) + "AlteraDownload.tcl";
-      stages.add(new Stage(
-            "init", "Creating Quartus Project",
-            cmd(ALTERA_QUARTUS_SH, "-t", script),
-            "Failed to create Quartus project, cannot download"));
-      stages.add(new Stage(
-            "optimize", "Optimizing for Minimal Area",
-            cmd(ALTERA_QUARTUS_MAP, TOP_HDL, "--optimize=area"),
-            "Failed to optimize design, cannot download"));
-      stages.add(new Stage(
-            "synthesize", "Synthesizing (may take a while)",
-            cmd(ALTERA_QUARTUS_SH, "--flow", "compile", TOP_HDL),
-            "Failed to synthesize design, cannot download"));
+      ArrayList<String> tool = externalSynthesisScript();
+      if (tool != null) {
+        tool.add("--synthesize");
+        if (board.fpga.FlashDefined) {
+          tool.add("--flash");
+          tool.add(board.fpga.FlashName);
+        }
+        tool.add(projectPath);
+        stages.add(new Stage(
+              "synthesis", "Synthesizing (may take a while)",
+              tool, "Failed to synthesize design, cannot download"));
+      } else {
+        String script = scriptPath.replace(projectPath, ".." + File.separator) + "AlteraDownload.tcl";
+        stages.add(new Stage(
+              "init", "Creating Quartus Project",
+              cmd(ALTERA_QUARTUS_SH, "-t", script),
+              "Failed to create Quartus project, cannot download"));
+        stages.add(new Stage(
+              "optimize", "Optimizing for Minimal Area",
+              cmd(ALTERA_QUARTUS_MAP, TOP_HDL, "--optimize=area"),
+              "Failed to optimize design, cannot download"));
+        stages.add(new Stage(
+              "synthesize", "Synthesizing (may take a while)",
+              cmd(ALTERA_QUARTUS_SH, "--flow", "compile", TOP_HDL),
+              "Failed to synthesize design, cannot download"));
+        if (flash) {
+          stages.add(new Stage(
+                "convert", "Convert JTAG bitstream (.sof) to Flash file (.pof) format",
+                cmd(ALTERA_QUARTUS_CPF, "-c", "-d", board.fpga.FlashName,
+                  sandboxPath + TOP_HDL + ".sof",
+                  sandboxPath + TOP_HDL + ".pof"),
+                "Failed to convert bitstream, cannot download"));
+        }
+      }
     }
 
     // Typical output for FPGA enumerate command:
@@ -95,24 +134,44 @@ public class AlteraDownload extends FPGADownload {
     // Info: Quartus II 32-bit Programmer was successful. 0 errors, 0 warnings
     //     Info: Peak virtual memory: 126 megabytes
     //     ...
+    ArrayList<String> scan = externalSynthesisScript();
+    if (scan != null) {
+      scan.add("--list-cables");
+    } else {
+      scan = cmd(ALTERA_QUARTUS_PGM, "--list");
+    }
     stages.add(new Stage(
           "scan", "Searching for FPGA Devices",
-          cmd(ALTERA_QUARTUS_PGM, "--list"),
+          scan,
           "Could not find any FPGA devices. Did you connect the FPGA board?") {
       @Override
       protected boolean prep() {
+        if (new File(sandboxPath + TOP_HDL + ".pof").exists())
+          flashfile = TOP_HDL + ".pof";
         // if there is no .sof generated, we can use a .pof instead
         if (new File(sandboxPath + TOP_HDL + ".sof").exists()) {
-          bitfile = "P;" + TOP_HDL + ".sof";
-        } else if (new File(sandboxPath + TOP_HDL + ".pof").exists()) {
-          bitfile = "P;" + TOP_HDL + ".pof";
-        } else {
-          console.printf(console.ERROR, "Error: Design must be synthesized before download.");
-          return false;
+          bitfile = TOP_HDL + ".sof";
+        } else if (flashfile != null) {
+          bitfile = flashfile;
         }
-        if (!cmdr.confirmDownload()) {
-          cancelled = true;
-          return false;
+        if (flash) {
+          if (flashfile == null) {
+            console.printf(console.ERROR, "Error: Design must be synthesized before download.");
+            return false;
+          }
+          if (!cmdr.confirmDownload("Set board to PROG, and restart it.")) {
+            cancelled = true;
+            return false;
+          }
+        } else {
+          if (bitfile == null) {
+            console.printf(console.ERROR, "Error: Design must be synthesized before download.");
+            return false;
+          }
+          if (!cmdr.confirmDownload()) {
+            cancelled = true;
+            return false;
+          }
         }
         return true;
       }
@@ -145,12 +204,23 @@ public class AlteraDownload extends FPGADownload {
         return true;
       }
     });
+
     stages.add(new Stage(
           "download", "Downloading to FPGA", null,
           "Failed to download design; did you connect the board?") {
       @Override
       protected boolean prep() {
-        cmd = cmd(ALTERA_QUARTUS_PGM, "-c", cablename, "-m", "jtag", "-o", bitfile);
+        cmd = externalSynthesisScript();
+        if (cmd != null) {
+          cmd.add("--program");
+          cmd.add(cablename);
+          cmd.add(flash ? "as" : "jtag");
+          cmd.add(flash ? flashfile : bitfile);
+        } else if (flash) {
+          cmd = cmd(ALTERA_QUARTUS_PGM, "-c", cablename, "-m", "as", "-o", "P;"+flashfile);
+        } else {
+          cmd = cmd(ALTERA_QUARTUS_PGM, "-c", cablename, "-m", "jtag", "-o", "P;"+bitfile);
+        }
         return true;
       }
     });
@@ -202,8 +272,10 @@ public class AlteraDownload extends FPGADownload {
     out.stmt();
     out.stmt("    # Include all entities and gates");
     out.stmt();
-    for (String f : hdlFiles)
-      out.stmt("    set_global_assignment -name %s \"%s\"", hdltype, f);
+    for (String f : hdlFiles) {
+      String relPath = Paths.get(scriptPath).relativize(Paths.get(f)).toString();
+      out.stmt("    set_global_assignment -name %s \"%s\"", hdltype, relPath);
+    }
     out.stmt();
     out.stmt("    # Map fpga_clk and ionets to fpga pins");
     if (ioResources.requiresOscillator)

@@ -105,8 +105,9 @@ public class Settings {
     } catch (UnsupportedEncodingException e) {
     }
 
-    if (!readFrom(HomePath, UserSettingsFileName))
+    if (!readFrom(HomePath, UserSettingsFileName)) {
       readFrom(SharedPath, SharedSettingsFileName);
+    }
 
     if (!settingsComplete())
       writeXml();
@@ -185,8 +186,9 @@ public class Settings {
       value = "";
     Element e = (Element)SettingsDocument.getElementsByTagName(nodeName).item(0);
     Attr a = e.getAttributeNode(attrName);
-    if (a != null && a.getNodeValue().equals(value))
+    if (a != null && a.getNodeValue().equals(value)) {
       return;
+    }
     if (a == null) {
       a = SettingsDocument.createAttribute(attrName);
       e.setAttributeNode(a);
@@ -215,18 +217,32 @@ public class Settings {
 
   public boolean SetAlteraToolPath(String path) {
     path = normalizePath(path);
-    if (path != null && !allToolsPresent(path, FPGADownload.ALTERA_PROGRAMS))
+    if (!validAlteraToolPath(path))
       return false;
     setAttribute(WorkSpace, AlteraToolsPath, path);
     return true;
   }
 
+  public boolean validAlteraToolPath(String path) {
+    path = normalizePath(path);
+    return path == null
+      || allToolsPresent(path, FPGADownload.ALTERA_PROGRAMS)
+      || isExecutableScript(path);
+  }
+
   public boolean SetXilinxToolPath(String path) {
     path = normalizePath(path);
-    if (path != null && !allToolsPresent(path, FPGADownload.XILINX_PROGRAMS))
+    if (!validXilinxToolPath(path))
       return false;
     setAttribute(WorkSpace, XilinxToolsPath, path);
     return true;
+  }
+
+  public boolean validXilinxToolPath(String path) {
+    path = normalizePath(path);
+    return path == null
+      || allToolsPresent(path, FPGADownload.XILINX_PROGRAMS)
+      || isExecutableScript(path);
   }
 
   public Collection<String> GetBoardNames() {
@@ -383,10 +399,13 @@ public class Settings {
   }
 
   private boolean writeXml() {
-    try {
-      writeTo(SharedPath, SharedSettingsFileName);
-      return true;
-    } catch (Exception e) { }
+    File UserSettingsFile = new File(join(HomePath, UserSettingsFileName));
+    if (!UserSettingsFile.exists()) {
+      try {
+        writeTo(SharedPath, SharedSettingsFileName);
+        return true;
+      } catch (Exception e) { }
+    }
     try {
       writeTo(HomePath, UserSettingsFileName);
       return true;
@@ -428,5 +447,10 @@ public class Settings {
         return false;
     }
     return true;
+  }
+
+  private boolean isExecutableScript(String path) {
+    File test = new File(path);
+    return test.exists() && !test.isDirectory() && test.canExecute();
   }
 }

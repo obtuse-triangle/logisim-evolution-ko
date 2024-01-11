@@ -231,10 +231,18 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     String signal; // e.g.: s_SomePin or s_LOGISIM_HIDDEN_OUTPUT[7 downto 3].
     String bit;    // e.g.: s_SomePin or s_LOGISIM_HIDDEN_OUTPUT
     int offset;    // e.g.: 0 or 3
+    boolean isInput = false, isOutput = false;
+    int srcwidth = -1;
+    // System.out.println("Generating inline code signal for " + path);
     if (shadow.original.getFactory() instanceof Pin) {
       signal = "s_" + shadow.pathName();
       bit = signal;
       offset = 0;
+      srcwidth = shadow.original.getEnd(0).getWidth().getWidth();
+      // note: these next two are reversed intentionally, b/c OutputPin has an
+      // EndData configured as an input srcwidth.r.t. logisim circuit, and vice versa
+      isInput = shadow.original.getEnd(0).isOutput();
+      isOutput = shadow.original.getEnd(0).isInput();
     } else {
       NetlistComponent.Range3 indices = shadow.getGlobalHiddenPortIndices(path);
       if (indices == null) {
@@ -246,61 +254,153 @@ public class ToplevelHDLGenerator extends HDLGenerator {
         offset = indices.start.in;
         bit = "s_LOGISIM_HIDDEN_FPGA_INPUT";
         signal = String.format(bit+out.idx, offset);
+        srcwidth = 1;
+        isInput = true;
       } else if (indices.end.in > indices.start.in) {
         // foo[8:3]
         offset = indices.start.in;
         bit = "s_LOGISIM_HIDDEN_FPGA_INPUT";
         signal = String.format(bit+out.range, indices.end.in, offset);
+        srcwidth = indices.end.in - indices.start.in;
+        isInput = true;
       } else if (indices.end.out == indices.start.out) {
         // foo[5] is the only bit
         offset = indices.start.out;
         bit = "s_LOGISIM_HIDDEN_FPGA_OUTPUT";
         signal = String.format(bit+out.idx, offset);
+        srcwidth = 1;
+        isOutput = true;
       } else if (indices.end.out > indices.start.out) {
         // foo[8:3]
         offset = indices.start.out;
         bit = "s_LOGISIM_HIDDEN_FPGA_OUTPUT";
         signal = String.format(bit+out.range, indices.end.out, offset);
+        srcwidth = indices.end.out - indices.start.out + 1;
+        isOutput = true;
       } else {
         // This is an inout signal, handled elsewhere (no inversions possible)
         return;
       }
     }
 
+    // Sanity check: one of isInput or isOutput must be set, because
+    // bidirectional components are handled elsewhere.
+    if (isInput == isOutput)
+      out.err.AddSevereWarning("Ambiguous direction for " + signal + " isInput="+isInput+" isOutput="+isOutput);
+    // Sanity check: srcwidth should be positive.
+    if (srcwidth <= 0)
+      out.err.AddSevereWarning("Unexpected width for " + signal + ", expected srcwidth>0: srcwidth="+srcwidth);
+
+    // Notes for both cases below (binding entire port, or individual pins):
+    // - srcwidth, isInput, isOutput all come from the Logisim Pin's EndData
+    // or shadow's hidden ports.
+    // - src.width comes from the PinBinding dialog.
+    // - dest.io is the underlying synthetic input or physical fpga resource
+    // from the PinBinding dialog.
+
     PinBindings.Source src = ioResources.sourceFor(path);
     PinBindings.Dest dest = ioResources.mappings.get(src);
+    // System.out.println("src="+src);
+    // System.out.println("dest="+dest);
     if (dest != null) { // Entire port is mapped to one BoardIO resource.
+
+      // Sanity check: src.width.inout should be zero, because bidirectional
+      // components are handled elsewhere.
+      if (src.width.inout != 0)
+        out.err.AddSevereWarning("Unexpected width for " + signal + ", expected inout=0: src.width="+src.width+" srcwidth="+srcwidth);
+
+      // Sanity check: srcwidth should match one of src.width.in or
+      // src.width.out, and the other should be zero, depending on isInput or
+      // isOutput.
+      if (isInput && (srcwidth != src.width.in || src.width.out != 0))
+        out.err.AddSevereWarning("Unexpected width for " + signal + ", expected srcwidth=src.width.in: src.width="+src.width+" srcwidth="+srcwidth);
+      if (isOutput && (srcwidth != src.width.out || src.width.in != 0))
+        out.err.AddSevereWarning("Unexpected width for " + signal + ", expected srcwidth=src.width.out: src.width="+src.width+" srcwidth="+srcwidth);
+
+      Netlist.Int3 destwidth = dest.io.getPinCounts();
+      // Sanity check: destwidth should have one non-zero component.
+      if (destwidth.isMixedDirection())
+        out.err.AddSevereWarning("Unexpected mixed direction for " + dest + ": destwidth="+destwidth);
+      // Sanity check: destwidth should be compatible with src.width.
+      if (isInput && src.width.in > destwidth.in + destwidth.inout)
+        out.err.AddSevereWarning("Unexpected mismatched widths for " + signal + " and " + dest + ": src.width="+src.width+" destwidth="+destwidth);
+      if (isOutput && src.width.out > destwidth.out + destwidth.inout)
+        out.err.AddSevereWarning("Unexpected mismatched widths for " + signal + " and " + dest + ": src.width="+src.width+" destwidth="+destwidth);
+      // Note: In many cases, src.width and destwidth are equal, e.g. when src
+      // is a Logisim HexDisplay, and dest is an FPGA SevenSegment, or when src
+      // is a Logisim 1-bit Logisim Output Pin and dest is an FPGA LED. But in
+      // other cases, src.width and dest.io.PinCounts() differ, such as when src
+      // is a 1-bit Logisim Output Pin and dest is a single bit of a 32-bit
+      // Ribbon, or when src is a Logisim LED and dest is a single bit of a
+      // SevenSegment. But even when mismatched, the destwidth must be no
+      // smaller than the src.width.
+
       boolean invert = needTopLevelInversion(shadow.original, dest.io);
       String maybeNot = (invert ? out.not + " " : "");
-      Netlist.Int3 destwidth = dest.io.getPinCounts();
       if (dest.io.type == BoardIO.Type.Unconnected) {
         // If user assigned type "unconnected", do nothing. Synthesis will warn,
         // but optimize away the signal.
       } else if (!BoardIO.PhysicalTypes.contains(dest.io.type)) {
         // Handle synthetic input types.
+        // Sanity check: only inputs can be synthetic.
+        if (!isInput)
+          out.err.AddSevereWarning("Conflicting synthetic input direction for " + signal);
         int constval = dest.io.syntheticValue;
-        out.assign(signal, maybeNot+out.literal(constval, destwidth.in));
+        out.assign(signal, maybeNot+out.literal(constval, src.width.in));
       } else {
         // Handle physical I/O device types.
         Netlist.Int3 seqno = dest.seqno();
-        // Input pins
-        if (destwidth.in == 1)
-          out.assign(signal, maybeNot+"FPGA_INPUT_PIN_"+seqno.in);
-        else for (int i = 0; i < destwidth.in; i++)
-          out.assign(bit, offset+i, maybeNot+"FPGA_INPUT_PIN_"+(seqno.in+i));
-        // Output pins
-        if (destwidth.out == 1)
-          out.assign("FPGA_OUTPUT_PIN_"+seqno.out, maybeNot+signal);
-        else for (int i = 0; i < destwidth.out; i++)
-          out.assign("FPGA_OUTPUT_PIN_"+(seqno.out+i), maybeNot+bit, offset+i);
-        // Note: no such thing as inout pins
+        // Inputs
+        if (isInput) {
+          if (src.width.in == 1)
+            out.assign(signal, maybeNot+"FPGA_INPUT_PIN_"+seqno.in);
+          else for (int i = 0; i < destwidth.in; i++)
+            out.assign(bit, offset+i, maybeNot+"FPGA_INPUT_PIN_"+(seqno.in+i));
+        }
+        // Outputs
+        else {
+          if (src.width.out == 1)
+            out.assign("FPGA_OUTPUT_PIN_"+seqno.out, maybeNot+signal);
+          else for (int i = 0; i < destwidth.out; i++)
+            out.assign("FPGA_OUTPUT_PIN_"+(seqno.out+i), maybeNot+bit, offset+i);
+        }
       }
     } else { // Each bit of pin is assigned to a different BoardIO resource.
       ArrayList<PinBindings.Source> srcs = ioResources.bitSourcesFor(path);
       for (int i = 0; i < srcs.size(); i++)  {
         src = srcs.get(i);
         dest = ioResources.mappings.get(src);
+        // System.out.println("src["+i+"]="+src);
+        // System.out.println("dest["+i+"]="+dest);
+
+        // Individual pins are handled almost identically to the code above,
+        // with only slight changes. All the sanity checks in the above case
+        // apply as well, except src.width.in (or out) will be 1, and srcwidth
+        // is no longer relevant.
+
+        // Sanity check: src.width.inout should be zero, because bidirectional
+        // components are handled elsewhere.
+        if (src.width.inout != 0)
+          out.err.AddSevereWarning("Unexpected width for " + signal + " bit " + i +", expected inout=0: src.width="+src.width+" srcwidth="+srcwidth);
+
+        // Sanity check: srcwidth should match one of src.width.in or
+        // src.width.out, and the other should be zero, depending on isInput or
+        // isOutput.
+        if (isInput && (1 != src.width.in || src.width.out != 0))
+          out.err.AddSevereWarning("Unexpected width for " + signal + " bit " + i +", expected srcwidth=src.width.in: src.width="+src.width+" srcwidth="+srcwidth);
+        if (isOutput && (1 != src.width.out || src.width.in != 0))
+          out.err.AddSevereWarning("Unexpected width for " + signal + " bit " + i +", expected srcwidth=src.width.out: src.width="+src.width+" srcwidth="+srcwidth);
+
         Netlist.Int3 destwidth = dest.io.getPinCounts();
+        // Sanity check: destwidth should have one non-zero component.
+        if (destwidth.isMixedDirection())
+          out.err.AddSevereWarning("Unexpected mixed direction for " + dest + ": destwidth="+destwidth);
+        // Sanity check: destwidth should be compatible with src.width.
+        if (isInput && src.width.in > destwidth.in + destwidth.inout)
+          out.err.AddSevereWarning("Unexpected mismatched widths for " + signal + " and " + dest + ": src.width="+src.width+" destwidth="+destwidth);
+        if (isOutput && src.width.out > destwidth.out + destwidth.inout)
+          out.err.AddSevereWarning("Unexpected mismatched widths for " + signal + " and " + dest + ": src.width="+src.width+" destwidth="+destwidth);
+        
         boolean invert = needTopLevelInversion(shadow.original, dest.io);
         String maybeNot = (invert ? out.not + " " : "");
         if (dest.io.type == BoardIO.Type.Unconnected) {
@@ -309,17 +409,22 @@ public class ToplevelHDLGenerator extends HDLGenerator {
           continue;
         } else if (!BoardIO.PhysicalTypes.contains(dest.io.type)) {
           // Handle synthetic input types.
+          // Sanity check: only inputs can be synthetic.
+          if (!isInput)
+            out.err.AddSevereWarning("Conflicting synthetic input direction for " + signal + " bit " + i);
           int constval = dest.io.syntheticValue;
           out.assign(bit, offset+i, maybeNot+out.literal(constval, 1));
         } else {
           // Handle physical I/O device types.
           Netlist.Int3 seqno = dest.seqno();
-          if (destwidth.in == 1)
+          // Inputs
+          if (isInput) {
             out.assign(bit, offset+i, maybeNot+"FPGA_INPUT_PIN_"+seqno.in);
-          // Output pins
-          if (destwidth.out == 1)
+          }
+          // Outputs
+          else {
             out.assign("FPGA_OUTPUT_PIN_"+seqno.out, maybeNot+bit, offset+i);
-          // Note: no such thing as inout pins
+          }
         }
       }
     }

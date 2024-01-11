@@ -122,8 +122,9 @@ public abstract class FPGADownload {
   public static final String ALTERA_QUARTUS_SH = "quartus_sh" + dotexe;
   public static final String ALTERA_QUARTUS_PGM = "quartus_pgm" + dotexe;
   public static final String ALTERA_QUARTUS_MAP = "quartus_map" + dotexe;
+  public static final String ALTERA_QUARTUS_CPF = "quartus_cpf" + dotexe;
   public static final String[] ALTERA_PROGRAMS = {
-    ALTERA_QUARTUS_SH, ALTERA_QUARTUS_PGM, ALTERA_QUARTUS_MAP
+    ALTERA_QUARTUS_SH, ALTERA_QUARTUS_PGM, ALTERA_QUARTUS_MAP, ALTERA_QUARTUS_CPF,
   };
 
   public static final String XILINX_XST = "xst" + dotexe;

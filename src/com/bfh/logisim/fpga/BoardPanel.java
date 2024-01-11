@@ -163,28 +163,29 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
   // private static final Color HILIGHT = new Color(1f, 0f, 0f, 0.6f);
 
   @Override
-	public void paint(Graphics g) {
-		super.paint(g);
-		if (scaledImage != null) {
-			g.drawImage(scaledImage, 0, 0, null);
+  public void paint(Graphics g) {
+    super.paint(g);
+    if (scaledImage != null) {
+      g.drawImage(scaledImage, 0, 0, null);
       for (BoardIO io: editor.ioComponents) {
         g.setColor(MISTY);
         g.fillRect(io.rect.x, io.rect.y, io.rect.width, io.rect.height);
         g.setColor(Color.RED);
         g.drawRect(io.rect.x, io.rect.y, io.rect.width, io.rect.height);
+        io.drawOrientedPins(g, null, null, Color.RED);
       }
-			g.setColor(Color.RED);
-			if (w != 0 || h != 0) {
-				int xr, yr, wr, hr;
-				xr = (w < 0) ? xs + w : xs;
-				yr = (h < 0) ? ys + h : ys;
-				wr = (w < 0) ? -w : w;
-				hr = (h < 0) ? -h : h;
-				g.drawRect(xr, yr, wr, hr);
-			}
-		} else {
-			g.setColor(Color.gray);
-			g.fillRect(0, 0, getWidth(), getHeight());
+      g.setColor(Color.RED);
+      if (w != 0 || h != 0) {
+        int xr, yr, wr, hr;
+        xr = (w < 0) ? xs + w : xs;
+        yr = (h < 0) ? ys + h : ys;
+        wr = (w < 0) ? -w : w;
+        hr = (h < 0) ? -h : h;
+        g.drawRect(xr, yr, wr, hr);
+      }
+    } else {
+      g.setColor(Color.gray);
+      g.fillRect(0, 0, getWidth(), getHeight());
       String[] lines = {
         "Click to add picture of FPGA board,",
         "or select a Built-in FPGA board below.",
@@ -206,7 +207,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
         else
           g.drawString(msg, xpos, ypos);
       }
+    }
   }
-	}
 
 }

@@ -287,7 +287,8 @@ public class Commander extends JFrame
     toolSettings.addActionListener(e -> Settings.doSettingsDialog(this));
 
     // configure console panels
-    tabbedPane.add(messages); // tab index 0 is for console messages
+    messages.badge.commander = this;
+    tabbedPane.addTab("Messages", messages.badge, messages); // tab index 0 is for console messages
     tabbedPane.setPreferredSize(new Dimension(700, 20 * Console.FONT_SIZE));
 
     // configure progress panel
@@ -662,7 +663,7 @@ public class Commander extends JFrame
       return String.format("%.2f %s", f, suffix);
   }
 
-  private void repaintConsoles() {
+  public void repaintConsoles() {
     Rectangle rect = tabbedPane.getBounds();
     rect.x = 0;
     rect.y = 0;
@@ -688,7 +689,8 @@ public class Commander extends JFrame
     synchronized(consoles) {
       Console console = new Console(this, title, 1+consoles.size());
       consoles.add(console);
-      tabbedPane.add(console);
+      console.badge.commander = this; // used for repainting
+      tabbedPane.addTab(title, console.badge, console);
       return console;
     }
   }
@@ -983,11 +985,13 @@ public class Commander extends JFrame
 
   private FPGADownload.Stage downloader;
 
-  public boolean confirmDownload() {
+  public boolean confirmDownload() { return confirmDownload(null); }
+  public boolean confirmDownload(String extramsg) {
     Object[] options = { "Yes, download", "Cancel" };
+    extramsg = (extramsg != null ? " "+extramsg : "");
     int ans = JOptionPane.showOptionDialog(
         this,
-        "Verify that your FPGA board is connected and you are ready to download.",
+        "Verify that your FPGA board is connected and you are ready to download." + extramsg,
         "Ready to download?", JOptionPane.OK_CANCEL_OPTION,
         JOptionPane.WARNING_MESSAGE, null, options, options[0]);
     return ans == JOptionPane.OK_OPTION;

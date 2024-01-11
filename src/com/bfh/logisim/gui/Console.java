@@ -64,6 +64,9 @@ public class Console extends JPanel {
   public static final int FONT_SIZE = 12;
   public static final String FONT_FAMILY = "monospaced";
 
+  public final BadgeIcon badge;
+  public int warnings, errors, severes;
+
   static final SimpleDateFormat initialDate = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss]\n");
 
   public static final AttributeSet INFO, WARNING, SEVERE, ERROR;
@@ -85,6 +88,7 @@ public class Console extends JPanel {
     this.idx = idx;
     setLayout(new GridLayout(1, 1));
     setName(title);
+    badge = new BadgeIcon(this);
 
     area = new JTextPane();
     area.setBackground(Color.BLACK);
@@ -136,6 +140,10 @@ public class Console extends JPanel {
         doc.insertString(doc.getLength(), format(msg), style);
         contents.add(msg);
       } catch (Exception e) { }
+      if (style == WARNING) warnings++;
+      else if (style == ERROR) errors++;
+      else if (style == SEVERE) severes++;
+      if (style != INFO && badge != null) badge.update();
     }
     try {
       cmdr.repaintConsole(idx);
@@ -152,6 +160,10 @@ public class Console extends JPanel {
         contents.clear();
       } catch (Exception e) { }
       start = System.currentTimeMillis();
+      warnings = 0;
+      errors = 0;
+      severes = 0;
+      if (badge != null) badge.update();
     }
     try {
       cmdr.repaintConsole(idx);

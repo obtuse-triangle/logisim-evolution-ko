@@ -30,6 +30,9 @@
 
 package com.bfh.logisim.fpga;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.EnumSet;
@@ -186,6 +189,7 @@ public class BoardIO {
 	public final PullBehavior pull; // only for physical types
 	public final PinActivity activity; // only for physical types; set to ACTIVE_HIGH for synthetic
 	public final DriveStrength strength; // only for physical types
+	public final PinOrdering orientation; // only for Ribbon and DIPSwitch so far
   public final int syntheticValue; // only for synthetic types
 
 	public final String[] pins;
@@ -211,6 +215,7 @@ public class BoardIO {
     standard = IoStandard.UNKNOWN;
     pull = PullBehavior.UNKNOWN;
     strength = DriveStrength.UNKNOWN;
+    orientation = null;
     pins = null;
   }
 
@@ -237,7 +242,7 @@ public class BoardIO {
 
   // constructor for physical I/O resources
   private BoardIO(Type t, int w, String l, Bounds r,
-      IoStandard s, PullBehavior p, PinActivity a, DriveStrength g, String[] x) {
+      IoStandard s, PullBehavior p, PinActivity a, DriveStrength g, PinOrdering o, String[] x) {
     if (!PhysicalTypes.contains(t))
       throw new IllegalArgumentException("BoardIO type "+t+" is not meant for physical I/O resources");
     type = t;
@@ -248,6 +253,7 @@ public class BoardIO {
     pull = p;
     activity = a;
     strength = g;
+    orientation = o;
     pins = x;
     // rest are defaults/empty
     syntheticValue = 0;
@@ -286,6 +292,7 @@ public class BoardIO {
     IoStandard s = IoStandard.get(params.get("FPGAPinIOStandard"));
     DriveStrength g = DriveStrength.get(params.get("FPGAPinDriveStrength"));
 
+    PinOrdering o = null;
     String[] pins;
 		int width;
     if (params.containsKey("FPGAPinName")) {
@@ -312,9 +319,21 @@ public class BoardIO {
         if (pins[i] == null)
           throw new Exception("missing pin label " + i + " for " + name);
       }
+      if (t == Type.Ribbon || t == Type.DIPSwitch) {
+        String desc = params.get("Orientation");
+        if (desc != null) {
+          o = PinOrdering.get(desc);
+          if (o == null)
+            throw new Exception("Invalid orientation " + desc + " for " + name);
+        } else if (r.width >= r.height) {
+          o = t == Type.DIPSwitch ? PinOrdering.ORDER_1_LR : PinOrdering.ORDER_2_BTLR;
+        } else {
+          o = t == Type.DIPSwitch ? PinOrdering.ORDER_1_TB : PinOrdering.ORDER_2_LRTB;
+        }
+      }
     }
 
-    return new BoardIO(t, width, label, r, s, p, a, g, pins);
+    return new BoardIO(t, width, label, r, s, p, a, g, o, pins);
 	}
 
 	public Element encodeXml(Document doc) throws Exception {
@@ -340,13 +359,15 @@ public class BoardIO {
       elt.setAttribute("FPGAPinPullBehavior", ""+pull);
     if (standard != IoStandard.UNKNOWN && standard != IoStandard.DEFAULT)
       elt.setAttribute("FPGAPinIOStandard", ""+standard);
+    if (orientation != null)
+      elt.setAttribute("Orientation", ""+orientation);
     return elt;
   }
 
 	public static BoardIO makeUserDefined(Type t, Bounds r, BoardEditor parent) {
     int w = t.defaultWidth();
     BoardIO template = new BoardIO(t, w, null/*no label*/, r,
-        defaultStandard, defaultPull, defaultActivity, defaultStrength, null /*no pins*/);
+        defaultStandard, defaultPull, defaultActivity, defaultStrength, null /* no orientation */, null /*no pins*/);
     if (t == Type.DIPSwitch || t == Type.Ribbon)
       template = doSizeDialog(template, parent);
     if (template == null)
@@ -378,10 +399,23 @@ public class BoardIO {
       size.addItem(i);
     size.setSelectedItem(t.width);
 
+    JLabel question2 = new JLabel("Orientation:");
+    JComboBox<String> layout = new JComboBox<>();
+    for (PinOrdering po : PinOrdering.OPTIONS)
+      layout.addItem(po.desc);
+    if (t.orientation != null)
+      layout.setSelectedItem(t.orientation.desc);
+    else if (t.rect.width >= t.rect.height)
+      layout.setSelectedItem(t.type == Type.DIPSwitch ? PinOrdering.ORDER_1_LR : PinOrdering.ORDER_2_BTLR);
+    else
+      layout.setSelectedItem(t.type == Type.DIPSwitch ? PinOrdering.ORDER_1_TB : PinOrdering.ORDER_2_LRTB);
+
     final int[] width = new int[] { -1 };
+    final PinOrdering[] orientation = new PinOrdering[] { null };
     JButton next = new JButton("Next");
     next.addActionListener(e -> {
       width[0] = (Integer)size.getSelectedItem();
+      orientation[0] = PinOrdering.get((String)layout.getSelectedItem());
       dlg.setVisible(false);
     });
 
@@ -389,17 +423,23 @@ public class BoardIO {
     options.setLayout(new BoxLayout(options, BoxLayout.LINE_AXIS));
     options.add(question);
     options.add(size);
+    JPanel options2 = new JPanel();
+    options2.setLayout(new BoxLayout(options2, BoxLayout.LINE_AXIS));
+    options2.add(question2);
+    options2.add(layout);
+
     dlg.add(options);
+    dlg.add(options2);
     dlg.add(next);
 
     parent.doModal(dlg, t.rect.x + t.rect.width/2, t.rect.y);
 
-    if (width[0] < 0)
+    if (width[0] < 0) // cancelled
       return null;
-    if (t.width == width[0])
+    if (t.width == width[0] && t.orientation == orientation[0])
       return t; // no change
     return new BoardIO(t.type, width[0], t.label,
-        t.rect, t.standard, t.pull, t.activity, t.strength, t.pins);
+        t.rect, t.standard, t.pull, t.activity, t.strength, orientation[0], t.pins);
   }
 
   private static DriveStrength defaultStrength = DriveStrength.DEFAULT;
@@ -467,7 +507,7 @@ public class BoardIO {
 
     for (int i = 0; i < t.width; i++) {
       add(dlg, c, "FPGA location for " + pinLabels[i] + " :", pinLocs[i]);
-      if (c.gridy == 32) {
+      if (c.gridy == 8) {
         c.gridx += 2;
         c.gridy = 0;
       }
@@ -576,6 +616,7 @@ public class BoardIO {
         pull != null ? defaultPull : PullBehavior.UNKNOWN,
         a,
         strength != null ? defaultStrength : DriveStrength.UNKNOWN,
+        t.orientation,
         pins);
   }
 
@@ -662,6 +703,75 @@ public class BoardIO {
 
   public String pinLabel(int bit) {
     return type.pinLabels(width)[bit];
+  }
+
+  public void drawOrientedPins(Graphics g, Color fill[], Color edge[], Color edgeDefault) {
+    if (width <= 1 || orientation == null)
+      return;
+    //   LRTB   RLBT    BTLR       TBRL       TB   BT   LR        RL
+    //   0 1       6    1 3 5      6 4 2 0    0    3    0 1 2 3   3 2 1 0
+    //   2 3     5 4    0 2 4 6      5 3 1    1    2
+    //   4 5     3 2                          2    1
+    //   6       1 0                          3    0
+    int gang = orientation.gang;
+    int dx = orientation.order.contains("Left-Right") ? +1
+      : orientation.order.contains("Right-Left") ? -1 : 0;
+    int dy = orientation.order.contains("Top-Bottom") ? +1
+      : orientation.order.contains("Bottom-Top") ? -1 : 0;
+    int nx, ny;
+    boolean horizontal =
+      orientation.order.endsWith("Left-Right") || orientation.order.endsWith("Right-Left");
+    if (horizontal) {
+      nx = (width + gang - 1) / gang;
+      ny = gang;
+    } else {
+      nx = gang;
+      ny = (width + gang - 1) / gang;
+    }
+    int margin = 4;
+    int sz = Math.min((rect.width-margin) / nx, (rect.height-margin) / ny);
+    if (sz < 10) {
+      margin = 0;
+      sz = Math.min((rect.width) / nx, (rect.height) / ny);
+    }
+    int xx = (dx >= 0 ? rect.x + margin/2 : rect.x + rect.width - margin - sz - 1);
+    int yy = (dy >= 0 ? rect.y + margin/2 : rect.y + rect.height - margin - sz - 1);
+    int ix = 0, iy = 0;
+    for (int i = 0; i < width; i++) {
+      if (fill != null && fill[i] != null) {
+        g.setColor(fill[i]);
+        if (i == 0)
+          g.fillRect(xx+1, yy+1, sz-margin/2, sz-margin/2);
+        else
+          g.fillOval(
+              xx+dx*(int)((rect.width-margin)*ix*1.0/nx)+1,
+              yy+dy*(int)((rect.height-margin)*iy*1.0/ny)+1,
+              sz-margin/2-1, sz-margin/2-1);
+      }
+      if (edge != null ? edge[i] != null : edgeDefault != null) {
+        g.setColor(edge != null ? edge[i] : edgeDefault);
+        if (i == 0)
+          g.drawRect(xx+1, yy+1, sz-margin/2, sz-margin/2);
+        else
+          g.drawOval(
+              xx+dx*(int)((rect.width-margin)*ix*1.0/nx)+1,
+              yy+dy*(int)((rect.height-margin)*iy*1.0/ny)+1,
+              sz-margin/2-1, sz-margin/2-1);
+      }
+      if (horizontal) {
+        iy++;
+        if (iy == gang) {
+          iy = 0;
+          ix++;
+        }
+      } else {
+        ix++;
+        if (ix == gang) {
+          ix = 0;
+          iy++;
+        }
+      }
+    }
   }
 
 }

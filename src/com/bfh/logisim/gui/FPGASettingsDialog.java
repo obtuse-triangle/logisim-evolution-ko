@@ -96,7 +96,7 @@ public class FPGASettingsDialog implements ActionListener {
 		workPicker.setActionCommand("workPicker");
 		workPicker.addActionListener(this);
 
-		JLabel alteraLabel = new JLabel("Altera tools path (directory containing "
+		JLabel alteraLabel = new JLabel("Altera tools path (custom script, or directory containing "
         + FPGADownload.ALTERA_PROGRAMS[0]+"):");
 		alteraPath = new JTextField(apath);
 		alteraPath.setPreferredSize(new Dimension(400, 10));
@@ -195,11 +195,11 @@ public class FPGASettingsDialog implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("workPicker")) {
-			pick(null, workPath.getText());
+			pick(null, workPath.getText(), false);
 		} else if (e.getActionCommand().equals("alteraPicker")) {
-			pick("Altera", alteraPath.getText());
+			pick("Altera", alteraPath.getText(), true);
 		} else if (e.getActionCommand().equals("xilinxPicker")) {
-			pick("Xilinx", xilinxPath.getText());
+			pick("Xilinx", xilinxPath.getText(), false);
 		} else if (e.getActionCommand().equals("Cancel")) {
 			panel.setVisible(false);
 		} else if (e.getActionCommand().equals("OK")) {
@@ -223,7 +223,7 @@ public class FPGASettingsDialog implements ActionListener {
 			String names = pretty(FPGADownload.ALTERA_PROGRAMS);
 			JOptionPane.showMessageDialog(null,
 					"Error setting Altera tool path.\n" +
-					"Please select a directory containing " + names + ".");
+          "Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
 		}
 		settings.SetAltera64Bit(altera64Choice.isSelected());
 		String xpath = xilinxPath.getText();
@@ -231,16 +231,16 @@ public class FPGASettingsDialog implements ActionListener {
 			String names = pretty(FPGADownload.XILINX_PROGRAMS);
 			JOptionPane.showMessageDialog(null,
 					"Error setting Xilinx tool path.\n" +
-					"Please select a directory containing " + names + ".");
+          "Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
 		}
 		settings.SetStaticWorkspacePath(workPath.getText());
 		settings.UpdateSettingsFile();
     settings.notifyListeners();
 	}
 
-	private void pick(String vendor, String path) {
+	private void pick(String vendor, String path, boolean allowFiles) {
 		JFileChooser fc = new JFileChooser(path);
-		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		fc.setFileSelectionMode(allowFiles ? JFileChooser.FILES_AND_DIRECTORIES : JFileChooser.DIRECTORIES_ONLY);
 		if (!"".equals(path)) {
 			File file = new File(path);
 			if (file.exists()) {
@@ -258,8 +258,20 @@ public class FPGASettingsDialog implements ActionListener {
 		path = file.getPath();
 		if ("Altera".equals(vendor)) {
 			alteraPath.setText(path);
+      if (!settings.validAlteraToolPath(path)) {
+        String names = pretty(FPGADownload.ALTERA_PROGRAMS);
+        JOptionPane.showMessageDialog(null,
+            "Invalid Altera tool path.\n" +
+            "Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
+      }
 		} else if ("Xilinx".equals(vendor)) {
 			xilinxPath.setText(path);
+      if (!settings.validXilinxToolPath(path)) {
+        String names = pretty(FPGADownload.XILINX_PROGRAMS);
+        JOptionPane.showMessageDialog(null,
+            "Invalid Xilinx tool path.\n" +
+            "Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
+      }
 		} else {
 			workPath.setText(path);
 		}

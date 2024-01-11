@@ -248,11 +248,15 @@ public class BindingsDialog extends JDialog {
 
   private class Rect extends JPanel implements MouseListener {
     BoardIO io;
-    boolean select, hover;
+    boolean emphasized, hover;
+    int emphasizeBit; // -1 for all
     int nmapped;
+    boolean isMapped[];
 
     Rect(BoardIO io) {
       this.io = io;
+      isMapped = new boolean[io.width];
+      nmapped = 0;
       setOpaque(false);
       setVisible(false);
       addMouseListener(this);
@@ -261,12 +265,29 @@ public class BindingsDialog extends JDialog {
 
     @Override
     protected void paintComponent(Graphics g) {
-      if (hover || nmapped == 0 || nmapped == io.width) {
-        g.setColor(hover ? HOVER : select ? HILIGHT : nmapped != 0 ? MAPPED : MISTY);
-        g.fillRect(0, 0, io.rect.width, io.rect.height);
-        g.setColor(hover ? HOVERB : select ? HILIGHTB : nmapped != 0 ? MAPPEDB : MISTYB);
-        g.drawRect(0, 0, io.rect.width-1, io.rect.height-1);
-      } else if (io.rect.width > io.rect.height) {
+      boolean fullymapped = nmapped == io.width;
+      g.setColor(hover ? HOVER :
+          emphasized && (emphasizeBit == -1 || io.width == 1) ? HILIGHT :
+          !fullymapped ? MISTY :
+          MAPPED);
+      g.fillRect(0, 0, io.rect.width, io.rect.height);
+      g.setColor(hover ? HOVERB : emphasized ? HILIGHTB : fullymapped ? MAPPEDB : MISTYB);
+      g.drawRect(0, 0, io.rect.width-1, io.rect.height-1);
+      if (io.width > 1 && io.orientation != null) {
+        Color fill[] = new Color[io.width];
+        Color edge[] = new Color[io.width];
+        for (int i = 0; i < io.width; i++) {
+          fill[i] = hover || !isMapped[i] ? null :
+            (emphasized && (emphasizeBit == -1 || emphasizeBit == i)) ? HILIGHT :
+            MAPPED;
+          edge[i] = hover ? HOVERB :
+            (emphasized && (emphasizeBit == -1 || emphasizeBit == i)) ? HILIGHTB :
+            isMapped[i] ? MAPPEDB : MISTYB;
+        }
+        g.translate(-io.rect.x, -io.rect.y);
+        io.drawOrientedPins(g, fill, edge, null);
+        g.translate(io.rect.y, io.rect.y);
+      } else if (io.width > 1 && io.rect.width > io.rect.height) {
         //    _________
         //   |/_/_/_/_/|  width = 6 bit
         //
@@ -282,11 +303,11 @@ public class BindingsDialog extends JDialog {
         g.setColor(MISTYB);
         g.drawPolygon(x, y, 4);
         x = new int[] {0, xt, xb, 0};
-        g.setColor(select ? HILIGHT : MAPPED);
+        g.setColor(emphasized ? HILIGHT : MAPPED);
         g.fillPolygon(x, y, 4);
-        g.setColor(select ? HILIGHTB : MAPPEDB);
+        g.setColor(emphasized ? HILIGHTB : MAPPEDB);
         g.drawPolygon(x, y, 4);
-      } else {
+      } else if (io.width > 1) {
         //  ___
         // |_- |
         // |  _|
@@ -306,12 +327,13 @@ public class BindingsDialog extends JDialog {
         g.setColor(MISTYB);
         g.drawPolygon(x, y, 4);
         y = new int[] {yb, yl, yr, yb};
-        g.setColor(select ? HILIGHT : MAPPED);
+        g.setColor(emphasized ? HILIGHT : MAPPED);
         g.fillPolygon(x, y, 4);
-        g.setColor(select ? HILIGHTB : MAPPEDB);
+        g.setColor(emphasized ? HILIGHTB : MAPPEDB);
         g.drawPolygon(x, y, 4);
       }
-    }
+
+      }
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -356,22 +378,31 @@ public class BindingsDialog extends JDialog {
       popup.show(this, e.getX(), e.getY());
     }
 
-    void emphasize(boolean b) {
-      if (select == b)
+    void emphasize(boolean b, int bit) {
+      if (emphasized == b && (b == false || emphasizeBit == bit))
         return;
-      select = b;
+      emphasized = b;
+      emphasizeBit = bit;
       repaint();
     }
 
-    int getMappedBitCount() { return nmapped; }
-    void setMappedBitCount(int n) {
-      if (n < 0)
-        n = 0;
-      if (n > io.width)
-        n = io.width;
-      if (n == nmapped)
+    void setBitIsMapped(int bit, boolean b) {
+      if (bit >= io.width)
         return;
-      nmapped = n;
+      if (bit < 0) {
+        if (b && nmapped == io.width)
+          return;
+        if (!b && nmapped == 0)
+          return;
+        for (int i = 0; i < io.width; i++)
+          isMapped[i] = b;
+        nmapped = b ? io.width : 0;
+      } else {
+        if (isMapped[bit] == b)
+          return;
+        isMapped[bit] = b;
+        nmapped += b ? +1 : -1;
+      }
       repaint();
     }
   }
@@ -484,7 +515,7 @@ public class BindingsDialog extends JDialog {
         typeButton.width = indented ? 280 : 220;
         typeButton.rowHasFocus = sel;
         ((JLabel)c).setIcon(typeButton);
-        ((JLabel)c).setForeground(done ? MAPPED_TEXT : Color.BLACK);
+        ((JLabel)c).setForeground(sel ? Color.WHITE : done ? MAPPED_TEXT : Color.BLACK);
       }
       return c;
     }
@@ -519,6 +550,7 @@ public class BindingsDialog extends JDialog {
       g.setColor(rowHasFocus ? TYPE_BUTTON_COLOR : Color.GRAY);
       g.fillRoundRect(b.x, b.y, b.width, b.height, 10, 10);
       g.setColor(Color.WHITE);
+      g.drawRoundRect(b.x, b.y, b.width, b.height, 10, 10);
       GraphicsUtil.drawText(g, text, tx, ty,
           GraphicsUtil.H_RIGHT, GraphicsUtil.V_CENTER);
       int xx = tx + 4;
@@ -664,7 +696,7 @@ public class BindingsDialog extends JDialog {
       } else if (src.type == BoardIO.Type.Expanded && old != null
           && old.io.isCompatible(newSrc.width, newSrc.type)) {
         pinBindings.addMapping(newSrc, old.io, -1);
-        rects.get(old.io).setMappedBitCount(newSrc.width.size());
+        rects.get(old.io).setBitIsMapped(-1, true);
         updateStatus();
         if (current == newSrc)
           setEnablesFor(current);
@@ -697,9 +729,9 @@ public class BindingsDialog extends JDialog {
               Source bitSource = model.data.get(idx+1+i);
               setBitSourceType(idx+1+i, bitSource, bitType);
               pinBindings.addMapping(bitSource, old.io, i);
+              rects.get(old.io).setBitIsMapped(i, true); // not needed: already marked?
             }
             updateStatus();
-            rects.get(old.io).setMappedBitCount(n);
           }
         }
         setSelectedValue(model.data.get(idx+1), true);
@@ -747,13 +779,29 @@ public class BindingsDialog extends JDialog {
     }
 
     void recalculateAllBitCounts() {
-      HashMap<BoardIO, Integer> counts = new HashMap<>();
+      boolean[] all = new boolean[1]; // sentinel
+      HashMap<BoardIO, boolean[]> maps = new HashMap<>();
       pinBindings.mappings.forEach((s, d) -> {
-        int nbits = counts.getOrDefault(d.io, 0);
-        nbits += s.width.size();
-        counts.put(d.io, nbits);
+        boolean map[] = maps.get(d.io);
+        if (map == null)
+          map = new boolean[d.io.width];
+        if (d.bit == -1) {
+          map = all;
+        } else {
+          for (int i = 0; i < s.width.size(); i++)
+            map[d.bit + i] = true;
+        }
+        maps.put(d.io, map);
       });
-      rects.forEach((io, r) -> r.setMappedBitCount(counts.getOrDefault(r.io, 0)));
+      rects.forEach((io, r) -> {
+        boolean[] map = maps.get(io);
+        if (map == null)
+          r.setBitIsMapped(-1, false);
+        else if (map == all)
+          r.setBitIsMapped(-1, true);
+        else for (int i = 0; i < map.length; i++)
+          r.setBitIsMapped(i, map[i]);
+      });
     }
 
     void mapCurrent(BoardIO.Type synthType, int val) {
@@ -783,9 +831,11 @@ public class BindingsDialog extends JDialog {
       pinBindings.mappings.remove(src);
       Rect r = rects.get(old.io);
       if (r != null && old.bit < 0)
-        r.setMappedBitCount(0);
-      else if (r != null)
-        r.setMappedBitCount(r.getMappedBitCount() - src.width.size());
+        r.setBitIsMapped(-1, false);
+      else if (r != null) {
+        for (int i = 0; i < src.width.size(); i++)
+          r.setBitIsMapped(old.bit+i, false);
+      }
       model.changed(src);
       updateStatus();
       if (src == current)
@@ -907,8 +957,9 @@ public class BindingsDialog extends JDialog {
       Dest dest = pinBindings.mappings.get(current);
       for (Synthetic b : synthetics)
         b.setSelected(dest != null && dest.io.type == b.type);
-      for (Rect r : rects.values())
-        r.emphasize(dest != null && r.io == dest.io);
+      for (Rect r : rects.values()) {
+        r.emphasize(dest != null && r.io == dest.io, dest == null ? -1 : dest.bit);
+      }
     }
     // prevCurrent = current;
     overlay.repaint();

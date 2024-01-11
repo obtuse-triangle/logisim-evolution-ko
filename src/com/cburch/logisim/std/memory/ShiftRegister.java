@@ -103,9 +103,12 @@ public class ShiftRegister extends InstanceFactory {
       if (parallelObj == null || parallelObj.booleanValue()) {
         ps = new Port[6 + 2 * len];
         ps[LD] = new Port(10, -20, Port.INPUT, 1);
+        ps[LD].setToolTip(S.getter("shiftRegLoadTip"));
         for (int i = 0; i < len; i++) {
           ps[6 + 2 * i]     = new Port(20 + 10 * i, -20, Port.INPUT, width);
           ps[6 + 2 * i + 1] = new Port(20 + 10 * i,  20, Port.OUTPUT, width);
+          ps[6 + 2 * i].setToolTip(S.getter("shiftRegParallelInputTip", ""+(len-i-1)));
+          ps[6 + 2 * i + 1].setToolTip(S.getter("shiftRegParallelOutputTip", ""+(len-i-1)));
         }
       } else {
         ps = new Port[5];
@@ -121,15 +124,17 @@ public class ShiftRegister extends InstanceFactory {
         ps[LD] = new Port(0, 30, Port.INPUT, 1);
         for (int i = 0; i < len; i++) {
           ps[6 + 2 * i] = new Port(0, 90 + i * 20, Port.INPUT, width);
-          if (i < (len - 1))
+          ps[6 + 2 * i].setToolTip(S.getter("shiftRegParallelInputTip", ""+(len-i-1)));
+          if (i < (len - 1)) {
             ps[6 + 2 * i + 1] = new Port(SymbolWidth + 20, 90 + i * 20,
                 Port.OUTPUT, width);
+            ps[6 + 2 * i + 1].setToolTip(S.getter("shiftRegParallelOutputTip", ""+(len-i-1)));
+          }
         }
         ps[LD].setToolTip(S.getter("shiftRegLoadTip"));
       } else {
         ps = new Port[5];
       }
-
 
       ps[OUT] = new Port(SymbolWidth + 20, 70 + len * 20, Port.OUTPUT, width);
       ps[IN] = new Port(0, 80, Port.INPUT, width);

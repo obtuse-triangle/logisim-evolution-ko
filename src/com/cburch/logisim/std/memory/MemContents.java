@@ -444,10 +444,12 @@ public class MemContents implements Cloneable, HexModel {
       pageLength = PAGE_SIZE;
     }
     pages = new Page[pageCount];
+    int copiedPages = 0;
     if (oldPages != null) {
       int n = Math.min(oldPages.length, pages.length);
       for (int i = 0; i < n; i++) {
         if (oldPages[i] != null) {
+          copiedPages++;
           pages[i] = MemContentsSub.createPage(pageLength, width);
           int m = Math.max(oldPages[i].getLength(), pageLength);
           for (int j = 0; j < m; j++) {
@@ -456,7 +458,7 @@ public class MemContents implements Cloneable, HexModel {
         }
       }
     }
-    if (pageCount == 0 && pages[0] == null) {
+    if (copiedPages == 0 && pages[0] == null) {
       pages[0] = MemContentsSub.createPage(pageLength, width);
     }
     fireMetainfoChanged();

@@ -344,7 +344,7 @@ public class PinBindings {
         for (int i = 0; i < w; i++)
           f.process(pins[b+i], signalPrefix + (seqno + i), d.io,
               d.bit < 0 ? d.io.toString() :
-              String.format("%s of %s", labels[i], d.io.toString()));
+              String.format("%s of %s", labels[b+i], d.io.toString()));
       }
     });
   }

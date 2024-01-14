@@ -923,7 +923,7 @@ public class Commander extends JFrame
     String circdir = circuitWorkspace();
     String langdir = circdir + lang.toLowerCase() + SLASH;
 
-    FPGADownload tools = FPGADownload.forVendor(board.fpga.Vendor);
+    FPGADownload tools = FPGADownload.forVendor(board.fpga.Vendor, settings);
     tools.err = err;
     tools.lang = lang;
     tools.board = board;
@@ -933,7 +933,7 @@ public class Commander extends JFrame
     tools.scriptPath = circdir + SCRIPT_DIR;
     tools.sandboxPath = circdir + SANDBOX_DIR;
     tools.ucfPath = circdir + UCF_DIR;
-    tools.writeToFlash = writeToFlash.isSelected();
+    tools.writeToFlash = writeToFlash.isSelected() && board.fpga.FlashDefined;
 
     if (pinBindings != null) {
       // sanity check pin bindings

@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <title>Quartus</title>
+
+    <style>
+form {
+  border: 1px solid gray;
+  background: #dee;
+  padding: 5px;
+  width: 4in;
+}
+input {
+  margin: 5px;
+}
+h3 {
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+    </style>
+  </head>
+
+  <body>
+    <h2>HDL Synthesis for Altera FPGA Devices</h2>
+
+    <form action="quartus.php" method="post" enctype="multipart/form-data">
+    <h3>HDL Synthesis</h3>
+    <p>Upload a zip file from Logisim containing HDL files suitable for Altera Synthesis.
+    <p>
+      <input type="hidden" name="operation" value="synthesize">
+      <input type="file" accept=".zip" name="zipfile" id="zipfile"><br>
+      <input type="radio" id="EPCS4" name="flashname" value="EPCS4" checked="checked">
+      <label for="EPCS4">EPCS4</label><br>
+      <input type="submit">
+    </form>
+
+    <form action="quartus.php" method="post" enctype="multipart/form-data">
+    <h3>FPGA Cable Listing</h3>
+    <p>Get list of attached cables.
+    <p>
+      <input type="hidden" name="operation" value="list-cables">
+      <input type="submit">
+    </form>
+
+    <form action="quartus.php" method="post" enctype="multipart/form-data">
+    <h3>FPGA Programming</h3>
+    <p>Upload a SOF or POF bitstream file suitable for FPGA programming.
+    <p>
+      <input type="hidden" name="operation" value="program">
+      <input type="file" accept=".pof,.sof" id="bitfile" name="bitfile"><br>
+      <label for="bitfile">Bitstram SOF or POF File</label><br>
+      <input type="radio" id="jtag" name="mode" value="jtag" checked="checked">
+      <label for="jtag">jtag (fast, but volatile)</label><br>
+      <input type="radio" id="as" name="mode" value="as">
+      <label for="jtag">as (active serial, slower, but non-volatile)</label><br>
+      <input type="radio" id="usb-blaster" name="cable" value="usb-blaster" checked="checked">
+      <label for="usb-blaster">usb-blaster</label><br>
+
+      <input type="submit">
+    </form>
+
+  </body>
+</html>

@@ -58,9 +58,9 @@ public abstract class FPGADownload {
     this.name = name;
   }
 
-  public static FPGADownload forVendor(char vendor) {
+  public static FPGADownload forVendor(char vendor, Settings settings) {
     if (vendor == Chipset.ALTERA)
-      return new AlteraDownload();
+      return AlteraDownload.makeNew(settings);
     else
       return new XilinxDownload();
   }
@@ -207,6 +207,37 @@ public abstract class FPGADownload {
         } catch (InterruptedException ex) {
           process.destroyForcibly();
           failed = true;
+        } finally {
+          SwingUtilities.invokeLater(completion);
+        }
+      });
+      thread.start();
+    }
+  }
+
+  public class RunnableStage extends Stage {
+
+    public RunnableStage(String title, String msg, String errmsg) {
+      super(title, msg, null, errmsg);
+    }
+
+    protected boolean run() { return true; }
+
+    @Override
+    public void startAndThen(Runnable completion) {
+      if (!prep()) {
+        failed = true;
+        completion.run();
+        return;
+      }
+      thread = new Thread(() -> {
+        try {
+          if (!run())
+            failed = true;
+          else if (!post())
+            failed = true;
+        // } catch (InterruptedException ex) {
+        //   failed = true;
         } finally {
           SwingUtilities.invokeLater(completion);
         }

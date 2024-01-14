@@ -38,12 +38,23 @@ import com.bfh.logisim.fpga.Chipset;
 import com.bfh.logisim.fpga.PinBindings;
 import com.bfh.logisim.fpga.PullBehavior;
 import com.bfh.logisim.gui.Commander;
+import com.bfh.logisim.gui.Console;
 import com.bfh.logisim.hdlgenerator.FileWriter;
+import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.hdl.Hdl;
 
-public class AlteraDownload extends FPGADownload {
+public abstract class AlteraDownload extends FPGADownload {
 
-  public AlteraDownload() { super("Altera"); }
+  protected AlteraDownload() { super("Altera"); }
+
+  public static AlteraDownload makeNew(Settings settings) {
+    if (isRemote(settings))
+      return new AlteraDownloadRemote();
+    else if (isScript(settings))
+      return new AlteraDownloadScript();
+    else
+      return new AlteraDownloadLocal();
+  }
 
   @Override
   public boolean readyForDownload() {
@@ -51,180 +62,17 @@ public class AlteraDownload extends FPGADownload {
         || new File(sandboxPath + TOP_HDL + ".pof").exists();
   }
  
-  private ArrayList<String> externalSynthesisScript() {
-    // If AlteraToolPath is an executable file, rather than a directory, then
-    // use that as a single-file script to do the entire synthesis rather than
-    // using the multi-step synthesis using quartus_sh, quartus_map, etc.
+  static boolean isRemote(Settings settings) {
+    String tool = settings.GetAlteraToolPath();
+    if (tool == null) return false;
+    tool = tool.toLowerCase();
+    return tool.startsWith("http://") || tool.startsWith("https://");
+  }
+
+  static boolean isScript(Settings settings) {
     String tool = settings.GetAlteraToolPath();
     File script = new File(tool);
-    if (!script.exists() || script.isDirectory() || !script.canExecute())
-      return null;
-    ArrayList<String> command = new ArrayList<>();
-    command.add(tool);
-    if (settings.GetAltera64Bit())
-      command.add("--64bit");
-    return command;
-  }
-
-  private ArrayList<String> cmd(String prog, String ...args) {
-    ArrayList<String> command = new ArrayList<>();
-    command.add(settings.GetAlteraToolPath() + File.separator + prog);
-    if (settings.GetAltera64Bit())
-      command.add("--64bit");
-    for (String arg: args)
-      command.add(arg);
-    return command;
-  }
-
-  private String bitfile, flashfile;
-  private String cablename;
-
-  @Override
-  public ArrayList<Stage> initiateDownload(Commander cmdr) {
-    ArrayList<Stage> stages = new ArrayList<>();
-
-    boolean flash = (writeToFlash && board.fpga.FlashDefined);
-
-    if (!readyForDownload()) {
-      ArrayList<String> tool = externalSynthesisScript();
-      if (tool != null) {
-        tool.add("--synthesize");
-        if (board.fpga.FlashDefined) {
-          tool.add("--flash");
-          tool.add(board.fpga.FlashName);
-        }
-        tool.add(projectPath);
-        stages.add(new Stage(
-              "synthesis", "Synthesizing (may take a while)",
-              tool, "Failed to synthesize design, cannot download"));
-      } else {
-        String script = scriptPath.replace(projectPath, ".." + File.separator) + "AlteraDownload.tcl";
-        stages.add(new Stage(
-              "init", "Creating Quartus Project",
-              cmd(ALTERA_QUARTUS_SH, "-t", script),
-              "Failed to create Quartus project, cannot download"));
-        stages.add(new Stage(
-              "optimize", "Optimizing for Minimal Area",
-              cmd(ALTERA_QUARTUS_MAP, TOP_HDL, "--optimize=area"),
-              "Failed to optimize design, cannot download"));
-        stages.add(new Stage(
-              "synthesize", "Synthesizing (may take a while)",
-              cmd(ALTERA_QUARTUS_SH, "--flow", "compile", TOP_HDL),
-              "Failed to synthesize design, cannot download"));
-        if (flash) {
-          stages.add(new Stage(
-                "convert", "Convert JTAG bitstream (.sof) to Flash file (.pof) format",
-                cmd(ALTERA_QUARTUS_CPF, "-c", "-d", board.fpga.FlashName,
-                  sandboxPath + TOP_HDL + ".sof",
-                  sandboxPath + TOP_HDL + ".pof"),
-                "Failed to convert bitstream, cannot download"));
-        }
-      }
-    }
-
-    // Typical output for FPGA enumerate command:
-    // Info: *******************************************************************
-    // Info: Running Quartus II 32-bit Programmer
-    //     Info: Version 13.0.0 Build 156 04/24/2013 SJ Web Edition
-    //     ...
-    //     Info: Processing started: Wed Feb 24 17:39:18 2016
-    // Info: Command: quartus_pgm --list
-    // 1) USB-Blaster [1-1.3]
-    // 2) USB-Blaster on grace.holycross.edu [1-1.3]
-    // Info: Quartus II 32-bit Programmer was successful. 0 errors, 0 warnings
-    //     Info: Peak virtual memory: 126 megabytes
-    //     ...
-    ArrayList<String> scan = externalSynthesisScript();
-    if (scan != null) {
-      scan.add("--list-cables");
-    } else {
-      scan = cmd(ALTERA_QUARTUS_PGM, "--list");
-    }
-    stages.add(new Stage(
-          "scan", "Searching for FPGA Devices",
-          scan,
-          "Could not find any FPGA devices. Did you connect the FPGA board?") {
-      @Override
-      protected boolean prep() {
-        if (new File(sandboxPath + TOP_HDL + ".pof").exists())
-          flashfile = TOP_HDL + ".pof";
-        // if there is no .sof generated, we can use a .pof instead
-        if (new File(sandboxPath + TOP_HDL + ".sof").exists()) {
-          bitfile = TOP_HDL + ".sof";
-        } else if (flashfile != null) {
-          bitfile = flashfile;
-        }
-        if (flash) {
-          if (flashfile == null) {
-            console.printf(console.ERROR, "Error: Design must be synthesized before download.");
-            return false;
-          }
-          if (!cmdr.confirmDownload("Set board to PROG, and restart it.")) {
-            cancelled = true;
-            return false;
-          }
-        } else {
-          if (bitfile == null) {
-            console.printf(console.ERROR, "Error: Design must be synthesized before download.");
-            return false;
-          }
-          if (!cmdr.confirmDownload()) {
-            cancelled = true;
-            return false;
-          }
-        }
-        return true;
-      }
-      @Override
-      protected boolean post() {
-        ArrayList<String> dev = new ArrayList<>();
-        for (String line: console.getText()) {
-          int n  = dev.size() + 1;
-          if (!line.matches("^" + n + "\\) .*" ))
-            continue;
-          line = line.replaceAll("^" + n + "\\) ", "");
-          dev.add(line.trim());
-        }
-        if (dev.size() == 0) {
-          console.printf(console.ERROR, "No USB-Blaster cable detected");
-          return false;
-        } else if (dev.size() == 1) {
-          cablename = "usb-blaster"; // why not dev.get(0)?
-        } else if (dev.size() > 1) {
-          console.printf("%d FPGA devices detected:", dev.size());
-          int i = 1;
-          for (String d : dev)
-            console.printf("   %d) %s", i++, d);
-          cablename = cmdr.chooseDevice(dev);
-          if (cablename == null) {
-            cancelled = true;
-            return false;
-          }
-        }
-        return true;
-      }
-    });
-
-    stages.add(new Stage(
-          "download", "Downloading to FPGA", null,
-          "Failed to download design; did you connect the board?") {
-      @Override
-      protected boolean prep() {
-        cmd = externalSynthesisScript();
-        if (cmd != null) {
-          cmd.add("--program");
-          cmd.add(cablename);
-          cmd.add(flash ? "as" : "jtag");
-          cmd.add(flash ? flashfile : bitfile);
-        } else if (flash) {
-          cmd = cmd(ALTERA_QUARTUS_PGM, "-c", cablename, "-m", "as", "-o", "P;"+flashfile);
-        } else {
-          cmd = cmd(ALTERA_QUARTUS_PGM, "-c", cablename, "-m", "jtag", "-o", "P;"+bitfile);
-        }
-        return true;
-      }
-    });
-    return stages;
+    return script.exists() && !script.isDirectory() && script.canExecute();
   }
 
   @Override
@@ -297,5 +145,71 @@ public class AlteraDownload extends FPGADownload {
     File f = FileWriter.GetFilePointer(scriptPath, "AlteraDownload.tcl", err);
     return f != null && FileWriter.WriteContents(f, out, err);
   }
- 
+
+  protected String bitfile, flashfile;
+  protected String cablename;
+  protected boolean scanWasCancelled = false;
+
+  protected boolean prepForScan(Commander cmdr, Console console) {
+    // Check for flash POF bitstream
+    if (new File(sandboxPath + TOP_HDL + ".pof").exists())
+      flashfile = TOP_HDL + ".pof";
+
+    // Check for jtag SOF bitstream, or fall back to flash POF
+    if (new File(sandboxPath + TOP_HDL + ".sof").exists())
+      bitfile = TOP_HDL + ".sof";
+    else if (flashfile != null)
+      bitfile = flashfile;
+
+    if (writeToFlash) {
+      if (flashfile == null) {
+        console.printf(console.ERROR, "Error: Design must be synthesized before download.");
+        return false;
+      }
+      if (!cmdr.confirmDownload("Set board to PROG, and restart it.")) {
+        scanWasCancelled = true;
+        return false;
+      }
+    } else {
+      if (bitfile == null) {
+        console.printf(console.ERROR, "Error: Design must be synthesized before download.");
+        return false;
+      }
+      if (!cmdr.confirmDownload()) {
+        scanWasCancelled = true;
+        return false;
+      }
+    }
+    return true;
+
+  }
+
+  protected boolean postScanDetectCable(Commander cmdr, Console console) {
+    ArrayList<String> dev = new ArrayList<>();
+    for (String line: console.getText()) {
+      int n  = dev.size() + 1;
+      if (!line.matches("^" + n + "\\) .*" ))
+        continue;
+      line = line.replaceAll("^" + n + "\\) ", "");
+      dev.add(line.trim());
+    }
+    if (dev.size() == 0) {
+      console.printf(console.ERROR, "No USB-Blaster cable detected");
+      return false;
+    } else if (dev.size() == 1) {
+      cablename = "usb-blaster"; // why not dev.get(0)?
+    } else if (dev.size() > 1) {
+      console.printf("%d FPGA devices detected:", dev.size());
+      int i = 1;
+      for (String d : dev)
+        console.printf("   %d) %s", i++, d);
+      cablename = cmdr.chooseDevice(dev);
+      if (cablename == null) {
+        scanWasCancelled = true;
+        return false;
+      }
+    }
+    return true;
+  }
+
 }

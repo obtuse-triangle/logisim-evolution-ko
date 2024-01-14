@@ -69,6 +69,12 @@ public class Settings {
   private static final String WorkPath = "WorkPath";
   private static final String WorkPathName = "logisim_fpga_workspace" + File.separator;
   private static final String XilinxToolsPath = "XilinxToolsPath";
+  // AlteraToolsPath can be a local directory, in which case we look for
+  // programs like quartus_pgm and quartus_map in that directory.
+  // Or, AlteraToolsPath can be a local filename, which is used as a single
+  // executable script or program to do synthesis.
+  // or, AlteraToolsPath can be a URL (starting with http:// or https://) in
+  // which case a web API is used.
   private static final String AlteraToolsPath = "AlteraToolsPath";
   private static final String Altera64Bit = "Altera64Bit";
   private static final String HDLTypeToGenerate = "HDLTypeToGenerate";
@@ -226,6 +232,8 @@ public class Settings {
   public boolean validAlteraToolPath(String path) {
     path = normalizePath(path);
     return path == null
+      || path.toLowerCase().startsWith("http://")
+      || path.toLowerCase().startsWith("https://")
       || allToolsPresent(path, FPGADownload.ALTERA_PROGRAMS)
       || isExecutableScript(path);
   }

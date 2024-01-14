@@ -34,7 +34,7 @@ import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.comp.Component;
 
-// A heirarchical path to a component within the tree of circuits and
+// A hierarchical path to a component within the tree of circuits and
 // subcircuits. Path is immutable. Examples:
 //   MainCirc
 //   MainCirc/FooSubCirc0/

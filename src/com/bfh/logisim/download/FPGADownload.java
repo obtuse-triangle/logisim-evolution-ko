@@ -61,6 +61,8 @@ public abstract class FPGADownload {
   public static FPGADownload forVendor(char vendor, Settings settings) {
     if (vendor == Chipset.ALTERA)
       return AlteraDownload.makeNew(settings);
+    else if (vendor == Chipset.LATTICE)
+        return new LatticeDownload();
     else
       return new XilinxDownload();
   }
@@ -138,6 +140,13 @@ public abstract class FPGADownload {
   public static final String[] XILINX_PROGRAMS = {
     XILINX_XST, XILINX_NGDBUILD, XILINX_MAP, XILINX_PAR,
     XILINX_BITGEN, XILINX_IMPACT, XILINX_CPLDFIT, XILINX_HPREP6,
+  };
+
+  public static final String LATTICE_DIAMOND_WIN = "pnmainc" + dotexe;
+  public static final String LATTICE_DIAMOND_UNIX = "diamondc";
+  public static final String LATTICE_ISPLEVER_WIN = "projnav" + dotexe;
+  public static final String[] LATTICE_PROGRAMS = {
+      LATTICE_DIAMOND_WIN, LATTICE_DIAMOND_UNIX // , LATTICE_ISPLEVER_WIN
   };
 
   public class Stage {

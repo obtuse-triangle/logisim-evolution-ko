@@ -57,7 +57,7 @@ public class FPGASettingsDialog implements ActionListener {
 
 	private JDialog panel;
 	private Settings settings;
-	private JTextField alteraPath, xilinxPath, workPath;
+	private JTextField alteraPath, xilinxPath, latticePath, workPath;
 	private JRadioButton altera32Choice, altera64Choice;
 
 	public FPGASettingsDialog(JFrame parentFrame, Settings settings) {
@@ -73,20 +73,24 @@ public class FPGASettingsDialog implements ActionListener {
 		GridBagConstraints c = new GridBagConstraints();
 
 		String apath = settings.GetAlteraToolPath();
-    if (apath == null) apath = "";
+		if (apath == null) apath = "";
 		String xpath = settings.GetXilinxToolPath();
-    if (xpath == null) xpath = "";
+		if (xpath == null) xpath = "";
+		String lpath = settings.GetLatticeToolPath();
+		if (lpath == null) lpath = "";
 		String wpath = settings.GetStaticWorkspacePath();
 		if (wpath == null) wpath = "";
 
 		JLabel globalSection = new JLabel("Global Settings");
 		JLabel alteraSection = new JLabel("Altera Settings");
 		JLabel xilinxSection = new JLabel("Xilinx Settings");
+		JLabel latticeSection = new JLabel("Lattice Settings");
 		Font font = globalSection.getFont();
 		Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
 		globalSection.setFont(boldFont);
 		alteraSection.setFont(boldFont);
 		xilinxSection.setFont(boldFont);
+		latticeSection.setFont(boldFont);
 
 		JLabel workLabel = new JLabel("Temporary directory for compilation:");
 		JLabel workStatic = new JLabel("(leave blank to use default)");
@@ -97,7 +101,7 @@ public class FPGASettingsDialog implements ActionListener {
 		workPicker.addActionListener(this);
 
 		JLabel alteraLabel = new JLabel("Altera tools path (*trusted* URL, or custom script, or directory containing "
-        + FPGADownload.ALTERA_PROGRAMS[0]+"):");
+				+ FPGADownload.ALTERA_PROGRAMS[0]+"):");
 		alteraPath = new JTextField(apath);
 		alteraPath.setPreferredSize(new Dimension(400, 10));
 		JButton alteraPicker = new JButton("Choose");
@@ -121,6 +125,14 @@ public class FPGASettingsDialog implements ActionListener {
 		JButton xilinxPicker = new JButton("Choose");
 		xilinxPicker.setActionCommand("xilinxPicker");
 		xilinxPicker.addActionListener(this);
+
+		JLabel latticeLabel = new JLabel("Lattice tools path (directory containing "
+				+ FPGADownload.LATTICE_PROGRAMS[0]+"):");
+		latticePath = new JTextField(lpath);
+		latticePath.setPreferredSize(new Dimension(400, 10));
+		JButton latticePicker = new JButton("Choose");
+		latticePicker.setActionCommand("latticePicker");
+		latticePicker.addActionListener(this);
 
 		JButton ok = new JButton("OK");
 		ok.setActionCommand("OK");
@@ -174,6 +186,20 @@ public class FPGASettingsDialog implements ActionListener {
 		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 5, 0);
 		panel.add(new JLabel(), c);
 
+
+	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 0, 10, 0);
+	    panel.add(latticeSection, c);
+	
+	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 2, 0);
+	    panel.add(latticeLabel, c);
+	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 5, 0);
+	    panel.add(latticePath, c);
+	    c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 10, 5, 0);
+	    panel.add(latticePicker, c);
+	
+	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 5, 0);
+	    panel.add(new JLabel(), c);
+
 		c.gridx = 1; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(15, 10, 10, 0);
 		panel.add(cancel, c);
 		c.gridx = 2; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(15, 10, 10, 0);
@@ -200,6 +226,8 @@ public class FPGASettingsDialog implements ActionListener {
 			pick("Altera", alteraPath.getText(), true);
 		} else if (e.getActionCommand().equals("xilinxPicker")) {
 			pick("Xilinx", xilinxPath.getText(), false);
+	    } else if (e.getActionCommand().equals("latticePicker")) {
+	      pick("Lattice", latticePath.getText(), false);
 		} else if (e.getActionCommand().equals("Cancel")) {
 			panel.setVisible(false);
 		} else if (e.getActionCommand().equals("OK")) {
@@ -208,30 +236,37 @@ public class FPGASettingsDialog implements ActionListener {
 		}
 	}
 
-  private static String pretty(String[] names) {
-    String s = names[0];
-    for (int i = 1; i < names.length; i++) {
-      s += (i == names.length - 1 ? ", and " :", "); 
-      s += names[i];
-    }
-    return s;
-  }
+	private static String pretty(String[] names, String conjunction) {
+		String s = names[0];
+		for (int i = 1; i < names.length; i++) {
+			s += (i == names.length - 1 ? " "+conjunction+" " : ", "); 
+			s += names[i];
+		}
+		return s;
+	}
 
 	private void save() {
 		String apath = alteraPath.getText();
 		if (!settings.SetAlteraToolPath(apath)) {
-			String names = pretty(FPGADownload.ALTERA_PROGRAMS);
+			String names = pretty(FPGADownload.ALTERA_PROGRAMS, "and");
 			JOptionPane.showMessageDialog(null,
 					"Error setting Altera tool path.\n" +
-          "Please pick a *trusted* URL, or a directory containing " + names + ", or select a stand-alone synthesis script.");
+					"Please pick a *trusted* URL, or a directory containing " + names + ", or select a stand-alone synthesis script.");
 		}
 		settings.SetAltera64Bit(altera64Choice.isSelected());
 		String xpath = xilinxPath.getText();
 		if (!settings.SetXilinxToolPath(xpath)) {
-			String names = pretty(FPGADownload.XILINX_PROGRAMS);
+			String names = pretty(FPGADownload.XILINX_PROGRAMS, "and");
 			JOptionPane.showMessageDialog(null,
 					"Error setting Xilinx tool path.\n" +
-          "Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
+					"Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
+		}
+		String lpath = latticePath.getText();
+		if (!settings.SetLatticeToolPath(lpath)) {
+			String names = pretty(FPGADownload.LATTICE_PROGRAMS, "or");
+			JOptionPane.showMessageDialog(null,
+					"Error setting Lattice tool path.\n" +
+					"Please select a directory containing " + names + ".");
 		}
 		settings.SetStaticWorkspacePath(workPath.getText());
 		settings.UpdateSettingsFile();
@@ -258,20 +293,28 @@ public class FPGASettingsDialog implements ActionListener {
 		path = file.getPath();
 		if ("Altera".equals(vendor)) {
 			alteraPath.setText(path);
-      if (!settings.validAlteraToolPath(path)) {
-        String names = pretty(FPGADownload.ALTERA_PROGRAMS);
-        JOptionPane.showMessageDialog(null,
-            "Invalid Altera tool path.\n" +
-            "Please pick a *trusted* URL, or a directory containing " + names + ", or select a stand-alone synthesis script.");
-      }
+			if (!settings.validAlteraToolPath(path)) {
+				String names = pretty(FPGADownload.ALTERA_PROGRAMS, "and");
+				JOptionPane.showMessageDialog(null,
+						"Invalid Altera tool path.\n" +
+						"Please pick a *trusted* URL, or a directory containing " + names + ", or select a stand-alone synthesis script.");
+			}
 		} else if ("Xilinx".equals(vendor)) {
 			xilinxPath.setText(path);
-      if (!settings.validXilinxToolPath(path)) {
-        String names = pretty(FPGADownload.XILINX_PROGRAMS);
-        JOptionPane.showMessageDialog(null,
-            "Invalid Xilinx tool path.\n" +
-            "Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
-      }
+			if (!settings.validXilinxToolPath(path)) {
+				String names = pretty(FPGADownload.XILINX_PROGRAMS, "and");
+				JOptionPane.showMessageDialog(null,
+						"Invalid Xilinx tool path.\n" +
+						"Please select a directory containing " + names + ", or select a stand-alone synthesis script.");
+			}
+		} else if ("Lattice".equals(vendor)) {
+			latticePath.setText(path);
+			if (!settings.validLatticeToolPath(path)) {
+				String names = pretty(FPGADownload.LATTICE_PROGRAMS, "or");
+				JOptionPane.showMessageDialog(null,
+						"Invalid Lattice tool path.\n" +
+						"Please select a directory containing " + names + ".");
+			}
 		} else {
 			workPath.setText(path);
 		}

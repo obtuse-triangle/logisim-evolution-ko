@@ -214,7 +214,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
   }
 
   private boolean needTopLevelInversion(Component comp, BoardIO io) {
-    boolean boardIsActiveHigh = io.activity == PinActivity.ACTIVE_HIGH;
+    boolean boardIsActiveHigh = io.activity != PinActivity.ACTIVE_LOW;
     boolean compIsActiveHigh = comp.getFactory().ActiveOnHigh(comp.getAttributeSet());
     return boardIsActiveHigh ^ compIsActiveHigh;
   }

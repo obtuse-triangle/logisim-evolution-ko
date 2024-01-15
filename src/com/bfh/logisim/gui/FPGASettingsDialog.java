@@ -93,17 +93,17 @@ public class FPGASettingsDialog implements ActionListener {
 		latticeSection.setFont(boldFont);
 
 		JLabel workLabel = new JLabel("Temporary directory for compilation:");
-		JLabel workStatic = new JLabel("(leave blank to use default)");
 		workPath = new JTextField(wpath);
-		workPath.setPreferredSize(new Dimension(400, 10));
+		workPath.setPreferredSize(new Dimension(450, 10));
+        workPath.setToolTipText("leave blank to use default");
 		JButton workPicker = new JButton("Choose");
 		workPicker.setActionCommand("workPicker");
 		workPicker.addActionListener(this);
 
-		JLabel alteraLabel = new JLabel("Altera tools path (*trusted* URL, or custom script, or directory containing "
-				+ FPGADownload.ALTERA_PROGRAMS[0]+"):");
+		JLabel alteraLabel = new JLabel("Altera tools path (trusted URL, script, or install directory):");
 		alteraPath = new JTextField(apath);
-		alteraPath.setPreferredSize(new Dimension(400, 10));
+		alteraPath.setPreferredSize(new Dimension(450, 10));
+        alteraPath.setToolTipText("A *trusted* URL, a custom script, or install directory of "+FPGADownload.ALTERA_PROGRAMS[0]+".");
 		JButton alteraPicker = new JButton("Choose");
 		alteraPicker.setActionCommand("alteraPicker");
 		alteraPicker.addActionListener(this);
@@ -118,18 +118,18 @@ public class FPGASettingsDialog implements ActionListener {
 		else
 			altera32Choice.setSelected(true);
 
-		JLabel xilinxLabel = new JLabel("Xilinx tools path (directory containing "
-        + FPGADownload.XILINX_PROGRAMS[0]+"):");
+		JLabel xilinxLabel = new JLabel("Xilinx tools path (script or install directory):");
 		xilinxPath = new JTextField(xpath);
-		xilinxPath.setPreferredSize(new Dimension(400, 10));
+		xilinxPath.setPreferredSize(new Dimension(450, 10));
+        xilinxPath.setToolTipText("A custom script, or install directory of "+FPGADownload.XILINX_PROGRAMS[0]+".");
 		JButton xilinxPicker = new JButton("Choose");
 		xilinxPicker.setActionCommand("xilinxPicker");
 		xilinxPicker.addActionListener(this);
 
-		JLabel latticeLabel = new JLabel("Lattice tools path (directory containing "
-				+ FPGADownload.LATTICE_PROGRAMS[0]+"):");
+		JLabel latticeLabel = new JLabel("Lattice tools path (install directory):");
 		latticePath = new JTextField(lpath);
-		latticePath.setPreferredSize(new Dimension(400, 10));
+		latticePath.setPreferredSize(new Dimension(450, 10));
+        latticePath.setToolTipText("Install directory of "+FPGADownload.LATTICE_PROGRAMS[0]+" or similar tools.");
 		JButton latticePicker = new JButton("Choose");
 		latticePicker.setActionCommand("latticePicker");
 		latticePicker.addActionListener(this);
@@ -137,72 +137,60 @@ public class FPGASettingsDialog implements ActionListener {
 		JButton ok = new JButton("OK");
 		ok.setActionCommand("OK");
 		ok.addActionListener(this);
+        panel.getRootPane().setDefaultButton(ok);
 		JButton cancel = new JButton("Cancel");
 		cancel.setActionCommand("Cancel");
 		cancel.addActionListener(this);
 
 		int y = -1;
 		
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(15, 0, 10, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(15, 10, 5, 0);
 		panel.add(globalSection, c);
 
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 0, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
 		panel.add(workLabel, c);
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 2, 0);
-		panel.add(workStatic, c);
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 5, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
 		panel.add(workPath, c);
-		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 10, 5, 0);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
 		panel.add(workPicker, c);
 
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 0, 10, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
 		panel.add(alteraSection, c);
 
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 2, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
 		panel.add(alteraLabel, c);
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 5, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
 		panel.add(alteraPath, c);
-		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 10, 5, 0);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
 		panel.add(alteraPicker, c);
-
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 5, 0);
-		panel.add(new JLabel(), c);
-
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 2, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
 		panel.add(altera32Choice, c);
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 5, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
 		panel.add(altera64Choice, c);
 
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 0, 10, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
 		panel.add(xilinxSection, c);
 
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 2, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
 		panel.add(xilinxLabel, c);
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 5, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
 		panel.add(xilinxPath, c);
-		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 10, 5, 0);
-		panel.add(xilinxPicker, c);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
+        panel.add(xilinxPicker, c);
 
-		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 5, 0);
-		panel.add(new JLabel(), c);
+        c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
+        panel.add(latticeSection, c);
 
-
-	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 0, 10, 0);
-	    panel.add(latticeSection, c);
+        c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
+        panel.add(latticeLabel, c);
+        c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
+        panel.add(latticePath, c);
+        c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
+        panel.add(latticePicker, c);
 	
-	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 2, 0);
-	    panel.add(latticeLabel, c);
-	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 10, 5, 0);
-	    panel.add(latticePath, c);
-	    c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 10, 5, 0);
-	    panel.add(latticePicker, c);
-	
-	    c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 10, 5, 0);
-	    panel.add(new JLabel(), c);
-
-		c.gridx = 1; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(15, 10, 10, 0);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.anchor = GridBagConstraints.EAST; c.insets = new Insets(20, 50, 20, 20);
 		panel.add(cancel, c);
-		c.gridx = 2; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(15, 10, 10, 0);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.anchor = GridBagConstraints.WEST; c.insets = new Insets(20, 0, 20, 20);
 		panel.add(ok, c);
 
 		panel.pack();

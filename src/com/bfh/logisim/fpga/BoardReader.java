@@ -68,7 +68,7 @@ public class BoardReader {
       if (name.toLowerCase().endsWith(".xml"))
         name = name.substring(0, name.length()-4);
 
-			Board b = new Board(name, parseChipset(doc), parsePicture(doc));
+			Board b = new Board(name, parseApioName(doc), parseChipset(doc), parsePicture(doc));
       parseComponents(doc, "PinsInformation", b); // backwards compatability	
 			parseComponents(doc, "ButtonsInformation", b); // backwards compatability	
 			parseComponents(doc, "LEDsInformation", b); // backwards compatability	
@@ -140,6 +140,17 @@ public class BoardReader {
     return new Chipset(xmlToMap(xml));
   }
 
+  private static String parseApioName(Document doc) throws Exception {
+    NodeList xml = getSection(doc, "BoardInformation");
+    if (xml == null)
+      return null;
+    String apio_name = xmlToMap(xml).get("Toolchain/ApioName");
+    if (apio_name != null)
+      apio_name = apio_name.trim();
+    if (apio_name != null && apio_name.equals(""))
+      apio_name = null;
+    return apio_name;
+  }
 
   private static void parseComponents(Document doc, String section, Board board)
       throws Exception {

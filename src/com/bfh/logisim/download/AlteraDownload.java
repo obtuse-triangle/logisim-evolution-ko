@@ -39,6 +39,7 @@ import com.bfh.logisim.fpga.PinBindings;
 import com.bfh.logisim.fpga.PullBehavior;
 import com.bfh.logisim.gui.Commander;
 import com.bfh.logisim.gui.Console;
+import com.bfh.logisim.gui.FPGAReport;
 import com.bfh.logisim.hdlgenerator.FileWriter;
 import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.hdl.Hdl;
@@ -73,6 +74,26 @@ public abstract class AlteraDownload extends FPGADownload {
     String tool = settings.GetAlteraToolPath();
     File script = new File(tool);
     return script.exists() && !script.isDirectory() && script.canExecute();
+  }
+  
+  public boolean toolchainIsInstalled(Settings settings, FPGAReport err) {
+    String helpmsg = "It should be set to the directory where " + ALTERA_QUARTUS_SH
+          + " and related programs are installed, or set to a file"
+          + " containing astand-alone executable script, or set to a"
+          + " *trusted* URL to invoke for remote synthesis.";
+    String tool = settings.GetAlteraToolPath();
+    if (tool == null) {
+      err.AddFatalError("Altera Quartus toolchain path not configured. " + helpmsg);
+      return false;
+    }
+    if (isRemote(settings) || isScript(settings))
+      return true;
+    File prog = new File(tool + File.separator + ALTERA_QUARTUS_SH);
+    if (prog.exists() && !prog.isDirectory() && prog.canExecute())
+      return true;
+    err.AddFatalError("Altera Quartus toolchain path is set to " + tool + ","
+        + " but this appears to be incorrect. " + helpmsg);
+    return false;
   }
 
   @Override

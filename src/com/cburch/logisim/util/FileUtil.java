@@ -34,6 +34,8 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,6 +86,13 @@ public class FileUtil {
       buf = bos.toByteArray();
     }
     return buf;
+  }
+
+  public static long copyFile(String dst, String src) throws IOException {
+    try (FileInputStream in = new FileInputStream(new File(src));
+        FileOutputStream out = new FileOutputStream(new File(dst))) {
+      return in.transferTo(out);
+    }
   }
 
 }

@@ -47,13 +47,15 @@ public class Board extends AbstractList<BoardIO> {
   public static final int IMG_HEIGHT = 400;
 
 	public final String name;
+	public final String apio_name; // board name used for apio toolchain
 	public final Chipset fpga;
 	public final Image image;
 
 	private final ArrayList<BoardIO> ios = new ArrayList<>();
 
-	public Board(String name, Chipset fpga, Image image) {
+	public Board(String name, String apio_name, Chipset fpga, Image image) {
     this.name = name;
+    this.apio_name = apio_name;
     this.fpga = fpga;
     this.image = image.getScaledInstance(IMG_WIDTH, IMG_HEIGHT, Image.SCALE_SMOOTH);
 	}

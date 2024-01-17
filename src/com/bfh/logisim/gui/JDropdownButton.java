@@ -72,32 +72,14 @@ class JDropdownButton extends AbstractButton {
   
       MouseAdapter ma = new MouseAdapter() {
          public void mouseClicked(MouseEvent me) { }
-         public void mousePressed(MouseEvent me) { 
-            if (me.getSource() == actionButton) {
-               menuButton.setSelected(true);
-            }
-         }
-         public void mouseReleased(MouseEvent me) {
-            if (me.getSource() == actionButton) {
-               menuButton.setSelected(false);
-            }
-         }
-         public void mouseEntered(MouseEvent me) { 
-            setRolloverBorder(true); 
-         }
-         public void mouseExited(MouseEvent me) { 
-            setRolloverBorder(false);
-         }
+         public void mousePressed(MouseEvent me) { menuButton.setSelected(true); }
+         public void mouseReleased(MouseEvent me) { menuButton.setSelected(false); }
       };
  
       actionButton.addMouseListener(ma);
-      menuButton.addMouseListener(ma);
-      menuButton.addActionListener(e ->
-          popupMenu.show(actionButton, 0, actionButton.getSize().height));
-   }  
- 
-   protected void setRolloverBorder(boolean b) {
-      // actionButton.setBorderPainted(b);
-      // menuButton.setBorderPainted(b);
-   }
+      menuButton.addActionListener(e -> {
+          menuButton.setSelected(false);
+          popupMenu.show(actionButton, 0, actionButton.getSize().height);
+      });
+   } 
 }

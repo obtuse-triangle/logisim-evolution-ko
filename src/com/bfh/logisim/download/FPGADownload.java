@@ -57,14 +57,35 @@ public abstract class FPGADownload {
   public FPGADownload(String name) {
     this.name = name;
   }
+  public static String getToolchain(Board board, Settings settings) {
+    // First priority: user preference for given board
+    String toolchain = settings.GetPreferredToolchain(board.name);
+    // Fall back: select toolchain based on vendor
+    if (toolchain == null)
+      toolchain = vendorToolchain(board.fpga.Vendor);
+    // Last restor: apio
+    if (toolchain == null)
+      toolchain = APIO_TOOLCHAIN;
+    return toolchain;
+  }
 
-  public static FPGADownload forVendor(char vendor, Settings settings) {
-    if (vendor == Chipset.ALTERA)
-      return AlteraDownload.makeNew(settings);
-    else if (vendor == Chipset.LATTICE)
+  public static FPGADownload forToolchain(String toolchain, Settings settings) {
+    if (toolchain == null)
+      toolchain = APIO_TOOLCHAIN;
+    switch (toolchain) {
+      case ALTERA_QUARTUS_TOOLCHAIN:
+        return AlteraDownload.makeNew(settings);
+      case XILINX_ISE_TOOLCHAIN:
+        return new XilinxDownload();
+      case LATTICE_DIAMOND_TOOLCHAIN:
         return new LatticeDownload();
-    else
-      return new XilinxDownload();
+      case LATTICE_ISPLEVER_TOOLCHAIN:
+        return new LatticeDownload(); // ???
+      case APIO_TOOLCHAIN:
+        return new ApioDownload();
+      default:
+        return new ApioDownload();
+    }
   }
 
   // Parameters set by Commander
@@ -78,6 +99,8 @@ public abstract class FPGADownload {
   public String sandboxPath;
   public String ucfPath;
   public boolean writeToFlash;
+
+  public abstract boolean toolchainIsInstalled(Settings settings, FPGAReport err);
 
   public boolean generateScripts(PinBindings ioResources) {
     ArrayList<String> hdlFiles = new ArrayList<>();
@@ -116,6 +139,70 @@ public abstract class FPGADownload {
     }
   }
 
+  public final static String ALTERA_QUARTUS_TOOLCHAIN = "Altera Quartus";
+  public final static String XILINX_ISE_TOOLCHAIN = "Xilinx ISE";
+  public final static String LATTICE_DIAMOND_TOOLCHAIN = "Lattice Diamond";
+  public final static String LATTICE_ISPLEVER_TOOLCHAIN = "Lattice ispLEVER";
+  public final static String APIO_TOOLCHAIN = "Apio";
+
+  public static String normalizeToolchain(String toolchain) {
+    if (toolchain == null)
+      return null;
+    toolchain = toolchain.toLowerCase().replaceAll("[ -_]+", " ").trim();
+    switch (toolchain.toLowerCase()) {
+      case "xilinx":
+      case "xilinx ise":
+      case "ise":
+        return XILINX_ISE_TOOLCHAIN;
+      case "altera":
+      case "altera quartus":
+      case "quartus":
+        return ALTERA_QUARTUS_TOOLCHAIN;
+      case "lattice":
+      case "lattice diamond":
+      case "diamond":
+        return LATTICE_DIAMOND_TOOLCHAIN;
+      case "lattice isplever":
+      case "isplever":
+        return LATTICE_ISPLEVER_TOOLCHAIN;
+      case "apio":
+        return APIO_TOOLCHAIN;
+      default:
+        return null;
+    }
+  }
+
+  public static String vendorToolchain(char chipset) {
+    switch (chipset) {
+      case Chipset.ALTERA: return ALTERA_QUARTUS_TOOLCHAIN;
+      case Chipset.XILINX: return XILINX_ISE_TOOLCHAIN;
+      case Chipset.LATTICE: return LATTICE_DIAMOND_TOOLCHAIN;
+      default: return null;
+    }
+  }
+
+  public static String getLanguage(Board board, Settings settings, String toolchain) {
+    String lang = settings.GetPreferredHDLType(board.name);
+    if (lang != null)
+      return lang;
+    if (toolchain == null)
+      return settings.GetHDLType();
+    switch (toolchain) {
+      case ALTERA_QUARTUS_TOOLCHAIN:
+        return Settings.VHDL;
+      case XILINX_ISE_TOOLCHAIN:
+        return Settings.VHDL;
+      case LATTICE_DIAMOND_TOOLCHAIN:
+        return Settings.VHDL; // ??
+      case LATTICE_ISPLEVER_TOOLCHAIN:
+        return Settings.VHDL; // ??
+      case APIO_TOOLCHAIN:
+        return Settings.VERILOG;
+      default:
+        return Settings.VHDL;
+    }
+  }
+
   private static final String osname = System.getProperty("os.name");
   private static final boolean windowsOS = osname != null
       && osname.toLowerCase().indexOf("windows") != -1;
@@ -148,6 +235,10 @@ public abstract class FPGADownload {
   public static final String[] LATTICE_PROGRAMS = {
       LATTICE_DIAMOND_WIN, LATTICE_DIAMOND_UNIX // , LATTICE_ISPLEVER_WIN
   };
+
+  public static final String BIN_APIO = "bin/apio";
+  // public static final String APIO_PYVENV = "pyvenv.cfg";
+  public static final String[] APIO_PROGRAMS = { BIN_APIO }; // APIO_PYVENV
 
   public class Stage {
     public final String title, msg, errmsg;

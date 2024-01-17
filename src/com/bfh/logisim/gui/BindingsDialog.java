@@ -33,16 +33,19 @@ package com.bfh.logisim.gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog.ModalityType;
-import java.awt.Point;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -60,7 +63,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -70,8 +73,10 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
@@ -92,9 +97,10 @@ public class BindingsDialog extends JDialog {
   private Synthetic zeros, ones, constants, bitbucket;
   private Synthetic[] synthetics;
 
+  private JButton cancel = new JButton("Cancel");
   private JButton unmap = new JButton("Unset");
   private JButton reset = new JButton("Reset All");
-  private JButton done = new JButton("Close/Done");
+  private JButton done = new JButton("Done");
   private JLabel status = new JLabel();
 
   private HashMap<BoardIO, Rect> rects = new HashMap<>();
@@ -150,9 +156,15 @@ public class BindingsDialog extends JDialog {
         + "Use drop-down menu to expand or change component type.</html>");
    
     // Action buttons along right side
+    cancel.addActionListener(e -> finished(false));
     unmap.addActionListener(e -> sources.unmapCurrent());
     reset.addActionListener(e -> sources.resetAll());
-    done.addActionListener(e -> { setVisible(false); dispose(); });
+    done.addActionListener(e -> { finished(true); });
+
+    getRootPane().setDefaultButton(done);
+    getRootPane().registerKeyboardAction(new ActionListener() {
+      public void actionPerformed(ActionEvent e) { finished(false); }
+    }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
 
     // Scroll panel and status along left side
     status.setBorder(
@@ -187,6 +199,7 @@ public class BindingsDialog extends JDialog {
     add(new JPanel(), c); // filler
     c.weighty = 0.0;
     c.fill = GridBagConstraints.HORIZONTAL;
+    add(cancel, c);
     add(unmap, c);
     add(reset, c);
     add(done, c);
@@ -215,6 +228,13 @@ public class BindingsDialog extends JDialog {
 
     pack();
     setLocationRelativeTo(parentFrame);
+  }
+
+  public boolean cancelled = false;
+  private void finished(boolean done) {
+    cancelled = !done;
+    setVisible(false);
+    dispose();
   }
 
   private class SelectionPanel extends JPanel {
@@ -969,7 +989,7 @@ public class BindingsDialog extends JDialog {
     String txt = pinBindings.getStatus();
     status.setText(txt);
     boolean finished = txt.startsWith("All");
-    done.setText(finished ? "Done" : "Close");
+    done.setEnabled(finished);
   }
 
 	/*

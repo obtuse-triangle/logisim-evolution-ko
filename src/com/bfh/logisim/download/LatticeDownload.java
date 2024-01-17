@@ -50,6 +50,8 @@ import com.bfh.logisim.fpga.IoStandard;
 import com.bfh.logisim.fpga.PinBindings;
 import com.bfh.logisim.fpga.PullBehavior;
 import com.bfh.logisim.gui.Commander;
+import com.bfh.logisim.gui.FPGAReport;
+import com.bfh.logisim.gui.FPGASettingsDialog;
 import com.bfh.logisim.hdlgenerator.FileWriter;
 import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.hdl.Hdl;
@@ -57,6 +59,22 @@ import com.cburch.logisim.hdl.Hdl;
 public class LatticeDownload extends FPGADownload {
 
   public LatticeDownload() { super("Lattice"); }
+
+  public boolean toolchainIsInstalled(Settings settings, FPGAReport err) {
+    String progs = FPGASettingsDialog.pretty(LATTICE_PROGRAMS, "or");
+    String helpmsg = "It should be set to the directory where "
+          + progs + " is installed.";
+    String tool = settings.GetLatticeToolPath();
+    if (tool == null) {
+      err.AddFatalError("Lattice Diamond and ispLEVER toolchain path not configured. " + helpmsg);
+      return false;
+    }
+    if (getTool() != null)
+      return true;
+    err.AddFatalError("Lattice Diamond and ispLEVER toolchain path is set to " + tool + ","
+        + " but this appears to be incorrect. " + helpmsg);
+    return false;
+  }
   
   public enum TOOLCHAIN { DIAMOND_WIN, DIAMOND_UNIX, ISP_LEVER_WIN, ISP_LEVER_UNIX, UNKNOWN };
   

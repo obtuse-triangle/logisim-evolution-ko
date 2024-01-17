@@ -36,6 +36,9 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +49,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -55,6 +59,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -93,6 +98,7 @@ public class Commander extends JFrame
   private final Project proj;
   private Board board;
   private String lang;
+  private String toolchain;
   private int boardsListSelectedIndex;
   private final FPGAReport err = new FPGAReport(this);
   public int fatals, warns, errors;
@@ -112,6 +118,7 @@ public class Commander extends JFrame
   // private static final String ANNOTATE_ALL = "Relabel all components";
 
   private final JLabel textCircuit = new JLabel("Circuit: ", SwingConstants.RIGHT);
+  private final JLabel textToolchain = new JLabel("Toolchain: ", SwingConstants.RIGHT);
   private final JLabel textLanguage = new JLabel("Language: ", SwingConstants.RIGHT);
   private final JLabel textTargetDiv = new JLabel("Divide clock by...", SwingConstants.RIGHT);
 
@@ -130,6 +137,7 @@ public class Commander extends JFrame
   private final ComboBox<String> clockOption = new ComboBox<>();
   private final ComboBox<Object> clockDivRate = new ComboBox<>();
   private final ComboBox<Object> clockDivCount = new ComboBox<>();
+  private final ComboBox<String> toolchainCombo = new ComboBox<>();
   private final ComboBox<String> language = new ComboBox<>();
   private final JButton toolSettings = new JButton("Settings");
 
@@ -154,14 +162,22 @@ public class Commander extends JFrame
     super("FPGA Commander : " + p.getLogisimFile().getName());
     LFrame.attachIcon(this, "resources/logisim/img/fpga-icon-%d.png");
     proj = p;
-    lang = settings.GetHDLType();
+    toolchain = FPGADownload.APIO_TOOLCHAIN;
+    lang = Settings.VERILOG;
 
     board = BoardReader.read(settings.GetSelectedBoardFileName());
     boardIcon.setImage(board == null ? null : board.image);
+    if (board != null) {
+      toolchain = FPGADownload.getToolchain(board, settings);
+      lang = FPGADownload.getLanguage(board, settings, toolchain);
+    }
 
     setResizable(true);
     setAlwaysOnTop(false);
     setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+    getRootPane().registerKeyboardAction(new ActionListener() {
+      public void actionPerformed(ActionEvent e) { setVisible(false); }
+    }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
     GridBagConstraints c = new GridBagConstraints();
 
     // listen for project changes
@@ -192,6 +208,15 @@ public class Commander extends JFrame
     d.width = Math.max(d.width, 150);
     circuitsList.setMinimumSize(d);
     circuitsList.setPreferredSize(d);
+
+    // configure toolchain options
+    toolchainCombo.addItem(FPGADownload.ALTERA_QUARTUS_TOOLCHAIN);
+    toolchainCombo.addItem(FPGADownload.XILINX_ISE_TOOLCHAIN);
+    toolchainCombo.addItem(FPGADownload.LATTICE_DIAMOND_TOOLCHAIN);
+    toolchainCombo.addItem(FPGADownload.LATTICE_ISPLEVER_TOOLCHAIN);
+    toolchainCombo.addItem(FPGADownload.APIO_TOOLCHAIN);
+    toolchainCombo.setSelectedItem(toolchain);
+    toolchainCombo.addActionListener(e -> setToolchain());
     
     // configure language options
     language.addItem(Settings.VHDL);
@@ -333,23 +358,28 @@ public class Commander extends JFrame
     c.anchor = GridBagConstraints.WEST;
     add(circuitsList, c);
     c.gridwidth = 1;
-    
+
+    // layout synthesis options
+    JPanel synthesisOptions = new JPanel();
+    synthesisOptions.setBorder(BorderFactory.createTitledBorder("Synthesis Options"));
+    synthesisOptions.setLayout(new GridBagLayout());
+    c.fill = GridBagConstraints.HORIZONTAL;
+    c.weightx = c.weighty = 0.0;
     c.insets.top = c.insets.bottom = 5;
     c.insets.left = c.insets.right = 5;
-    c.gridy++;
+    c.gridy = 0;
     c.gridx = 0;
-    c.weightx = 0.0;
-    c.anchor = GridBagConstraints.EAST;
-    add(textLanguage, c);
-    c.insets.left = 0;
-    c.gridx++;
-    c.anchor = GridBagConstraints.WEST;
-    add(language, c);
-    c.insets.left = 0;
-    c.gridx++;
-    c.weightx = 1.0;
-    c.anchor = GridBagConstraints.WEST;
-    add(toolSettings, c);
+    synthesisOptions.add(toolSettings, c);
+    c.gridx = 1;
+    synthesisOptions.add(textToolchain, c);
+    c.gridx = 2;
+    synthesisOptions.add(toolchainCombo, c);
+    c.insets.top = 0;
+    c.gridy++;
+    c.gridx = 1;
+    synthesisOptions.add(textLanguage, c);
+    c.gridx = 2;
+    synthesisOptions.add(language, c);
 
     c.insets.top = c.insets.bottom = 5;
     c.insets.left = c.insets.right = 5;
@@ -357,8 +387,10 @@ public class Commander extends JFrame
     c.fill = GridBagConstraints.BOTH;
     c.weightx = 1.0;
     c.gridwidth = 3;
-    c.gridy++;
     c.gridx = 0;
+    c.gridy++;
+    add(synthesisOptions, c);
+    c.gridy++;
     add(clockOptions, c);
     c.gridy++;
     add(buttons, c);
@@ -718,6 +750,8 @@ public class Commander extends JFrame
       return;
     }
     boardsListSelectedIndex = boardsList.getSelectedIndex();
+    String t = FPGADownload.getToolchain(board, settings);
+    language.setSelectedItem(t);
     settingBoard = false;
     boardIcon.setImage(board == null ? null : board.image);
     populateClockDivOptions();
@@ -874,7 +908,7 @@ public class Commander extends JFrame
         iprintf("Performing pin assignment");
         PinBindings pinBindings = performPinAssignments(ctx);
         if (pinBindings == null || fatals > 0) {
-          eprintf("Pin assignment failed or is incomplete, synthesis can't continue.");
+          eprintf("Pin assignment cancelled or is incomplete, synthesis can't continue.");
           return;
         }
         iprintf("Generating HDL files");
@@ -923,7 +957,7 @@ public class Commander extends JFrame
     String circdir = circuitWorkspace();
     String langdir = circdir + lang.toLowerCase() + SLASH;
 
-    FPGADownload tools = FPGADownload.forVendor(board.fpga.Vendor, settings);
+    FPGADownload tools = FPGADownload.forToolchain(toolchain, settings);
     tools.err = err;
     tools.lang = lang;
     tools.board = board;
@@ -976,6 +1010,7 @@ public class Commander extends JFrame
     clockDivCount.setEnabled(!dl);
     if (!dl)
       setClockOption();
+    toolchainCombo.setEnabled(!dl);
     language.setEnabled(!dl);
     toolSettings.setEnabled(!dl);
 
@@ -1062,29 +1097,24 @@ public class Commander extends JFrame
   void configureActions() {
     clearConsoles();
     actionButton.setEnabled(board != null);
-    if (board == null
-        || (board.fpga.Vendor == Chipset.ALTERA && settings.GetAlteraToolPath() == null)
-        || (board.fpga.Vendor == Chipset.LATTICE && settings.GetLatticeToolPath() == null)
-        || (board.fpga.Vendor == Chipset.XILINX && settings.GetXilinxToolPath() == null)) {
-      if (board == null) {
+    boolean toolchainReady = false;
+    if (board == null) {
         eprintf("Please select an FPGA board.");
-      } else {
-        String vendor = board.fpga.VendorName;
-        eprintf("Tool path for " + vendor + " is not set correctly. "
+    } else {
+      FPGADownload tools = FPGADownload.forToolchain(toolchain, settings);
+      if (tools == null) {
+        eprintf("Please select a toolchain.");
+      } else if (!tools.toolchainIsInstalled(settings, err)) {
+        eprintf("The " + toolchain + " toolchain is not configured properly. "
             + "Synthesis and download will not be available. "
-            + "Please set the " + vendor + " tool path "
-            + "using the \"Settings\" button above, or choose "
-            + "a board from a different vendor.");
-        String[] toolset=null;
-        switch (board.fpga.Vendor) {
-        case Chipset.ALTERA: toolset = FPGADownload.ALTERA_PROGRAMS; break;
-        case Chipset.XILINX: toolset = FPGADownload.XILINX_PROGRAMS; break;
-        case Chipset.LATTICE: toolset = FPGADownload.LATTICE_PROGRAMS; break;
-        default: eprintf("Unknown vendor for board, please use either Altera, Xilinx or Lattice.");
-        }
-        iprintf("The tool path for " + vendor + " must contain these progams:\n"
-            + "         " + String.join(", ", toolset));
+            + "Please configure the toolchain using the \"Settings\" button above, "
+            + "or select a different toolchain suitable for " + board.name
+            + " and " + board.fpga.VendorName + " FPGA synthesis.");
+      } else {
+        toolchainReady = true;
       }
+    }
+    if (!toolchainReady) {
       actionItems.get(HDL_GEN_AND_DOWNLOAD).setSelected(false);
       actionItems.get(HDL_DOWNLOAD_ONLY).setSelected(false);
       actionItems.get(HDL_GEN_AND_DOWNLOAD).setEnabled(false);
@@ -1095,7 +1125,7 @@ public class Commander extends JFrame
       actionItems.forEach((s, m) -> m.setEnabled(true));
       setAction(HDL_GEN_AND_DOWNLOAD);
     }
-    writeToFlash.setEnabled(board != null && board.fpga.FlashDefined
+    writeToFlash.setEnabled(toolchainReady && board.fpga.FlashDefined
         && !actionItems.get(HDL_GEN_ONLY).isSelected());
     if (!writeToFlash.isEnabled())
       writeToFlash.setSelected(false);
@@ -1119,15 +1149,37 @@ public class Commander extends JFrame
       actionButton.setText("Just Download");
   }
 
-  private void setLang() {
-    if (language.getSelectedIndex() == 0)
-      lang = Settings.VHDL;
-    else
-      lang = Settings.VERILOG;
-    if (lang.equals(settings.GetHDLType()))
+  private void setToolchain() {
+    String t = (String)toolchainCombo.getSelectedItem();
+    if (t.equals(toolchain))
       return;
-    settings.SetHDLType(lang);
-    settings.UpdateSettingsFile();
+    toolchain = t;
+    if (board != null) {
+      if (!toolchain.equals(FPGADownload.getToolchain(board, settings))) {
+        settings.SetPreferredToolchain(board.name, toolchain);
+        settings.UpdateSettingsFile();
+      }
+      String v = FPGADownload.getLanguage(board, settings, toolchain);
+      language.setSelectedItem(v);
+      configureActions();
+    }
+  }
+
+  private void setLang() {
+    String v = (String)language.getSelectedItem();
+    if (v.equals(lang))
+        return;
+    lang = v;
+    if (!lang.equals(settings.GetHDLType())) {
+      settings.SetHDLType(lang);
+      settings.UpdateSettingsFile();
+    }
+    if (board != null) {
+      if (!lang.equals(FPGADownload.getLanguage(board, settings, toolchain))) {
+        settings.SetPreferredHDLType(board.name, lang);
+        settings.UpdateSettingsFile();
+      }
+    }
   }
 
   private PinBindings performPinAssignments(Netlist.Context ctx) {
@@ -1145,6 +1197,10 @@ public class Commander extends JFrame
     setVisible(false);
     dlg.setVisible(true);
     setVisible(true);
+    if (dlg.cancelled) {
+      eprintf("Cancelled.");
+      return null;
+    }
     // Save configuration for future use, even if not complete.
     String clkmode = clockOption.getSelectedValue().equals(MAX_SPEED) ? "maximum"
         : clockOption.getSelectedValue().equals(DIV_SPEED) ? "reduced"

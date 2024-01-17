@@ -69,6 +69,7 @@ public class Settings {
   private static final String WorkSpace = "WorkSpace";
   private static final String WorkPath = "WorkPath";
   private static final String WorkPathName = "logisim_fpga_workspace" + File.separator;
+
   private static final String XilinxToolsPath = "XilinxToolsPath";
   // AlteraToolsPath can be a local directory, in which case we look for
   // programs like quartus_pgm and quartus_map in that directory.
@@ -77,8 +78,9 @@ public class Settings {
   // or, AlteraToolsPath can be a URL (starting with http:// or https://) in
   // which case a web API is used.
   private static final String AlteraToolsPath = "AlteraToolsPath";
-  private static final String LatticeToolsPath = "LatticeToolsPath";
   private static final String Altera64Bit = "Altera64Bit";
+  private static final String LatticeToolsPath = "LatticeToolsPath";
+  private static final String ApioToolsPath = "ApioToolsPath";
   private static final String HDLTypeToGenerate = "HDLTypeToGenerate";
   private static final String FPGABoards = "FPGABoards";
   private static final String SelectedBoard = "SelectedBoard";
@@ -226,6 +228,11 @@ public class Settings {
   public String GetLatticeToolPath() {
     String s = getAttribute(WorkSpace, LatticeToolsPath, "");
     return normalizePath(s);
+  } 
+
+  public String GetApioToolPath() {
+    String s = getAttribute(WorkSpace, ApioToolsPath, "");
+    return normalizePath(s);
   }
 
   public boolean SetAlteraToolPath(String path) {
@@ -274,6 +281,20 @@ public class Settings {
       || LatticeDownload.getToolChainType(path) != LatticeDownload.TOOLCHAIN.UNKNOWN;
   }
 
+  public boolean SetApioToolPath(String path) {
+    path = normalizePath(path);
+    if (!validApioToolPath(path))
+      return false;
+    setAttribute(WorkSpace, ApioToolsPath, path);
+    return true;
+  }
+
+  public boolean validApioToolPath(String path) {
+    path = normalizePath(path);
+    return path == null
+      || allToolsPresent(path, FPGADownload.APIO_PROGRAMS);
+  }
+
   public Collection<String> GetBoardNames() {
     return KnownBoards.GetBoardNames();
   }
@@ -311,6 +332,87 @@ public class Settings {
       return s;
     setAttribute(FPGABoards, SelectedBoard, defBoard); // correct broken XML value
     return defBoard;
+  }
+
+  private Element GetBoardSettings(String board) {
+    Element e = (Element)SettingsDocument.getElementsByTagName(FPGABoards).item(0);
+    NodeList nodes = e.getChildNodes();
+    for (int i = 0; i < nodes.getLength(); i++) {
+      Node n = nodes.item(i);
+      if (!(n instanceof Element))
+        continue;
+      Element e2 = (Element)n;
+      if ("Settings".equals(e2.getTagName()) && board.equals(e2.getAttribute("Board")))
+        return e2;
+    }
+    return null;
+  }
+
+  static boolean warnedBadToolchain = false;
+  static boolean warnedBadHDLType = false;
+
+  public String GetPreferredToolchain(String board) {
+    String pref = GetBoardPreferences(board, "Toolchain");
+    String toolchain = FPGADownload.normalizeToolchain(pref);
+    if (pref != null && toolchain == null) {
+      if (!warnedBadToolchain) {
+        warnedBadToolchain = true;
+        JOptionPane.showMessageDialog(null,
+            "Error: Unrecognized toolchain '"+pref+"' in LogisimFPGASettings.xml");
+      }
+    }
+    return toolchain;
+  }
+
+  public String GetPreferredHDLType(String board) {
+    String pref = GetBoardPreferences(board, "HDLTypeToGenerate");
+    if (VHDL.equalsIgnoreCase(pref))
+      return VHDL;
+    if (VERILOG.equalsIgnoreCase(pref))
+      return VERILOG;
+    if (pref != null && !warnedBadHDLType) {
+      warnedBadHDLType = true;
+      JOptionPane.showMessageDialog(null,
+          "Error: Unrecognized HDL type '"+pref+"' in LogisimFPGASettings.xml");
+    }
+    return null;
+  }
+
+  private String GetBoardPreferences(String board, String attr) {
+    Element e = GetBoardSettings(board);
+    if (e == null)
+      return null;
+    String val = e.getAttribute(attr);
+    if (val == null || val.trim().equals(""))
+      return null;
+    return val;
+  }
+
+  public void SetPreferredToolchain(String board, String toolchain) {
+    SetBoardPreferences(board, "Toolchain", toolchain);
+  }
+
+  public void SetPreferredHDLType(String board, String hdlType) {
+    SetBoardPreferences(board, "HDLTypeToGenerate", hdlType);
+  }
+
+  private void SetBoardPreferences(String board, String attr, String val) {
+    Element e = GetBoardSettings(board);
+    if (e == null) {
+      Element p = (Element)SettingsDocument.getElementsByTagName(FPGABoards).item(0);
+      e = SettingsDocument.createElement("Settings");
+      p.appendChild(e);
+      Attr b = SettingsDocument.createAttribute("Board");
+      b.setNodeValue(board);
+      e.setAttributeNode(b);
+    }
+    Attr a = e.getAttributeNode(attr);
+    if (a == null) {
+      a = SettingsDocument.createAttribute(attr);
+    }
+    a.setNodeValue(val);
+    e.setAttributeNode(a);
+    modified = true;
   }
 
   public boolean SetSelectedBoard(String boardName) {

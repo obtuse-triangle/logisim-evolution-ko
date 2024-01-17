@@ -46,7 +46,9 @@ import com.bfh.logisim.fpga.PinBindings;
 import com.bfh.logisim.fpga.PullBehavior;
 import com.bfh.logisim.gui.Commander;
 import com.bfh.logisim.gui.Console;
+import com.bfh.logisim.gui.FPGAReport;
 import com.bfh.logisim.hdlgenerator.FileWriter;
+import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.hdl.Hdl;
 
 public class XilinxDownload extends FPGADownload {
@@ -82,6 +84,25 @@ public class XilinxDownload extends FPGADownload {
     for (String arg: args)
       command.add(arg);
     return command;
+  }
+  
+  public boolean toolchainIsInstalled(Settings settings, FPGAReport err) {
+    String helpmsg = "It should be set to the directory where " + XILINX_XST
+          + " and related programs are installed, or set to a file"
+          + " containing a stand-alone executable script.";
+    String tool = settings.GetXilinxToolPath();
+    if (tool == null) {
+      err.AddFatalError("Xilinx ISE toolchain path not configured. " + helpmsg);
+      return false;
+    }
+    if (externalSynthesisScript() != null)
+      return true;
+    File prog = new File(tool + File.separator + XILINX_XST);
+    if (prog.exists() && !prog.isDirectory() && prog.canExecute())
+      return true;
+    err.AddFatalError("Xilinx ISE toolchain path is set to " + tool + ","
+        + " but this appears to be incorrect. " + helpmsg);
+    return false;
   }
 
   @Override

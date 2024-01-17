@@ -645,7 +645,20 @@ public class HDLGenerator extends HDLSupport {
     else if (p.width.equals("1"))
       map.add(p.name, map.bit(p.defaultValue)); // "name => '1'" or ".name(1'b1)"
     else 
-      map.add(p.name, map.all(p.defaultValue)); // "name => (others => '1')" or ".name(~0)"
+      map.add(p.name, map.all(getWidth(p.width), p.defaultValue)); // "name => (others => '1')" or ".name(~0)"
+  }
+
+  private Integer getWidth(String width) {
+    try { return Integer.parseInt(width); }
+    catch (NumberFormatException e) { }
+    if (width.startsWith("(") && width.endsWith(")")) {
+      try { return Integer.parseInt(width.substring(1, width.length()-1)); }
+      catch (NumberFormatException e) { }
+    }
+    ParameterInfo p = parameters.get(width);
+    if (p == null || p.value == null || !(p.value instanceof Integer))
+      return null;
+    return (Integer)p.value;
   }
 
   protected void getPortMappings(Hdl.Map map, NetlistComponent comp, PortInfo p) {

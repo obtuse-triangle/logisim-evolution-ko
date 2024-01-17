@@ -260,13 +260,17 @@ public class Hdl extends ArrayList<String> {
 	}
 
   // Returns "(others => '1')", "(others => '0'), "~0", or "0".
-  public String all(boolean value) {
+  public String all(Integer width, boolean value) {
     if (isVhdl)
       return String.format("(others => %s)", bit(value));
-    else if (value)
-      return "~0";
-    else
-      return "0";
+    // Instead of "0" and "~0", use proper width in verilog to avoid synthesis warnings
+    if (width != null) {
+      if (value) return width+"'b1";
+      else return width+"'b0";
+    } else {
+      if (value) return "~0"; // may generate (harmless) warnings in synthesis
+      else return "0"; // may generate (harmless) warnings in synthesis
+    }
   }
  
   // Same as literal(0, 1) or literal(1, 1).

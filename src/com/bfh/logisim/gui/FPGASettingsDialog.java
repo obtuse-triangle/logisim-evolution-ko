@@ -30,25 +30,28 @@
 
 package com.bfh.logisim.gui;
 
-import java.awt.Font;
 import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Insets;
+import java.awt.event.KeyEvent;
 import java.io.File;
 
-import javax.swing.JOptionPane;
-import javax.swing.JButton;
-import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
-import javax.swing.JTextField;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 import com.bfh.logisim.settings.Settings;
 import com.bfh.logisim.download.FPGADownload;
@@ -57,7 +60,7 @@ public class FPGASettingsDialog implements ActionListener {
 
 	private JDialog panel;
 	private Settings settings;
-	private JTextField alteraPath, xilinxPath, latticePath, workPath;
+	private JTextField alteraPath, xilinxPath, latticePath, apioPath, workPath;
 	private JRadioButton altera32Choice, altera64Choice;
 
 	public FPGASettingsDialog(JFrame parentFrame, Settings settings) {
@@ -78,6 +81,8 @@ public class FPGASettingsDialog implements ActionListener {
 		if (xpath == null) xpath = "";
 		String lpath = settings.GetLatticeToolPath();
 		if (lpath == null) lpath = "";
+		String ppath = settings.GetApioToolPath();
+		if (ppath == null) ppath = "";
 		String wpath = settings.GetStaticWorkspacePath();
 		if (wpath == null) wpath = "";
 
@@ -85,17 +90,19 @@ public class FPGASettingsDialog implements ActionListener {
 		JLabel alteraSection = new JLabel("Altera Settings");
 		JLabel xilinxSection = new JLabel("Xilinx Settings");
 		JLabel latticeSection = new JLabel("Lattice Settings");
+		JLabel apioSection = new JLabel("Apio Settings");
 		Font font = globalSection.getFont();
 		Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
 		globalSection.setFont(boldFont);
 		alteraSection.setFont(boldFont);
 		xilinxSection.setFont(boldFont);
 		latticeSection.setFont(boldFont);
+		apioSection.setFont(boldFont);
 
 		JLabel workLabel = new JLabel("Temporary directory for compilation:");
 		workPath = new JTextField(wpath);
 		workPath.setPreferredSize(new Dimension(450, 10));
-        workPath.setToolTipText("leave blank to use default");
+		workPath.setToolTipText("leave blank to use default");
 		JButton workPicker = new JButton("Choose");
 		workPicker.setActionCommand("workPicker");
 		workPicker.addActionListener(this);
@@ -103,7 +110,7 @@ public class FPGASettingsDialog implements ActionListener {
 		JLabel alteraLabel = new JLabel("Altera tools path (trusted URL, script, or install directory):");
 		alteraPath = new JTextField(apath);
 		alteraPath.setPreferredSize(new Dimension(450, 10));
-        alteraPath.setToolTipText("A *trusted* URL, a custom script, or install directory of "+FPGADownload.ALTERA_PROGRAMS[0]+".");
+		alteraPath.setToolTipText("A *trusted* URL, a custom script, or install directory of "+FPGADownload.ALTERA_PROGRAMS[0]+".");
 		JButton alteraPicker = new JButton("Choose");
 		alteraPicker.setActionCommand("alteraPicker");
 		alteraPicker.addActionListener(this);
@@ -121,7 +128,7 @@ public class FPGASettingsDialog implements ActionListener {
 		JLabel xilinxLabel = new JLabel("Xilinx tools path (script or install directory):");
 		xilinxPath = new JTextField(xpath);
 		xilinxPath.setPreferredSize(new Dimension(450, 10));
-        xilinxPath.setToolTipText("A custom script, or install directory of "+FPGADownload.XILINX_PROGRAMS[0]+".");
+		xilinxPath.setToolTipText("A custom script, or install directory of "+FPGADownload.XILINX_PROGRAMS[0]+".");
 		JButton xilinxPicker = new JButton("Choose");
 		xilinxPicker.setActionCommand("xilinxPicker");
 		xilinxPicker.addActionListener(this);
@@ -129,21 +136,33 @@ public class FPGASettingsDialog implements ActionListener {
 		JLabel latticeLabel = new JLabel("Lattice tools path (install directory):");
 		latticePath = new JTextField(lpath);
 		latticePath.setPreferredSize(new Dimension(450, 10));
-        latticePath.setToolTipText("Install directory of "+FPGADownload.LATTICE_PROGRAMS[0]+" or similar tools.");
+		latticePath.setToolTipText("Install directory of "+FPGADownload.LATTICE_PROGRAMS[0]+" or similar tools.");
 		JButton latticePicker = new JButton("Choose");
 		latticePicker.setActionCommand("latticePicker");
 		latticePicker.addActionListener(this);
 
+		JLabel apioLabel = new JLabel("Apio tools path (python virtualenv directory):");
+		apioPath = new JTextField(ppath);
+		apioPath.setPreferredSize(new Dimension(450, 10));
+		apioPath.setToolTipText("Python virtualenv directory, path to apio executable, or leave blank to use system python");
+		JButton apioPicker = new JButton("Choose");
+		apioPicker.setActionCommand("apioPicker");
+		apioPicker.addActionListener(this);
+
 		JButton ok = new JButton("OK");
 		ok.setActionCommand("OK");
 		ok.addActionListener(this);
-        panel.getRootPane().setDefaultButton(ok);
 		JButton cancel = new JButton("Cancel");
 		cancel.setActionCommand("Cancel");
 		cancel.addActionListener(this);
 
+		panel.getRootPane().setDefaultButton(ok);
+    panel.getRootPane().registerKeyboardAction(new ActionListener() {
+      public void actionPerformed(ActionEvent e) { panel.setVisible(false); }
+    }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+
 		int y = -1;
-		
+
 		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(15, 10, 5, 0);
 		panel.add(globalSection, c);
 
@@ -176,35 +195,45 @@ public class FPGASettingsDialog implements ActionListener {
 		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
 		panel.add(xilinxPath, c);
 		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
-        panel.add(xilinxPicker, c);
+		panel.add(xilinxPicker, c);
 
-        c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
-        panel.add(latticeSection, c);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
+		panel.add(latticeSection, c);
 
-        c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
-        panel.add(latticeLabel, c);
-        c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
-        panel.add(latticePath, c);
-        c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
-        panel.add(latticePicker, c);
-	
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
+		panel.add(latticeLabel, c);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
+		panel.add(latticePath, c);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
+		panel.add(latticePicker, c);
+
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
+		panel.add(apioSection, c);
+
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
+		panel.add(apioLabel, c);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
+		panel.add(apioPath, c);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
+		panel.add(apioPicker, c);
+
 		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.anchor = GridBagConstraints.EAST; c.insets = new Insets(20, 50, 20, 20);
 		panel.add(cancel, c);
 		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.anchor = GridBagConstraints.WEST; c.insets = new Insets(20, 0, 20, 20);
 		panel.add(ok, c);
 
 		panel.pack();
-		panel.setMinimumSize(new Dimension(600, 400));
+		panel.setMinimumSize(new Dimension(600, 600));
 		panel.setLocationRelativeTo(parentFrame);
 	}
 
 	public void doDialog() {
-    panel.setVisible(true);
+		panel.setVisible(true);
 	}
 
-  public void toFront() {
-    panel.toFront();
-  }
+	public void toFront() {
+		panel.toFront();
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -214,8 +243,10 @@ public class FPGASettingsDialog implements ActionListener {
 			pick("Altera", alteraPath.getText(), true);
 		} else if (e.getActionCommand().equals("xilinxPicker")) {
 			pick("Xilinx", xilinxPath.getText(), false);
-	    } else if (e.getActionCommand().equals("latticePicker")) {
-	      pick("Lattice", latticePath.getText(), false);
+		} else if (e.getActionCommand().equals("latticePicker")) {
+			pick("Lattice", latticePath.getText(), false);
+		} else if (e.getActionCommand().equals("apioPicker")) {
+			pick("Apio", apioPath.getText(), false);
 		} else if (e.getActionCommand().equals("Cancel")) {
 			panel.setVisible(false);
 		} else if (e.getActionCommand().equals("OK")) {
@@ -224,7 +255,7 @@ public class FPGASettingsDialog implements ActionListener {
 		}
 	}
 
-	private static String pretty(String[] names, String conjunction) {
+	public static String pretty(String[] names, String conjunction) {
 		String s = names[0];
 		for (int i = 1; i < names.length; i++) {
 			s += (i == names.length - 1 ? " "+conjunction+" " : ", "); 
@@ -256,9 +287,16 @@ public class FPGASettingsDialog implements ActionListener {
 					"Error setting Lattice tool path.\n" +
 					"Please select a directory containing " + names + ".");
 		}
+		String ppath = apioPath.getText();
+		if (!settings.SetApioToolPath(ppath)) {
+			String names = pretty(FPGADownload.APIO_PROGRAMS, "and");
+			JOptionPane.showMessageDialog(null,
+					"Invalid python virtualenv directory.\n" +
+					"Please select a directory containing " + names + ".");
+		}
 		settings.SetStaticWorkspacePath(workPath.getText());
 		settings.UpdateSettingsFile();
-    settings.notifyListeners();
+		settings.notifyListeners();
 	}
 
 	private void pick(String vendor, String path, boolean allowFiles) {
@@ -301,6 +339,14 @@ public class FPGASettingsDialog implements ActionListener {
 				String names = pretty(FPGADownload.LATTICE_PROGRAMS, "or");
 				JOptionPane.showMessageDialog(null,
 						"Invalid Lattice tool path.\n" +
+						"Please select a directory containing " + names + ".");
+			}
+		} else if ("Apio".equals(vendor)) {
+			apioPath.setText(path);
+			if (!settings.validApioToolPath(path)) {
+				String names = pretty(FPGADownload.APIO_PROGRAMS, "and");
+				JOptionPane.showMessageDialog(null,
+						"Invalid python virtualenv directory.\n" +
 						"Please select a directory containing " + names + ".");
 			}
 		} else {

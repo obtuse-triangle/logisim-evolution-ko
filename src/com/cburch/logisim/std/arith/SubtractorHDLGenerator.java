@@ -50,6 +50,8 @@ public class SubtractorHDLGenerator extends HDLGenerator {
         wires.add("s_B", "BitWidth+1");
         wires.add("s_C", 1);
         wires.add("s_R", "BitWidth+1");
+      } else {
+        wires.add("s_C", 1);
       }
     } else {
       // 1-bit version
@@ -63,6 +65,8 @@ public class SubtractorHDLGenerator extends HDLGenerator {
         wires.add("s_B", 2);
         wires.add("s_C", 1);
         wires.add("s_R", 2);
+      } else {
+        wires.add("s_C", 1);
       }
     }
   }

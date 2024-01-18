@@ -95,8 +95,8 @@ public class MultiplexerHDLGenerator extends HDLGenerator {
       out.stmt("begin");
       out.stmt("  if (~Enable) s_vec <= 0;");
       out.stmt("  else case (Sel)");
-      for (int i = 0; i < n - 1; i++)
-        out.stmt("    %d : s_vec <= In_%d;", i<n-1 ? out.literal(i, ws) : "default", i);
+      for (int i = 0; i < n; i++)
+        out.stmt("    %s : s_vec <= In_%d;", i<n-1 ? out.literal(i, ws) : "default", i);
       out.stmt("  endcase");
       out.stmt("end");
     }

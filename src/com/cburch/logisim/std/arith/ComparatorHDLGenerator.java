@@ -52,7 +52,7 @@ public class ComparatorHDLGenerator extends HDLGenerator {
     outPorts.add("A_GT_B", 1, Comparator.GT, null);
     outPorts.add("A_EQ_B", 1, Comparator.EQ, null);
     outPorts.add("A_LT_B", 1, Comparator.LT, null);
-    if (_hdl.isVhdl && isBus()) {
+    if (isBus()) {
       wires.add("s_slt", 1);
       wires.add("s_ult", 1);
       wires.add("s_sgt", 1);

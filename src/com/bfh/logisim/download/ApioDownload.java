@@ -256,7 +256,16 @@ public class ApioDownload extends FPGADownload {
     stages.add(new Stage(
           "upload", "Uploading to FPGA", 
            apio("upload"),
-          "Failed to upload design; did you connect the board?"));
+          "Failed to upload design; did you connect the board?") {
+      @Override
+      protected boolean prep() {
+        if (!cmdr.confirmDownload()) {
+          cancelled = true;
+          return false;
+        }
+        return true;
+      }
+    });
 
     return stages;
   }

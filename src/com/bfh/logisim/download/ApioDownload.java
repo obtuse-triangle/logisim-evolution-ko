@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import com.bfh.logisim.fpga.Chipset;
@@ -46,8 +47,11 @@ import com.bfh.logisim.gui.Console;
 import com.bfh.logisim.gui.FPGAReport;
 import com.bfh.logisim.hdlgenerator.FileWriter;
 import com.bfh.logisim.netlist.Netlist;
+import com.bfh.logisim.netlist.NetlistComponent;
+import com.bfh.logisim.netlist.Path;
 import com.bfh.logisim.settings.Settings;
 import com.cburch.logisim.hdl.Hdl;
+import com.cburch.logisim.std.wiring.Pin;
 import com.cburch.logisim.util.FileUtil;
 
 public class ApioDownload extends FPGADownload {
@@ -161,11 +165,9 @@ public class ApioDownload extends FPGADownload {
     Hdl out2 = new Hdl(lang, err);
     out2.stmt();
     ioResources.forEachPhysicalPin((pin, net, io, label) -> {
-      out2.stmt("set_io --warn-no-port %s %s", net, pin);
-      // todo: input pullups using SB_IO
-      // todo: bidirectional using SB_IO
-      // if (io.pull != PullBehavior.UNKNOWN)
-      //   err.AddSevereWarning("FPGA pin %s pull behavior specified as %s, but apio does not support pull VHDL was chosen, but apio toolchain maybe only supports Verilog.");
+      // todo: also handle bidirectional using SB_IO
+      if (ioResources.getInputPinPull(net) == PullBehavior.NONE)
+        out2.stmt("set_io --warn-no-port %s %s", net, pin);
     });
     f = FileWriter.GetFilePointer(sandboxPath, "fpga.pcf", err);
     if (f == null || !FileWriter.WriteContents(f, out2, err))
@@ -197,10 +199,13 @@ public class ApioDownload extends FPGADownload {
     // todo: SB_IO for pullups, tristates, etc.
     Hdl out3 = new Hdl(lang, err);
     Netlist.Int3 ioPinCount = ioResources.countFPGAPhysicalIOPins();
-    int n = ioPinCount.size();
+    int n = ioPinCount.size() - ioResources.countInputPinPulls();
     out3.stmt("module LogisimToplevelApioShell(%s", (n == 0 ? " );" : ""));
-		for (int i = 0; i < ioPinCount.in; i++)
-      out3.stmt("              FPGA_INPUT_PIN_%d%s", i, (--n == 0 ? " );" : ","));
+		for (int i = 0; i < ioPinCount.in; i++) {
+      String net = "FPGA_INPUT_PIN_" + i;
+      if (ioResources.getInputPinPull(net) == PullBehavior.NONE)
+        out3.stmt("              %s%s", net, (--n == 0 ? " );" : ","));
+    }
 		for (int i = 0; i < ioPinCount.inout; i++)
       out3.stmt("              FPGA_INOUT_PIN_%d%s", i, (--n == 0 ? " );" : ","));
 		for (int i = 0; i < ioPinCount.out; i++)
@@ -216,10 +221,23 @@ public class ApioDownload extends FPGADownload {
     n = ioPinCount.size();
     if (ioResources.requiresOscillator) {
       out3.stmt("  wire FPGA_CLK;");
-      out3.stmt("  SB_HFOSC inthosc(.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(FPGA_CLK));");
+      out3.stmt("  SB_HFOSC internal_oscillator(.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(FPGA_CLK));");
       out3.stmt();
       n++;
     }
+    ioResources.forEachPhysicalPin((pin, net, io, label) -> {
+      // todo: also handle bidirectional using SB_IO
+      PullBehavior pull = ioResources.getInputPinPull(net);
+      int pullup = 0;
+      if (pull == PullBehavior.PULL_UP) {
+        pullup = 1;
+      } else if (pull != PullBehavior.NONE) {
+        err.AddSevereWarning("FPGA pin %s pull behavior specified as %s, but apio only supports pull-up.", pull);
+      }
+      out3.stmt("  wire %s;", net);
+      out3.stmt("  SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b %d))", pullup);
+      out3.stmt("        sb_%s (.PACKAGE_PIN(%s), .D_IN_0(%s)", net, pin, net);
+    });
 
     out3.stmt("  LogisimToplevelShell wrappedShell( %s", (n == 0 ? " );" : ""));
     if (ioResources.requiresOscillator)

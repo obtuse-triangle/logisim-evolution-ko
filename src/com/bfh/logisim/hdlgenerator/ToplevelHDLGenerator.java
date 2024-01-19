@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import com.bfh.logisim.fpga.BoardIO;
 import com.bfh.logisim.fpga.PinActivity;
 import com.bfh.logisim.fpga.PinBindings;
+import com.bfh.logisim.fpga.PullBehavior;
 import com.bfh.logisim.library.DynamicClock;
 import com.bfh.logisim.netlist.ClockBus;
 import com.bfh.logisim.netlist.Netlist;
@@ -43,6 +44,7 @@ import com.bfh.logisim.netlist.Path;
 import com.cburch.logisim.circuit.Circuit;
 import com.cburch.logisim.circuit.CircuitState;
 import com.cburch.logisim.comp.Component;
+import com.cburch.logisim.data.AttributeOption;
 import com.cburch.logisim.hdl.Hdl;
 import com.cburch.logisim.std.wiring.ClockHDLGenerator;
 import com.cburch.logisim.std.wiring.Pin;
@@ -219,6 +221,43 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     return boardIsActiveHigh ^ compIsActiveHigh;
   }
 
+  private static PullBehavior pullDirection(PullBehavior behavior) {
+    if (behavior == PullBehavior.PULL_UP || behavior == PullBehavior.PULL_DOWN)
+      return behavior;
+    else
+      return PullBehavior.NONE;
+  }
+  private PullBehavior pullDirection(NetlistComponent shadow) {
+    AttributeOption behavior = shadow.original.getAttributeSet().getValue(Pin.ATTR_BEHAVIOR);
+    if (behavior == Pin.PULL_UP) return PullBehavior.PULL_UP;
+    if (behavior == Pin.PULL_DOWN) return PullBehavior.PULL_DOWN;
+    if (behavior != Pin.SIMPLE)
+        _err.AddFatalError(shadow.pathName() + " is configured as " + behavior + ", which can't be synthesized.");
+      return PullBehavior.NONE;
+  }
+
+  // precondition: dest is a physical I/O device, src is a Pin requesting given pull
+  private void recordInputPullDirection(Hdl out, PullBehavior inputPinPullDir,
+      NetlistComponent shadow, PinBindings.Source src,  PinBindings.Dest dest) {
+    if (inputPinPullDir == null || inputPinPullDir == PullBehavior.NONE)
+      return;
+    PullBehavior fpgaPullDir = pullDirection(dest.io.pull);
+    if (fpgaPullDir == inputPinPullDir) {
+      out.err.AddInfo(shadow.pathName() + " " + inputPinPullDir + " satisfied by default configuration of " + dest.io);
+      return;
+    }
+    if (fpgaPullDir != PullBehavior.NONE) {
+      out.err.AddSevereWarning(shadow.pathName() + " " + inputPinPullDir + " conflicts with "
+          + dest.io + " " + fpgaPullDir +", latter will take precedence.");
+      return;
+    }
+    out.err.AddInfo(shadow.pathName() + " requires " + inputPinPullDir + " on " + dest.io);
+    Netlist.Int3 seqno = dest.seqno();
+    for (int i = 0; i < src.width.in; i++) { // TODO: verify src.width.in instead of destwidth.in
+      ioResources.addPull("FPGA_INPUT_PIN_"+(seqno.in+i), inputPinPullDir);
+    }
+  }
+
   private void generateInlinedCodeSignal(Hdl out, Path path, NetlistComponent shadow) {
     // Note: Any logisim component that is not active-high will get an inversion
     // here. Also, any FPGA I/O device that is not active-high will get an
@@ -234,6 +273,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     boolean isInput = false, isOutput = false;
     int srcwidth = -1;
     // System.out.println("Generating inline code signal for " + path);
+    PullBehavior inputPinPullDir = PullBehavior.NONE;
     if (shadow.original.getFactory() instanceof Pin) {
       signal = "s_" + shadow.pathName();
       bit = signal;
@@ -243,6 +283,8 @@ public class ToplevelHDLGenerator extends HDLGenerator {
       // EndData configured as an input srcwidth.r.t. logisim circuit, and vice versa
       isInput = shadow.original.getEnd(0).isOutput();
       isOutput = shadow.original.getEnd(0).isInput();
+      if (isInput)
+        inputPinPullDir = pullDirection(shadow);
     } else {
       NetlistComponent.Range3 indices = shadow.getGlobalHiddenPortIndices(path);
       if (indices == null) {
@@ -352,16 +394,18 @@ public class ToplevelHDLGenerator extends HDLGenerator {
         Netlist.Int3 seqno = dest.seqno();
         // Inputs
         if (isInput) {
-          if (src.width.in == 1)
+          recordInputPullDirection(out, inputPinPullDir, shadow, src, dest);
+          if (src.width.in == 1) {
             out.assign(signal, maybeNot+"FPGA_INPUT_PIN_"+seqno.in);
-          else for (int i = 0; i < destwidth.in; i++)
+          } else for (int i = 0; i < src.width.in; i++) { // TODO: verify src.width.in instead of destwidth.in
             out.assign(bit, offset+i, maybeNot+"FPGA_INPUT_PIN_"+(seqno.in+i));
+          }
         }
         // Outputs
         else {
           if (src.width.out == 1)
             out.assign("FPGA_OUTPUT_PIN_"+seqno.out, maybeNot+signal);
-          else for (int i = 0; i < destwidth.out; i++)
+          else for (int i = 0; i < src.width.out; i++) // TODO: verify src.width.out instead of destwidth.out
             out.assign("FPGA_OUTPUT_PIN_"+(seqno.out+i), maybeNot+bit, offset+i);
         }
       }
@@ -419,6 +463,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
           Netlist.Int3 seqno = dest.seqno();
           // Inputs
           if (isInput) {
+            recordInputPullDirection(out, inputPinPullDir, shadow, src, dest);
             out.assign(bit, offset+i, maybeNot+"FPGA_INPUT_PIN_"+seqno.in);
           }
           // Outputs

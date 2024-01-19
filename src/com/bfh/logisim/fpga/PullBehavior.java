@@ -33,6 +33,7 @@ package com.bfh.logisim.fpga;
 public class PullBehavior {
   public final String desc, altera, xilinx, lattice;
 
+  public static final PullBehavior NONE = new PullBehavior("Without Pull", null, null, null);
   public static final PullBehavior FLOAT = new PullBehavior("Float", "TRI-STATED", "FLOAT", "KEEPER");
   public static final PullBehavior PULL_UP = new PullBehavior("Pull Up", "PULLUP", "PULLUP", "UP");
   public static final PullBehavior PULL_DOWN = new PullBehavior("Pull Down", "PULLDOWN", "PULLDOWN", "DOWN");

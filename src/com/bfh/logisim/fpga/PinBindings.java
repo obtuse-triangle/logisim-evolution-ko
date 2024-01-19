@@ -407,6 +407,18 @@ public class PinBindings {
     }
   }
 
+  private HashMap<String, PullBehavior> inputPullRequests = new HashMap<>();
+
+  public void addPull(String pin, PullBehavior pull) {
+    inputPullRequests.put(pin, pull);
+  }
+  public PullBehavior getInputPinPull(String pin) {
+    return inputPullRequests.getOrDefault(pin, PullBehavior.NONE);
+  }
+  public int countInputPinPulls() {
+    return inputPullRequests.size();
+  }
+
   public Source sourceFor(Path path) {
     NetlistComponent comp = components.get(path);
     Int3 compWidth = widthFor(comp);

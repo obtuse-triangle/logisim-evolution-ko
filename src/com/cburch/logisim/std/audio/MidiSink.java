@@ -33,14 +33,6 @@ import static com.cburch.logisim.std.Strings.S;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.util.LinkedList;
-import java.util.ListIterator;
-
-import javax.sound.midi.Instrument;
-import javax.sound.midi.MidiChannel;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Synthesizer;
 
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeOption;
@@ -57,18 +49,10 @@ import com.cburch.logisim.instance.InstancePainter;
 import com.cburch.logisim.instance.InstanceState;
 import com.cburch.logisim.instance.Port;
 import com.cburch.logisim.instance.StdAttr;
-import com.cburch.logisim.util.EventScheduler;
-import com.cburch.logisim.util.QNode;
 
 public class MidiSink extends InstanceFactory {
 
-  static final String UNKNOWN_INSTRUMENT = "0: Unknown Instrument";
-  static AttributeOption instlist[] = new AttributeOption[] {
-    new AttributeOption(UNKNOWN_INSTRUMENT, UNKNOWN_INSTRUMENT, S.unlocalized(UNKNOWN_INSTRUMENT))
-  };
-  static Attribute<AttributeOption> ATTR_INSTR = Attributes.forOption("instrument", S.getter("midiInstrument"), instlist);
-  static Attribute<Integer> ATTR_CHAN = Attributes.forIntegerRange("channel", S.getter("midiChannel"), 0, 15);
-  static Attribute<Integer> ATTR_HOLD = Attributes.forIntegerRange("hold", S.getter("midiHold"), 0, 1000);
+  private static Attribute<Integer> ATTR_HOLD = Attributes.forIntegerRange("hold", S.getter("midiHold"), 0, 1000);
   
   static final AttributeOption IFACE_SERIAL = new AttributeOption("serial",
       S.getter("midiInterfaceSerial"));
@@ -108,8 +92,8 @@ public class MidiSink extends InstanceFactory {
   public AttributeSet createAttributeSet() {
     // We defer init to here, so that Midi is only initialized when being used
     if (init()) {
-      setAttributes(new Attribute[] { StdAttr.EDGE_TRIGGER, ATTR_INSTR, ATTR_CHAN, ATTR_HOLD, ATTR_IFACE },
-          new Object[] { StdAttr.TRIG_RISING, instlist[0], 0, 250, IFACE_LOGISIM5 });
+      setAttributes(new Attribute[] { StdAttr.EDGE_TRIGGER, dev.ATTR_INSTR, dev.ATTR_CHAN, ATTR_HOLD, ATTR_IFACE },
+          new Object[] { StdAttr.TRIG_RISING, dev.defaultInstrument(), 0, 250, IFACE_LOGISIM5 });
     }
     return super.createAttributeSet();
   }
@@ -171,7 +155,7 @@ public class MidiSink extends InstanceFactory {
 
   @Override
   public void propagate(InstanceState circState) {
-    if (midiFailed)
+    if (dev == null)
       return;
 
     Object trigger = circState.getAttributeValue(StdAttr.EDGE_TRIGGER);
@@ -228,18 +212,18 @@ public class MidiSink extends InstanceFactory {
         damp = 1;
 
       if (chan < 0)
-        chan = circState.getAttributeValue(ATTR_CHAN);
+        chan = circState.getAttributeValue(dev.ATTR_CHAN);
       if (chan < 0) chan = 0;
-      if (chan >= numChannels) chan = numChannels - 1;
+      if (chan >= dev.numChannels) chan = dev.numChannels - 1;
 
       if (inst < 0) {
         // s = "###: name"
-        String s = circState.getAttributeValue(ATTR_INSTR).toString();
+        String s = circState.getAttributeValue(dev.ATTR_INSTR).toString();
         inst = Integer.parseInt(s.substring(0, s.indexOf(':')));
       }
       
-      setProgram(chan, inst);
-      play(note, velo, damp, chan, hold);
+      dev.setProgram(chan, inst, volume);
+      dev.play(note, velo, damp, chan, hold);
     } else if (iface == IFACE_PARALLEL3 || iface == IFACE_PARALLEL4) {
       // 3 or 4 bytes: MIDI control byte and 0, 1 or 2 MIDI parameter bytes, rest unused
       // 4-byte Big Endian:
@@ -329,28 +313,25 @@ public class MidiSink extends InstanceFactory {
       // MIDI NoteOn control message
       int note = b1;
       int velo = b2;
-      if (note < 0 || note >= 128 || velo < 0 || velo >= 128 || chan >= numChannels)
+      if (note < 0 || note >= 128 || velo < 0 || velo >= 128 || chan >= dev.numChannels)
         return;
-      play(note, velo, 0, chan, 0);
+      dev.play(note, velo, 0, chan, 0);
     } else if (stat == 0x8) {
       // MIDI NoteOff control message
       int note = b1;
       int velo = b2;
-      if (note < 0 || note >= 128 || velo < 0 || velo >= 128 || chan >= numChannels)
+      if (note < 0 || note >= 128 || velo < 0 || velo >= 128 || chan >= dev.numChannels)
         return;
-      play(256 - note, velo, 0, chan, 0);
+      dev.play(256 - note, velo, 0, chan, 0);
     } else if (stat == 0xC) {
       // MIDI Program Change control message (set instrument)
       int prog = b1;
       if (prog < 0 || prog >= 128)
         return;
-      setProgram(chan, prog); 
+      dev.setProgram(chan, prog, volume); 
     } else if (stat == 0xF && chan == 0xF) {
       // MIDI Reset control message
-      for (int i = 0; i < numChannels; i++) {
-        midiChannel[i].allNotesOff();
-        setProgram(i, 0);
-      }
+      dev.resetAllChannels();
     } else {
       // not yet supported
     }
@@ -373,114 +354,26 @@ public class MidiSink extends InstanceFactory {
     Bounds bds = painter.getBounds();
     Graphics g = painter.getGraphics();
 
-    int x = bds.x + (bds.width-24)/2;
-    int y = bds.y + (bds.height-24)/2;
-    g.setColor(Color.BLACK);
-    g.drawRect(x+1, y+7, 6, 10);
-    int[] bx = new int[] { x+7, x+13, x+14, x+14, x+13, x+7 };
-    int[] by = new int[] { y+7, y+1, y+1, y+23, y+23, y+17 };
-    if (!midiFailed)
-      g.setColor(Color.BLUE);
-    else
-      g.setColor(Color.RED);
-    g.drawPolyline(bx, by, 6);
-    g.drawArc(x+14, y+1, 9, 22, -60, 120);
-    g.drawArc(x+10, y+5, 9, 12, -60, 120);
+    int x = bds.x + bds.width/2;
+    int y = bds.y + bds.height/2;
+    MidiDevice.paintSpeakerIcon(g, x, y, dev != null);
   }
 
   // Global state, since the underlying midi system is global anyway
-  static Object midiLock = new Object();
-  static boolean midiFailed = false;
-  static Synthesizer midiSynth = null;
-  static Releaser midiReleaser;
-  static Instrument[] midiInstrument;
-  static MidiChannel[] midiChannel;
-  static int numChannels;
-  static int[] midiChannelInstrument;
-
-  private static boolean init() {
-    synchronized(midiLock) {
-      if (midiFailed || midiSynth != null)
-        return false;
-      try {
-        midiSynth = MidiSystem.getSynthesizer(); 
-        midiSynth.open();
-        
-        midiChannel = midiSynth.getChannels();
-        if (midiChannel == null || midiChannel.length == 0)
-          throw new MidiUnavailableException("No midi channels available");
-        numChannels = midiChannel.length;
-        ATTR_CHAN = Attributes.forIntegerRange("channel", S.getter("midiChannel"), 0, numChannels - 1);
-
-        midiInstrument = midiSynth.getDefaultSoundbank().getInstruments();
-        if (midiInstrument == null || midiInstrument.length == 0)
-          throw new MidiUnavailableException("No midi instruments available");
-
-        instlist = new AttributeOption[midiInstrument.length];
-        for (int i = 0 ; i < midiInstrument.length ; i++) {
-          String name = i + ": " + midiInstrument[i].getName();
-          instlist[i] = new AttributeOption(name, name, S.unlocalized(name));
-        }
-        ATTR_INSTR = Attributes.forOption("instrument", S.getter("midiInstrument"), instlist);
-
-        midiChannelInstrument = new int[numChannels];
-        for (int i = 0; i < numChannels; i++)
-          midiChannelInstrument[i] = -1;
-
-        midiChannel[0].allNotesOff();
-
-        midiReleaser = new Releaser();
-        midiReleaser.start();
-        
-        midiFailed = false;
-      } catch (MidiUnavailableException e) {
-        midiFailed = true;
-        if (midiSynth != null) {
-          midiSynth.close();
-          midiSynth = null;
-          midiInstrument = null;
-          midiChannel = null;
-          midiChannelInstrument = null;
-          numChannels = 0;
-        }
-      }
-      return true;
-    }
-  }
-    
+  private static Object initLock = new Object();
+  private static boolean initFailed = false;
+  private static MidiDevice dev;
   static final int volume = 127;
 
-  static void setProgram(int chan, int inst) {
-    synchronized (midiLock) {
-      if (midiChannelInstrument[chan] != inst) {
-        // switch instruments
-        if (inst < 0) inst = 0;
-        else if (inst >= midiInstrument.length) inst = midiInstrument.length - 1;
-        midiSynth.loadInstrument(midiInstrument[inst]);
-        midiChannel[chan].programChange(midiInstrument[inst].getPatch().getProgram());
-        midiChannel[chan].controlChange(7, volume);
-        midiChannelInstrument[chan] = inst;
+  private static boolean init() {
+    synchronized(initLock) {
+      if (dev == null && !initFailed) {
+        dev = MidiDevice.open();
+        if (dev == null)
+          initFailed = true;
       }
+      return dev != null;
     }
-  }
-
-  // notes 0 and 128 affect instrument damper, but do not play notes
-  // note 1 to 127 cause NoteOn(note)
-  // note -1 to -127 cause NoteOff(-note) [ negatives using 8 bit twos complement ]
-  static void play(int note, int velocity, int damper, int chan, int hold) { 
-
-    synchronized (midiLock) {
-      if (damper == 1)
-        midiChannel[chan].allNotesOff();
-
-      if (0 < note && note < 128)
-        midiChannel[chan].noteOn(note, velocity);
-      else if (note >= 128)
-        midiChannel[chan].noteOff(256 - note, velocity);
-    }
-
-    if (0 < note && note < 128 && hold > 0)
-      midiReleaser.schedule(new Release(hold, chan, note, velocity));
   }
 
   private State getState(InstanceState state) {
@@ -488,8 +381,6 @@ public class MidiSink extends InstanceFactory {
     if (ret == null) {
       ret = new State();
       state.setData(ret);
-    } else {
-      // ret.update(...)
     }
     return ret;
   }
@@ -518,26 +409,6 @@ public class MidiSink extends InstanceFactory {
       Value ret = lastClock;
       lastClock = newClock;
       return ret;
-    }
-
-  }
-
-  static class Release extends QNode {
-    int chan, note, velo;
-    Release(long hold, int chan, int note, int velo) {
-      super(System.currentTimeMillis() + hold);
-      this.chan = chan;
-      this.note = note;
-      this.velo = velo;
-    }
-  }
-
-  static class Releaser extends EventScheduler<Release> {
-
-    Releaser() { super("MidiNoteReleaser"); }
-
-    public void fire(Release r) {
-      play(256 - r.note, r.velo, 0, r.chan, 0);
     }
 
   }

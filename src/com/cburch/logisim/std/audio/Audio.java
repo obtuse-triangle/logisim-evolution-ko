@@ -41,6 +41,7 @@ import com.cburch.logisim.tools.Tool;
 public class Audio extends Library {
 
   private static FactoryDescription[] DESCRIPTIONS = {
+    new FactoryDescription("Octave", S.getter("audioOctaveComponent"), "octave.gif", "Octave"),
     new FactoryDescription("PCMSink", S.getter("audioPCMSinkComponent"), "midisink.gif", "PCMSink"),
     new FactoryDescription("MidiSink", S.getter("audioMidiSinkComponent"), "midisink.gif", "MidiSink"),
     new FactoryDescription("MidiIn", S.getter("audioMidiInComponent"), "midiin.gif", "MidiIn"),

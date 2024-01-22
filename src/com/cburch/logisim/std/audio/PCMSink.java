@@ -184,21 +184,11 @@ public class PCMSink extends InstanceFactory {
     painter.drawPort(WE);
     painter.drawPort(IN);
 
-    int x = bds.x + (bds.width-24)/2;
-    int y = bds.y + (bds.height-24)/2;
-    g.setColor(Color.BLACK);
-    g.drawRect(x+1, y+7, 6, 10);
-    int[] bx = new int[] { x+7, x+13, x+14, x+14, x+13, x+7 };
-    int[] by = new int[] { y+7, y+1, y+1, y+23, y+23, y+17 };
-    if (data != null && data.out != null
+    int x = bds.x + bds.width/2;
+    int y = bds.y + bds.height/2;
+    MidiDevice.paintSpeakerIcon(g, x, y, data != null && data.out != null
         && data.out.isOpen() && data.out.isActive() && data.out.isRunning()
-        && data.out.available() < data.out.getBufferSize())
-      g.setColor(Color.BLUE);
-    else
-      g.setColor(Color.RED);
-    g.drawPolyline(bx, by, 6);
-    g.drawArc(x+14, y+1, 9, 22, -60, 120);
-    g.drawArc(x+10, y+5, 9, 12, -60, 120);
+        && data.out.available() < data.out.getBufferSize());
   }
 
   private State getState(InstanceState state) {
@@ -238,6 +228,7 @@ public class PCMSink extends InstanceFactory {
     }
 
     public State(State orig) {
+      lastClock = orig.lastClock;
       init(orig.buflen, orig.bitsPerSample, orig.rateOption, orig.signed);
     }
 

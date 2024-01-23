@@ -32,10 +32,11 @@ package com.cburch.logisim.std.wiring;
 
 import com.cburch.logisim.data.AttributeSet;
 import com.cburch.logisim.data.BitWidth;
+import com.cburch.logisim.data.Value;
 import com.cburch.logisim.instance.StdAttr;
-import com.cburch.logisim.tools.key.IntegerConfigurator;
+import com.cburch.logisim.tools.key.NumericConfigurator;
 
-class ConstantConfigurator extends IntegerConfigurator {
+class ConstantConfigurator extends NumericConfigurator<Constant.ValueWithRadix> {
   public ConstantConfigurator() {
     super(Constant.ATTR_VALUE, 0, 0, 0, 16);
   }
@@ -59,5 +60,10 @@ class ConstantConfigurator extends IntegerConfigurator {
     } else {
       return Integer.MIN_VALUE;
     }
+  }
+
+  @Override
+  protected Constant.ValueWithRadix createValue(int val) {
+    return Constant.ValueWithRadix.fromValue(Value.createKnown(BitWidth.of(32), val));
   }
 }

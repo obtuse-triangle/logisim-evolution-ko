@@ -40,6 +40,7 @@ import java.util.List;
 import com.bfh.logisim.hdlgenerator.HDLSupport;
 import com.cburch.logisim.analyze.model.Expressions;
 import com.cburch.logisim.circuit.ExpressionComputer;
+import com.cburch.logisim.circuit.RadixOption;
 import com.cburch.logisim.data.AbstractAttributeSet;
 import com.cburch.logisim.data.Attribute;
 import com.cburch.logisim.data.AttributeSet;
@@ -58,12 +59,14 @@ import com.cburch.logisim.instance.StdAttr;
 import com.cburch.logisim.tools.key.BitWidthConfigurator;
 import com.cburch.logisim.tools.key.JoinedConfigurator;
 import com.cburch.logisim.util.GraphicsUtil;
+import com.cburch.logisim.util.StringGetter;
 
 public class Constant extends InstanceFactory {
   private static class ConstantAttributes extends AbstractAttributeSet {
     private Direction facing = Direction.EAST;;
     private BitWidth width = BitWidth.ONE;
     private Value value = Value.TRUE;
+    private RadixOption radix = RadixOption.RADIX_16;
 
     @Override
     protected void copyInto(AbstractAttributeSet destObj) {
@@ -71,6 +74,7 @@ public class Constant extends InstanceFactory {
       dest.facing = this.facing;
       dest.width = this.width;
       dest.value = this.value;
+      dest.radix = this.radix;
     }
 
     @Override
@@ -85,7 +89,9 @@ public class Constant extends InstanceFactory {
       if (attr == StdAttr.WIDTH)
         return (V) width;
       if (attr == ATTR_VALUE)
-        return (V) Integer.valueOf(value.toIntValue());
+        return (V) new ValueWithRadix(value, radix);
+      if (attr == RadixOption.ATTRIBUTE)
+        return (V) radix;
       return null;
     }
 
@@ -98,8 +104,12 @@ public class Constant extends InstanceFactory {
         this.value = this.value.extendWidth(width.getWidth(),
             this.value.get(this.value.getWidth() - 1));
       } else if (attr == ATTR_VALUE) {
-        int val = ((Integer) value).intValue();
-        this.value = Value.createKnown(width, val);
+        this.value = ((ValueWithRadix) value).value;
+        this.value = this.value.extendWidth(width.getWidth(),
+            this.value.get(this.value.getWidth() - 1));
+        // this.radix = ((ValueWithRadix) value).radix;
+      } else if (attr == RadixOption.ATTRIBUTE) {
+        this.radix = (RadixOption) value;
       }
     }
   }
@@ -114,7 +124,7 @@ public class Constant extends InstanceFactory {
     public void computeExpression(ExpressionComputer.Map expressionMap) {
       AttributeSet attrs = instance.getAttributeSet();
       int width = attrs.getValue(StdAttr.WIDTH).getWidth();
-      Value v = Value.createKnown(BitWidth.create(width), attrs.getValue(ATTR_VALUE));
+      Value v = attrs.getValue(ATTR_VALUE).value;
       for (int b = 0; b < width; b++) {
         expressionMap.put(instance.getLocation(), b,
             Expressions.constant(v.get(b).toIntValue()));
@@ -122,8 +132,8 @@ public class Constant extends InstanceFactory {
     }
   }
 
-  public static final Attribute<Integer> ATTR_VALUE = Attributes
-      .forHexInteger("value", S.getter("constantValueAttr"));
+  public static final Attribute<ValueWithRadix> ATTR_VALUE = 
+    new ValueWithRadixAttribute("value", S.getter("constantValueAttr"));
 
   public static InstanceFactory FACTORY = new Constant();
 
@@ -132,8 +142,8 @@ public class Constant extends InstanceFactory {
   private static final Font DEFAULT_FONT = new Font("monospaced", Font.PLAIN, 12);
 
   private static final List<Attribute<?>> ATTRIBUTES = Arrays
-      .asList(new Attribute<?>[] { StdAttr.FACING, StdAttr.WIDTH,
-        ATTR_VALUE });
+      .asList(new Attribute<?>[] { StdAttr.FACING, RadixOption.ATTRIBUTE,
+        StdAttr.WIDTH, ATTR_VALUE });
 
   public Constant() {
     super("Constant", S.getter("constantComponent"));
@@ -164,8 +174,9 @@ public class Constant extends InstanceFactory {
   @Override
   public Bounds getOffsetBounds(AttributeSet attrs) {
     Direction facing = attrs.getValue(StdAttr.FACING);
-    BitWidth width = attrs.getValue(StdAttr.WIDTH);
-    int chars = (width.getWidth() + 3) / 4;
+    // BitWidth width = attrs.getValue(StdAttr.WIDTH);
+    ValueWithRadix value = attrs.getValue(ATTR_VALUE);
+    int chars = value.toUnadornedString().length();
     int w = 7 + 7*chars;
     if (facing == Direction.EAST)
       return Bounds.create(-w, -8, w, 16);
@@ -181,7 +192,7 @@ public class Constant extends InstanceFactory {
 
   @Override
   public HDLSupport getHDLSupport(HDLSupport.ComponentContext ctx) {
-    return new ConstantHDLGenerator(ctx, ctx.attrs.getValue(Constant.ATTR_VALUE));
+    return new ConstantHDLGenerator(ctx, ctx.attrs.getValue(Constant.ATTR_VALUE).value.toIntValue());
   }
 
   @Override
@@ -191,15 +202,25 @@ public class Constant extends InstanceFactory {
       updatePorts(instance);
     } else if (attr == StdAttr.FACING) {
       instance.recomputeBounds();
+    } else if (attr == RadixOption.ATTRIBUTE) {
+      ValueWithRadix v = instance.getAttributeValue(ATTR_VALUE);
+      RadixOption r = instance.getAttributeValue(RadixOption.ATTRIBUTE);
+      if (v.radix != r)
+        instance.getAttributeSet().setAttr(ATTR_VALUE, new ValueWithRadix(v.value, r));
+      instance.recomputeBounds();
+      instance.fireInvalidated();
     } else if (attr == ATTR_VALUE) {
+      ValueWithRadix v = instance.getAttributeValue(ATTR_VALUE);
+      RadixOption r = instance.getAttributeValue(RadixOption.ATTRIBUTE);
+      if (r != v.radix)
+        instance.getAttributeSet().setAttr(RadixOption.ATTRIBUTE, v.radix);
       instance.fireInvalidated();
     }
   }
 
   @Override
   public void paintGhost(InstancePainter painter) {
-    int v = painter.getAttributeValue(ATTR_VALUE).intValue();
-    String vStr = Integer.toHexString(v);
+    String vStr = painter.getAttributeValue(ATTR_VALUE).toUnadornedString();
     Bounds bds = getOffsetBounds(painter.getAttributeSet());
 
     Graphics g = painter.getGraphics();
@@ -233,7 +254,7 @@ public class Constant extends InstanceFactory {
 
     Graphics g = painter.getGraphics();
     if (w == 1) {
-      int v = painter.getAttributeValue(ATTR_VALUE).intValue();
+      int v = painter.getAttributeValue(ATTR_VALUE).value.toIntValue();
       Value val = v == 1 ? Value.TRUE : Value.FALSE;
       g.setColor(val.getColor());
       GraphicsUtil.drawCenteredText(g, "" + v, 10, 9);
@@ -248,8 +269,7 @@ public class Constant extends InstanceFactory {
   public void paintInstance(InstancePainter painter) {
     Bounds bds = painter.getOffsetBounds();
     BitWidth width = painter.getAttributeValue(StdAttr.WIDTH);
-    int intValue = painter.getAttributeValue(ATTR_VALUE).intValue();
-    Value v = Value.createKnown(width, intValue);
+    ValueWithRadix v = painter.getAttributeValue(ATTR_VALUE);
     Location loc = painter.getLocation();
     int x = loc.getX();
     int y = loc.getY();
@@ -260,33 +280,120 @@ public class Constant extends InstanceFactory {
       g.fillRect(x + bds.getX(), y + bds.getY(), bds.getWidth(),
           bds.getHeight());
     }
-    if (v.getWidth() == 1) {
-      if (painter.shouldDrawColor())
-        g.setColor(v.getColor());
-      g.setFont(DEFAULT_FONT);
-      GraphicsUtil.drawCenteredText(g, v.toString(),
-          x + bds.getX() + bds.getWidth() / 2,
-          y + bds.getY() + bds.getHeight() / 2 - 2);
-    } else {
+    if (v.value.getWidth() <= 1 && painter.shouldDrawColor())
+      g.setColor(v.value.getColor());
+    else
       g.setColor(Color.BLACK);
-      g.setFont(DEFAULT_FONT);
-      GraphicsUtil.drawCenteredText(g, v.toHexString(), x + bds.getX()
-          + bds.getWidth() / 2, y + bds.getY() + bds.getHeight() / 2
-          - 2);
-    }
+    g.setFont(DEFAULT_FONT);
+    RadixOption radix = painter.getAttributeValue(RadixOption.ATTRIBUTE);
+    GraphicsUtil.drawCenteredText(g, v.toUnadornedString(),
+        x + bds.getX() + bds.getWidth() / 2,
+        y + bds.getY() + bds.getHeight() / 2 - 2);
     painter.drawPorts();
   }
 
   @Override
   public void propagate(InstanceState state) {
-    BitWidth width = state.getAttributeValue(StdAttr.WIDTH);
-    int value = state.getAttributeValue(ATTR_VALUE).intValue();
-    state.setPort(0, Value.createKnown(width, value), 1);
+    Value value = state.getAttributeValue(ATTR_VALUE).value;
+    state.setPort(0, value, 1);
   }
 
   private void updatePorts(Instance instance) {
     Port[] ps = { new Port(0, 0, Port.OUTPUT, StdAttr.WIDTH) };
     instance.setPorts(ps);
+  }
+
+  public static class ValueWithRadix {
+    public final Value value;
+    public final RadixOption radix;
+    public ValueWithRadix(Value v, RadixOption r) {
+      value = v; radix = r;
+    }
+    public static ValueWithRadix fromValue(Value v) {
+      return new ValueWithRadix(v, RadixOption.RADIX_16);
+    }
+    public static ValueWithRadix fromInteger(int v) {
+      return fromValue(Value.createKnown(BitWidth.of(32), v));
+    }
+    public static ValueWithRadix parse(String value) {
+      return new ValueWithRadix(value);
+    }
+    private ValueWithRadix(String s) {
+      s = s.toLowerCase();
+      if (s.startsWith("0x")) {
+        s = s.substring(2);
+        value = Value.createKnown(BitWidth.of(32), (int) Long.parseLong(s, 16));
+        radix = RadixOption.RADIX_16;
+      } else if (s.startsWith("0b")) {
+        s = s.substring(2);
+        value = Value.createKnown(BitWidth.of(32), (int) Long.parseLong(s, 2));
+        radix = RadixOption.RADIX_2;
+      } else if (s.startsWith("0o")) {
+        s = s.substring(2);
+        value = Value.createKnown(BitWidth.of(32), (int) Long.parseLong(s, 8));
+        radix = RadixOption.RADIX_8;
+      } else if (s.startsWith("+") || s.startsWith("-")) {
+        value = Value.createKnown(BitWidth.of(32), (int) Long.parseLong(s, 10));
+        radix = RadixOption.RADIX_10_SIGNED;
+      } else  {
+        value = Value.createKnown(BitWidth.of(32), (int) Long.parseLong(s, 10));
+        radix = RadixOption.RADIX_10_UNSIGNED;
+      }
+    }
+    public String toDisplayString() { // includes prefix, fixed width
+      if (radix == RadixOption.RADIX_2)
+        return "0b" + value.toBinaryString();
+      else if (radix == RadixOption.RADIX_8)
+        return "0o" + value.toOctalString();
+      else if (radix == RadixOption.RADIX_10_UNSIGNED)
+        return Integer.toUnsignedString(value.toIntValue()); // variable width
+      else if (radix == RadixOption.RADIX_10_SIGNED) {
+        int val = this.value.extendWidth(32,
+            value.get(value.getWidth() - 1)).toIntValue();
+        return (val >= 0 ? "+" : "") + Integer.toString(val); // variable width
+      }
+      else 
+        return "0x" + value.toHexString();
+    }
+    public String toUnadornedString() { // without prefix, fixed width
+      if (radix == RadixOption.RADIX_2)
+        return value.toBinaryString();
+      else if (radix == RadixOption.RADIX_8)
+        return value.toOctalString();
+      else if (radix == RadixOption.RADIX_10_UNSIGNED)
+        return Integer.toUnsignedString(value.toIntValue()); // variable width
+      else if (radix == RadixOption.RADIX_10_SIGNED) {
+        int val = this.value.extendWidth(32,
+            value.get(value.getWidth() - 1)).toIntValue();
+        return (val >= 0 ? "+" : "") + Integer.toString(val); // variable width
+      }
+      else 
+        return value.toHexString();
+    }
+    public String toStandardString() { // always hex, variable width
+     return "0x" + value.toHexString();
+    }
+  }
+
+  private static class ValueWithRadixAttribute extends Attribute<ValueWithRadix> {
+    private ValueWithRadixAttribute(String name, StringGetter disp) {
+      super(name, disp);
+    }
+
+    @Override
+    public ValueWithRadix parse(String value) {
+      return ValueWithRadix.parse(value);
+    }
+
+    @Override
+    public String toDisplayString(ValueWithRadix value) {
+      return value.toDisplayString();
+    }
+
+    @Override
+    public String toStandardString(ValueWithRadix value) {
+      return value.toStandardString();
+    }
   }
 
   // TODO: Allow editing of value via text tool/attribute table

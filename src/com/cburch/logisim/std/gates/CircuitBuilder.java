@@ -252,7 +252,7 @@ public class CircuitBuilder {
       ComponentFactory factory = Constant.FACTORY;
       AttributeSet attrs = factory.createAttributeSet();
       attrs.setAttr(Constant.ATTR_VALUE,
-          Integer.valueOf(value.getValue()));
+          Constant.ValueWithRadix.fromInteger(value.getValue()));
       Bounds bds = factory.getOffsetBounds(attrs);
       return new Layout(bds.getWidth(), bds.getHeight(), -bds.getY(),
           factory, attrs, new Layout[0], 0);
@@ -447,10 +447,9 @@ public class CircuitBuilder {
       Object factory = parent.getFactory();
       if (factory instanceof AbstractGate) {
         Value val = ((AbstractGate) factory).getIdentity();
-        Integer valInt = Integer.valueOf(val.toIntValue());
         Location loc = parent.getEnd(index).getLocation();
         AttributeSet attrs = Constant.FACTORY.createAttributeSet();
-        attrs.setAttr(Constant.ATTR_VALUE, valInt);
+        attrs.setAttr(Constant.ATTR_VALUE, Constant.ValueWithRadix.fromValue(val));
         result.add(Constant.FACTORY.createComponent(loc, attrs));
       }
     }

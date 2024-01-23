@@ -116,7 +116,7 @@ fi
 INSTALLER_TYPE="pkg" # Options: dmg or pkg
 OUTPUT="."
 JAR="logisim-evolution.jar"
-VERSION="5.0.2" # must be numerical x.y.z
+VERSION="5.0.3" # must be numerical x.y.z
 FILE_ASSOCIATIONS="file-associations.properties"
 APP_ICON="logisim.icns"
 JAVA_APP_IDENTIFIER="edu.holycross.cs.kwalsh.logisim"

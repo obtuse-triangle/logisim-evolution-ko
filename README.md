@@ -3,16 +3,14 @@ Logisim-Evolution (Holy Cross Edition)
 
 You can get the latest *stable version* of Logisim-Evolution (Holy Cross Edition) here:
 
-[![Download for Windows](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-windows.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.2/Logisim-Evolution-5.0.2hc.exe)
-[![Download for Mac](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-mac.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.2/Logisim-Evolution-5.0.2-HC.pkg)
-[![Download for Linux](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-linux.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.2/logisim-evolution-5.0.2hc.jar)
+[![Download for Windows](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-windows.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/Logisim-Evolution-5.0.3hc.exe)
+[![Download for Mac](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-mac.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/Logisim-Evolution-5.0.3-HC.pkg)
+[![Download for Linux](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-linux.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/logisim-evolution-5.0.3hc.jar)
 
 **Older Mac Notice**: On older intel-based Macs, please use
 [Mac OS Version 4.0.4-HC](https://mathcs.holycross.edu/~kwalsh/Logisim-Evolution-4.0.4-HC.pkg),
 a slightly older version of the package. The newer 5.x version is not yet
 compiled in a format usable by older Macs.
-
-the 5.x version of Logisim will
 
 **Mac Security Warning**: On some recent MacOS versions, the OS security
 gatekeeper may prevent you from opening the PKG file above directly. Instead,
@@ -21,7 +19,7 @@ go to your download folder in the finder, right click the PKG file and "Open
 with... Installer (Default)". When given a security warning, click "Open". This
 should install the program.
 
-An alternative [ZIP format version for Windows](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.2/Logisim-Evolution-5.0.2hc-windows.zip) is
+An alternative [ZIP format version for Windows](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/Logisim-Evolution-5.0.3hc-windows.zip) is
 also available. After downloading it, extract the compressed contents to a directory of your choice and run the
 extracted exe file.
 
@@ -30,7 +28,7 @@ platform, but requires that Java version 11 or above be installed separately
 (Java version 17 is recommended; the Adoptium project's Temurin OpenJDK 17
 available [here](https://adoptium.net/) is one possible choice).
 To run the JAR file, open a command line (or Mac Terminal or Windows CMD.exe
-prompt) and type `java -jar logisim-evolution-5.0.2hc.jar` from within the
+prompt) and type `java -jar logisim-evolution-5.0.3hc.jar` from within the
 directory where you have downloaded the JAR file.
 
 ## What's new in version 5.x.x

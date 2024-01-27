@@ -59,7 +59,7 @@ public class DecoderHDLGenerator extends HDLGenerator {
       if (out.isVhdl)
         out.stmt("Out_%d <= '1' WHEN Sel = %s AND Enable = '1' ELSE '0';", i, s);
       else
-        out.stmt("assign Out_%d = (Enable & (Sel == s)) ? 1'b1 : 1'b0;", i, s);
+        out.stmt("assign Out_%d = (Enable & (Sel == %s)) ? 1'b1 : 1'b0;", i, s);
     }
   }
 

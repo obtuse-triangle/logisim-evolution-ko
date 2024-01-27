@@ -577,10 +577,10 @@ public class ToplevelHDLGenerator extends HDLGenerator {
       } else {
         // Handle physical I/O device types.
         Netlist.Int3 seqno = dest.seqno();
-        // Input half
-        // todo: support for PortIO pullup resistors?
+        // TODO: support for PortIO pullup resistors?
         // recordInputPullDirection(out, inputPinPullDir, shadow, src, dest);
         if (useTristates) {
+          // Input half
           if (src.width.inout == 1) {
             out.assign("in_"+signal, maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout);
           } else for (int i = 0; i < src.width.inout; i++) { // TODO: verify src.width.inout instead of destwidth.inout
@@ -647,10 +647,10 @@ public class ToplevelHDLGenerator extends HDLGenerator {
         } else {
           // Handle physical I/O device types.
           Netlist.Int3 seqno = dest.seqno();
-          // Input half
           // todo: support for PortIO pullup resistors?
           // recordInputPullDirection(out, inputPinPullDir, shadow, src, dest);
           if (useTristates) {
+            // Input half
             out.assign("in_"+bit, offset+i, maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout);
             // Output half
             out.assignTristate("FPGA_BIDIR_PIN_"+seqno.inout, maybeNot+"out_"+bit, offset+i, "en_"+bit, offset+i);
@@ -664,128 +664,6 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     }
   }
 
-  protected String[] getBidirPinAssignments(int n) {
-    String[] fpgaPins = new String[n];
-    // go through each hidden inout device
-    ioResources.components.forEach((path, shadow) -> 
-      getBidirPinAssignments(path, shadow, fpgaPins));
-    // Sanity check:
-    for (int i = 0; i < n; i++) {
-      if (fpgaPins[i] == null) {
-        _err.AddFatalError("INTERNAL ERROR: Some bidirectional ports were not correctly mapped.");
-        fpgaPins[i] = "unknown"; // will cause hdl gen to fail
-      }
-    }
-    return fpgaPins;
-  }
-
-  private void getBidirPinAssignments(Path path, NetlistComponent shadow, String[] fpgaPins) {
-    // Note: Any logisim component that needs a bidirectional port (which are
-    // only hidden ports, at least so far), gets handled here. This is used by
-    // CircuitHDLGenerator to create the instance port mapping for the top-most
-    // circuit under test.
-    // Note: The signal being mapped is always a slice of
-    // LOGISIM_HIDDEN_FPGA_BIDIR[n downto 0].
-    // And that signal might get mapped together to a single I/O device, or each
-    // bit might be individually mapped to different I/O devices. Or to open, or
-    // a constant.
-    String signal; // e.g.: s_SomePin or s_LOGISIM_HIDDEN_OUTPUT[7 downto 3].
-    String bit;    // e.g.: s_SomePin or s_LOGISIM_HIDDEN_OUTPUT
-    int offset;    // e.g.: 0 or 3
-    if (shadow.original.getFactory() instanceof Pin)
-      return; // Pin is never bidir
-    NetlistComponent.Range3 indices = shadow.getGlobalHiddenPortIndices(path);
-    if (indices == null)
-      return; // error, handled above
-    if (indices.end.inout == indices.start.inout) {
-      // foo[5] is the only bit
-      offset = indices.start.inout;
-      bit = "LOGISIM_HIDDEN_FPGA_BIDIR";
-      signal = String.format(bit+_hdl.idx, offset);
-    } else if (indices.end.inout > indices.start.inout) {
-      // foo[8:3]
-      offset = indices.start.inout;
-      bit = "LOGISIM_HIDDEN_FPGA_BIDIR";
-      signal = String.format(bit+_hdl.range, indices.end.inout, offset);
-    } else {
-      return; // not bidir
-    }
-
-    if (indices.start.inout < 0 || indices.end.inout >= fpgaPins.length) {
-      _hdl.err.AddFatalError("INTERNAL ERROR: Bidirectional device '%s' "
-          + "has offsets %d..%d, but should be within 0..%d.",
-          path, indices.start.inout, indices.end.inout, fpgaPins.length-1);
-      return;
-    }
-    for (int i = indices.start.inout; i <= indices.end.inout; i++) {
-      if (fpgaPins[i] != null) {
-        _hdl.err.AddFatalError("INTERNAL ERROR: Bidirectional device '%s' "
-            + "offset %d is already mapped to pin '%s'.",
-            path, i, fpgaPins[i]);
-        return;
-      }
-    }
-
-    PinBindings.Source src = ioResources.sourceFor(path);
-    PinBindings.Dest dest = ioResources.mappings.get(src);
-    if (dest != null) { // Entire port is mapped to one BoardIO resource.
-      boolean invert = needTopLevelInversion(shadow.original, dest.io);
-      if (invert) {
-        _hdl.err.AddSevereWarning("Bidirectional device '%s' is mapped to active-low pin '%s': "
-            + "HDL generator can't insert an inverter in this case, so user circuit must "
-            + "explicitly account for active-low logic for this signal.",
-            src, dest);
-      }
-      Netlist.Int3 destwidth = dest.io.getPinCounts();
-      Netlist.Int3 seqno = dest.seqno();
-      if (seqno != null)
-        seqno = seqno.copy();
-      if (dest.io.type == BoardIO.Type.Unconnected) {
-        // If user assigned type "unconnected", use bogus "FPGA_OPEN_" signal for mapping.
-        // VHDL could use keyword "open", but that isn't possible for Verilog.
-        for (int i = indices.start.inout; i <= indices.end.inout; i++)
-          fpgaPins[i] = "FPGA_OPEN_"+(seqno.inout++);
-      } else if (!BoardIO.PhysicalTypes.contains(dest.io.type)) {
-        // Handle synthetic input types.
-        int constval = dest.io.syntheticValue;
-        for (int i = indices.start.inout; i <= indices.end.inout; i++)
-          fpgaPins[i] = _hdl.literal((constval>>i)&1, 1);
-      } else {
-        // Handle physical I/O device types.
-        for (int i = indices.start.inout; i <= indices.end.inout; i++)
-          fpgaPins[i] = "FPGA_BIDIR_PIN_"+(seqno.inout++);
-      }
-    } else { // Each bit of port is assigned to a different BoardIO resource.
-      ArrayList<PinBindings.Source> srcs = ioResources.bitSourcesFor(path);
-      for (int i = 0; i < srcs.size(); i++)  {
-        src = srcs.get(i);
-        dest = ioResources.mappings.get(src);
-        Netlist.Int3 destwidth = dest.io.getPinCounts();
-        Netlist.Int3 seqno = dest.seqno();
-        if (seqno != null)
-          seqno = seqno.copy();
-        boolean invert = needTopLevelInversion(shadow.original, dest.io);
-        if (invert) {
-        _hdl.err.AddSevereWarning("Bidirectional device '%s' bit %d is mapped to active-low pin '%s': "
-            + "HDL generator can't insert an inverter in this case, so user circuit must "
-            + "explicitly account for active-low logic for this signal.",
-            src, i, dest);
-        }
-        if (dest.io.type == BoardIO.Type.Unconnected) {
-          fpgaPins[i] = "FPGA_OPEN_"+(seqno.inout++);
-        } else if (!BoardIO.PhysicalTypes.contains(dest.io.type)) {
-          // Handle synthetic input types.
-          int constval = dest.io.syntheticValue;
-          fpgaPins[i] = _hdl.literal(constval, 1);
-        } else {
-          // Handle physical I/O device types.
-          if (destwidth.inout == 1)
-            fpgaPins[i] = "FPGA_BIDIR_PIN_"+(seqno.inout++);
-        }
-      }
-    }
-  }
-  
   public void notifyNetlistReady() {
     circgen.notifyNetlistReady();
   }

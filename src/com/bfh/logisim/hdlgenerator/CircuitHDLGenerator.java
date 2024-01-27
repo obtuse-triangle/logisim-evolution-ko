@@ -221,13 +221,9 @@ public class CircuitHDLGenerator extends HDLGenerator {
 			if (h.out > 0)
         map.add("LOGISIM_HIDDEN_FPGA_OUTPUT", "s_LOGISIM_HIDDEN_FPGA_OUTPUT", h.out-1, 0);
 			if (h.inout > 0) {
-        // String[] fpgaPins = parent.getBidirPinAssignments(h.inout);
-        // map.addVector("LOGISIM_HIDDEN_FPGA_BIDIR", fpgaPins);
-        // fixme: no need for indices here, map entire bus?
         map.add("LOGISIM_HIDDEN_FPGA_BIDIR_IN", "in_s_LOGISIM_HIDDEN_FPGA_BIDIR", h.inout-1, 0);
         map.add("LOGISIM_HIDDEN_FPGA_BIDIR_OUT", "out_s_LOGISIM_HIDDEN_FPGA_BIDIR", h.inout-1, 0);
         map.add("LOGISIM_HIDDEN_FPGA_BIDIR_EN", "en_s_LOGISIM_HIDDEN_FPGA_BIDIR", h.inout-1, 0);
-        // fixme: delete addVector ?
       }
       
       // Normal ports

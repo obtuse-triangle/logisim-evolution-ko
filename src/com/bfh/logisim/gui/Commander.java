@@ -891,10 +891,11 @@ public class Commander extends JFrame
         return;
       }
       iprintf("Workspace directory for HDL synthesis: " + path);
+      FPGADownload tools = makeToolchainDownloader();
       if (actionItems.get(HDL_DOWNLOAD_ONLY).isSelected()) {
         iprintf("*** NOTE *** Skipping both HDL generation and synthesis.");
         iprintf("*** NOTE *** Recent changes to circuits will not take effect.");
-        doSynthesisAndDownload(null);
+        doSynthesisAndDownload(null, tools);
       } else {
         iprintf("Performing design rule checks (DRC)");
         long oscFreq = board.fpga.ClockFrequency;
@@ -912,13 +913,13 @@ public class Commander extends JFrame
           return;
         }
         iprintf("Generating HDL files");
-        if (!writeHDL(ctx, pinBindings) || fatals > 0) {
+        if (!writeHDL(ctx, pinBindings, tools) || fatals > 0) {
           eprintf("HDL file generation failed, synthesis can't continue.");
           return;
         }
         iprintf("HDL files are ready for synthesis.");
         if (!actionItems.get(HDL_GEN_ONLY).isSelected())
-          doSynthesisAndDownload(pinBindings);
+          doSynthesisAndDownload(pinBindings, tools);
       }
     } catch (Exception e) {
       eprintf("Unexpected exception: " + e.getMessage());
@@ -951,9 +952,7 @@ public class Commander extends JFrame
     return projectWorkspace() + safename + SLASH;
   }
 
-  private void doSynthesisAndDownload(PinBindings pinBindings) {
-    if (board == null)
-      return;
+  FPGADownload makeToolchainDownloader() {
     String circdir = circuitWorkspace();
     String langdir = circdir + lang.toLowerCase() + SLASH;
 
@@ -968,6 +967,12 @@ public class Commander extends JFrame
     tools.sandboxPath = circdir + SANDBOX_DIR;
     tools.ucfPath = circdir + UCF_DIR;
     tools.writeToFlash = writeToFlash.isSelected() && board.fpga.FlashDefined;
+    return tools;
+  }
+
+  private void doSynthesisAndDownload(PinBindings pinBindings, FPGADownload tools) {
+    if (board == null)
+      return;
 
     if (pinBindings != null) {
       // sanity check pin bindings
@@ -1258,7 +1263,7 @@ public class Commander extends JFrame
     return Integer.parseInt(item.toString());
   }
 
-  private boolean writeHDL(Netlist.Context ctx, PinBindings pinBindings) {
+  private boolean writeHDL(Netlist.Context ctx, PinBindings pinBindings, FPGADownload tools) {
     String circdir = circuitWorkspace();
     if (!cleanDirectory(circdir))
       return false;
@@ -1269,7 +1274,7 @@ public class Commander extends JFrame
     // Generate HDL for top-level module and everything it contains, including
     // the root circuit (and all its subcircuits and components), the top-level
     // ticker (if needed), any clocks lifted to the top-level, etc.
-    ToplevelHDLGenerator g = new ToplevelHDLGenerator(ctx, pinBindings);
+    ToplevelHDLGenerator g = tools.toplevelHDLGenerator(ctx, pinBindings);
 
     g.notifyNetlistReady();
     Circuit root = circuitsList.getSelectedValue();

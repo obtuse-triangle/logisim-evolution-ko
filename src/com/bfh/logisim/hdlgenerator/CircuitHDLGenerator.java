@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.bfh.logisim.hdlgenerator.ToplevelHDLGenerator;
 import com.bfh.logisim.library.DynamicClock;
 import com.bfh.logisim.netlist.Net;
 import com.bfh.logisim.netlist.Netlist;
@@ -93,7 +94,7 @@ public class CircuitHDLGenerator extends HDLGenerator {
     // hidden ports
     Netlist.Int3 hidden = _circNets.numHiddenBits();
     inPorts.addVector("LOGISIM_HIDDEN_FPGA_INPUT", hidden.in, -1, null);
-    inOutPorts.addVector("LOGISIM_HIDDEN_FPGA_INOUT", hidden.inout, -1, null);
+    inOutPorts.addVector("LOGISIM_HIDDEN_FPGA_BIDIR", hidden.inout, -1, null);
     outPorts.addVector("LOGISIM_HIDDEN_FPGA_OUTPUT", hidden.out, -1, null);
 
     // global clock buses
@@ -184,8 +185,11 @@ public class CircuitHDLGenerator extends HDLGenerator {
       NetlistComponent.Range3 r = comp.getLocalHiddenPortIndices();
 			if (r.end.in >= r.start.in)
         map.add("LOGISIM_HIDDEN_FPGA_INPUT", "LOGISIM_HIDDEN_FPGA_INPUT", r.end.in, r.start.in);
-			if (r.end.inout >= r.start.inout)
-        map.add("LOGISIM_HIDDEN_FPGA_INOUT", "LOGISIM_HIDDEN_FPGA_INOUT", r.end.inout, r.start.inout);
+			if (r.end.inout >= r.start.inout) {
+        map.add("LOGISIM_HIDDEN_FPGA_BIDIR_IN", "LOGISIM_HIDDEN_FPGA_BIDIR_IN", r.end.inout, r.start.inout);
+        map.add("LOGISIM_HIDDEN_FPGA_BIDIR_OUT", "LOGISIM_HIDDEN_FPGA_BIDIR_OUT", r.end.inout, r.start.inout);
+        map.add("LOGISIM_HIDDEN_FPGA_BIDIR_EN", "LOGISIM_HIDDEN_FPGA_BIDIR_EN", r.end.inout, r.start.inout);
+      }
 			if (r.end.out >= r.start.out)
         map.add("LOGISIM_HIDDEN_FPGA_OUTPUT", "LOGISIM_HIDDEN_FPGA_OUTPUT", r.end.out, r.start.out);
 
@@ -216,10 +220,14 @@ public class CircuitHDLGenerator extends HDLGenerator {
         map.add("LOGISIM_HIDDEN_FPGA_INPUT", "s_LOGISIM_HIDDEN_FPGA_INPUT", h.in-1, 0);
 			if (h.out > 0)
         map.add("LOGISIM_HIDDEN_FPGA_OUTPUT", "s_LOGISIM_HIDDEN_FPGA_OUTPUT", h.out-1, 0);
-      // Note: Toplevel has direct connection (and no inversions) for InOut ports.
 			if (h.inout > 0) {
-        String[] fpgaPins = parent.getBidirPinAssignments(h.inout);
-        map.addVector("LOGISIM_HIDDEN_FPGA_INOUT", fpgaPins);
+        // String[] fpgaPins = parent.getBidirPinAssignments(h.inout);
+        // map.addVector("LOGISIM_HIDDEN_FPGA_BIDIR", fpgaPins);
+        // fixme: no need for indices here, map entire bus?
+        map.add("LOGISIM_HIDDEN_FPGA_BIDIR_IN", "in_s_LOGISIM_HIDDEN_FPGA_BIDIR", h.inout-1, 0);
+        map.add("LOGISIM_HIDDEN_FPGA_BIDIR_OUT", "out_s_LOGISIM_HIDDEN_FPGA_BIDIR", h.inout-1, 0);
+        map.add("LOGISIM_HIDDEN_FPGA_BIDIR_EN", "en_s_LOGISIM_HIDDEN_FPGA_BIDIR", h.inout-1, 0);
+        // fixme: delete addVector ?
       }
       
       // Normal ports

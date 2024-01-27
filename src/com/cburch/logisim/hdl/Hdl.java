@@ -44,20 +44,22 @@ public class Hdl extends ArrayList<String> {
   public final boolean isVhdl, isVerilog;
   public final FPGAReport err;
 
-  // HDL-specific formats                VHDL                      Verilog
-  public final String assn;           // %s <= %s;                 assign %s = %s;
-  public final String bitAssn;        // %s(%d) <= %s;             assign %s[%d] = %s;
-  public final String rangeAssn;      // %s(%d downto %d) <= %s;   assign %s[%d:%d] = %s;
-  public final String assnBit;        // %s <= %s(%d);             assign %s = %s[%d];
-  public final String assnRange;      // %s <= %s(%d downto %d);   assign %s = %s[%d:%d];
-  public final String bitAssnBit;     // %s(%d) <= %s(%d);         assign %s[%d] = %s[%d];
-  public final String idx;            // (%d)                      [%d]
-  public final String range;          // (%d downto %d)            [%d:%d]
-  public final String zero;           // '0'                       1'b0
-  public final String one;            // '1'                       1'b1
-  public final String unconnected;    // open                      (emptystring)
-  public final String not;            // not                       ~
-  public final String allZeros;       // (others => '0')           0
+  // HDL-specific formats                 VHDL                                       Verilog
+  public final String assn;            // %s <= %s;                                  assign %s = %s;
+  public final String bitAssn;         // %s(%d) <= %s;                              assign %s[%d] = %s;
+  public final String rangeAssn;       // %s(%d downto %d) <= %s;                    assign %s[%d:%d] = %s;
+  public final String assnBit;         // %s <= %s(%d);                              assign %s = %s[%d];
+  public final String assnRange;       // %s <= %s(%d downto %d);                    assign %s = %s[%d:%d];
+  public final String bitAssnBit;      // %s(%d) <= %s(%d);                          assign %s[%d] = %s[%d];
+  public final String assnTristate;    // %s <= %s when (%s = '1') else 'Z';         assign %s = %s ? %s : 'bz;
+  public final String assnTristateBit; // %s <= %s(%d) when (%s(%d) = '1') else 'Z'; assign %s = %s[%d] ? %s[%d] : 'bz;
+  public final String idx;             // (%d)                                       [%d]
+  public final String range;           // (%d downto %d)                             [%d:%d]
+  public final String zero;            // '0'                                        1'b0
+  public final String one;             // '1'                                        1'b1
+  public final String unconnected;     // open                                       (emptystring)
+  public final String not;             // not                                        ~
+  public final String allZeros;        // (others => '0')                            0
 
   private int indent = 0;
   private String tab = "";
@@ -81,6 +83,8 @@ public class Hdl extends ArrayList<String> {
       assnBit = "%s \t<= %s(%d);";
       assnRange = "%s \t<= %s(%d downto %d);";
       bitAssnBit = "%s(%d) \t<= %s(%d);";
+      assnTristate = "%s \t<= %s when (%s = '1') else 'Z';";
+      assnTristateBit = "%s \t<= %s(%d) when (%s(%d) = '1') else 'Z'";
       idx = "(%d)";
       range = "(%d downto %d)";
       zero = "'0'";
@@ -95,6 +99,8 @@ public class Hdl extends ArrayList<String> {
       assnBit = "assign %s \t= %s[%d];";
       assnRange = "assign %s \t= %s[%d:%d];";
       bitAssnBit = "assign %s[%d] \t= %s[%d];";
+      assnTristate = "assign %1$s \t= %3$s ? %2$s : 'bz;";
+      assnTristateBit = "assign %1$s \t= %4$s[%5$d] ? %2$s[%3$d] : 'bz;";
       idx = "[%d]";
       range = "[%d:%d]";
       zero = "1'b0";
@@ -223,6 +229,14 @@ public class Hdl extends ArrayList<String> {
     stmt(bitAssnBit, name, nameIdx, val, valIdx);
   }
 
+  public void assignTristate(String name, String val, String en) {
+    stmt(assnTristate, name, val, en);
+  }
+
+  public void assignTristate(String name, String val, int valIdx, String en, int enIdx) {
+    stmt(assnTristateBit, name, val, valIdx, en, enIdx);
+  }
+
   // todo: consider enforcing max line length (e.g. 80 chars)?
   public void comment(String fmt, Object ...args) {
     comment(String.format(fmt, args).split("\\R", -1));
@@ -330,6 +344,14 @@ public class Hdl extends ArrayList<String> {
     try {
       return typeForWidth(Integer.parseInt(w));
     } catch (NumberFormatException ex) {
+      // special case: when using a constant size vector, precompute the width
+      if (w.startsWith("(") && w.endsWith(")")) {
+        try {
+          int n = Integer.parseInt(w.substring(1, w.length()-1));
+          return isVhdl ? "std_logic_vector("+(n-1)+" downto 0)" : "["+(n-1)+":0] ";
+          } catch (NumberFormatException ex2) {
+          }
+      }
       return isVhdl ? "std_logic_vector("+w+"-1 downto 0)" : "["+w+"-1:0] ";
     }
   }

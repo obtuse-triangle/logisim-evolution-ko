@@ -45,6 +45,7 @@ import com.bfh.logisim.gui.FPGAReport;
 import com.bfh.logisim.hdlgenerator.FileWriter;
 import com.bfh.logisim.hdlgenerator.TickHDLGenerator;
 import com.bfh.logisim.hdlgenerator.ToplevelHDLGenerator;
+import com.bfh.logisim.netlist.Netlist;
 import com.bfh.logisim.settings.Settings;
 
 public abstract class FPGADownload {
@@ -360,6 +361,10 @@ public abstract class FPGADownload {
       s += s.length() > 0 ? " " + c : c;
     }
     return s;
+  }
+
+  public ToplevelHDLGenerator toplevelHDLGenerator(Netlist.Context ctx, PinBindings pinBindings) {
+    return new ToplevelHDLGenerator(ctx, pinBindings);
   }
 
 }

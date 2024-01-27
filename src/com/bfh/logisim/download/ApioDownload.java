@@ -46,6 +46,7 @@ import com.bfh.logisim.gui.Commander;
 import com.bfh.logisim.gui.Console;
 import com.bfh.logisim.gui.FPGAReport;
 import com.bfh.logisim.hdlgenerator.FileWriter;
+import com.bfh.logisim.hdlgenerator.ToplevelHDLGenerator;
 import com.bfh.logisim.netlist.Netlist;
 import com.bfh.logisim.netlist.NetlistComponent;
 import com.bfh.logisim.netlist.Path;
@@ -202,13 +203,13 @@ public class ApioDownload extends FPGADownload {
 		for (int i = 0; i < ioPinCount.in; i++)
       out3.stmt("              FPGA_INPUT_PIN_%d%s", i, (--n == 0 ? " );" : ","));
 		for (int i = 0; i < ioPinCount.inout; i++)
-      out3.stmt("              FPGA_INOUT_PIN_%d%s", i, (--n == 0 ? " );" : ","));
+      out3.stmt("              FPGA_BIDIR_PIN_%d%s", i, (--n == 0 ? " );" : ","));
 		for (int i = 0; i < ioPinCount.out; i++)
       out3.stmt("              FPGA_OUTPUT_PIN_%d%s", i, (--n == 0 ? " );" : ","));
 		for (int i = 0; i < ioPinCount.in; i++)
       out3.stmt("  input FPGA_INPUT_PIN_%d;", i);
 		for (int i = 0; i < ioPinCount.inout; i++)
-      out3.stmt("  inout FPGA_INOUT_PIN_%d;", i);
+      out3.stmt("  inout FPGA_BIDIR_PIN_%d;", i);
 		for (int i = 0; i < ioPinCount.out; i++)
       out3.stmt("  output FPGA_OUTPUT_PIN_%d;", i);
     out3.stmt();
@@ -233,10 +234,23 @@ public class ApioDownload extends FPGADownload {
       }
       out3.stmt("  wire %s;", "PULLED_"+net);
       // PIN_TYPE = 6 bits = xxxx_yy, xxxx=1010 is tri-state output, yy=01 is
-      // simple input, etc.
+      // simple non-clocked input, etc.
       out3.stmt("  SB_IO #(.PIN_TYPE(6'b 0000_01), .PULLUP(1'b %d))", pullup);
       out3.stmt("        sb_pin_%s (.PACKAGE_PIN(%s), .D_IN_0(%s));", pin, net, "PULLED_"+net);
+      out3.stmt();
     });
+		for (int i = 0; i < ioPinCount.inout; i++) {
+      String net = "FPGA_BIDIR_PIN_" + i;
+      out3.stmt("  wire %s;", net+"_IN");
+      out3.stmt("  wire %s;", net+"_OUT");
+      out3.stmt("  wire %s;", net+"_EN");
+      out3.stmt("  SB_IO #(.PIN_TYPE(6'b 1010_01), .PULLUP(1'b 0))");
+      out3.stmt("        sb_bidir_%d (.PACKAGE_PIN(%s),", i, net);
+      out3.stmt("                    .OUTPUT_ENABLE(%s),", net+"_EN");
+      out3.stmt("                    .D_OUT_0(%s),", net+"_OUT");
+      out3.stmt("                    .D_IN_0(%s));", net+"_IN");
+      out3.stmt();
+    }
 
     out3.stmt("  LogisimToplevelShell wrappedShell( %s", (n == 0 ? " );" : ""));
     if (ioResources.requiresOscillator)
@@ -247,8 +261,11 @@ public class ApioDownload extends FPGADownload {
         net = "PULLED_"+net;
       out3.stmt("              .FPGA_INPUT_PIN_%d(%s)%s", i, net, (--n == 0 ? " );" : ","));
     }
-		for (int i = 0; i < ioPinCount.inout; i++)
-      out3.stmt("              .FPGA_INOUT_PIN_%d(FPGA_INOUT_PIN_%d)%s", i, i, (--n == 0 ? " );" : ","));
+		for (int i = 0; i < ioPinCount.inout; i++) {
+      out3.stmt("              .FPGA_BIDIR_PIN_%d_IN(FPGA_BIDIR_PIN_%d_IN),", i, i);
+      out3.stmt("              .FPGA_BIDIR_PIN_%d_OUT(FPGA_BIDIR_PIN_%d_OUT),", i, i);
+      out3.stmt("              .FPGA_BIDIR_PIN_%d_EN(FPGA_BIDIR_PIN_%d_EN)%s", i, i, (--n == 0 ? " );" : ","));
+    }
 		for (int i = 0; i < ioPinCount.out; i++)
       out3.stmt("              .FPGA_OUTPUT_PIN_%d(FPGA_OUTPUT_PIN_%d)%s", i, i, (--n == 0 ? " );" : ","));
     out3.stmt();
@@ -293,6 +310,10 @@ public class ApioDownload extends FPGADownload {
     });
 
     return stages;
+  }
+
+  public ToplevelHDLGenerator toplevelHDLGenerator(Netlist.Context ctx, PinBindings pinBindings) {
+    return new ToplevelHDLGenerator(ctx, pinBindings, false);
   }
 
 }

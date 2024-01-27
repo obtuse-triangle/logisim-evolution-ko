@@ -128,7 +128,7 @@ public class HiddenPort {
 	}
 
   private static String[] generateLabels(int dir, int w) {
-    String prefix = (dir == IN ? "In_" : dir == OUT ? "Out_" : "InOut_");
+    String prefix = (dir == IN ? "In_" : dir == OUT ? "Out_" : "Bidir_");
     String[] labels = new String[w];
     for (int i = 1; i <= w; i++)
       labels[i-1] = prefix + i;
@@ -146,7 +146,7 @@ public class HiddenPort {
   @Override
   public String toString() {
     return String.format("HiddenPort{dir=%s, width=%s maintype=%s}",
-        in?"in":inout?"inout":"out", width, mainType);
+        in?"in":inout?"bidir":"out", width, mainType);
   }
 
 }

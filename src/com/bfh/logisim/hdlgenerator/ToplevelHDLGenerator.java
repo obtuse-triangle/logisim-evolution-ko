@@ -56,6 +56,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
 
 	private Circuit circUnderTest;
 	private PinBindings ioResources;
+  private boolean useTristates;
   private Netlist _circNets; // Netlist of the circUnderTest.
 
   private TickHDLGenerator ticker;
@@ -70,10 +71,15 @@ public class ToplevelHDLGenerator extends HDLGenerator {
   // and empty attributes.
 	
   public ToplevelHDLGenerator(Netlist.Context ctx, PinBindings ioResources) {
+    this(ctx, ioResources, true);
+  }
+
+  public ToplevelHDLGenerator(Netlist.Context ctx, PinBindings ioResources, boolean useTristates) {
     super(new ComponentContext(ctx, null, null), "toplevel", HDL_NAME, "i_Toplevel");
 
 		this.circUnderTest = ctx.circUnderTest;
 		this.ioResources = ioResources;
+    this.useTristates = useTristates;
 
     _circNets = ctx.getNetlist(circUnderTest);
     int numclk = ctx.clockbus.shapes().size();
@@ -88,7 +94,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
 		for (int i = 0; i < ioPinCount.in; i++)
       inPorts.add("FPGA_INPUT_PIN_"+i, 1, -1, null);
 		for (int i = 0; i < ioPinCount.inout; i++)
-      inOutPorts.add("FPGA_INOUT_PIN_"+i, 1, -1, null);
+      inOutPorts.add("FPGA_BIDIR_PIN_"+i, 1, -1, null);
 		for (int i = 0; i < ioPinCount.out; i++)
       outPorts.add("FPGA_OUTPUT_PIN_"+i, 1, -1, null);
 
@@ -108,11 +114,12 @@ public class ToplevelHDLGenerator extends HDLGenerator {
 		}
 
     // wires for hidden ports for circuit design under test
-    // note: inout ports never get inversions, so no wire for those
     Netlist.Int3 hidden = _circNets.numHiddenBits();
     wires.addVector("s_LOGISIM_HIDDEN_FPGA_INPUT", hidden.in);
-		// wires.AddVector("s_LOGISIM_HIDDEN_FPGA_INOUT", hidden.inout); // see circuit gen
     wires.addVector("s_LOGISIM_HIDDEN_FPGA_OUTPUT", hidden.out);
+    wires.addVector("in_s_LOGISIM_HIDDEN_FPGA_BIDIR", hidden.inout);
+    wires.addVector("out_s_LOGISIM_HIDDEN_FPGA_BIDIR", hidden.inout);
+    wires.addVector("en_s_LOGISIM_HIDDEN_FPGA_BIDIR", hidden.inout);
 
     // wires for normal ports for circuit design under test
     for (NetlistComponent shadow : _circNets.inpins) {
@@ -162,6 +169,11 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     }
     return true;
   }
+  
+  @Override
+	protected void generateVhdlBlackBox(Hdl out, boolean isEntity) {
+    generateVhdlBlackBox(out, isEntity, true);
+  }
 
   @Override
   public boolean hdlDependsOnCircuitState() { // for NVRAM
@@ -191,6 +203,12 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     out.comment("signal adaptions for I/O related components and top-level pins");
     ioResources.components.forEach((path, shadow) -> {
       generateInlinedCodeSignal(out, path, shadow);
+		});
+    out.stmt();
+
+    out.comment("signal adaptions for bidirectional top-level pins");
+    ioResources.components.forEach((path, shadow) -> {
+      generateInlinedCodeBidirSignal(out, path, shadow);
 		});
     out.stmt();
 
@@ -475,6 +493,177 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     }
   }
 
+  private void generateInlinedCodeBidirSignal(Hdl out, Path path, NetlistComponent shadow) {
+    // This implements the top-level tri-state logic needed for bidirectional
+    // pins.
+    // Note: Any logisim component that is not active-high will get an inversion
+    // here. Also, any FPGA I/O device that is not active-high will get an
+    // inversion. In cases where there would be two inversions, we leave them
+    // both off.
+    // Note: The signal being mapped might be an entire signal, e.g. s_SomePin,
+    // or it might be a slice of some hidden net, e.g. s_LOGISIM_HIDDEN_OUTPUT[7 downto 3].
+    // And that signal might get mapped together to a single I/O device, or each
+    // bit might be individually mapped to different I/O devices.
+    String signal; // e.g.: s_SomePin or s_LOGISIM_HIDDEN_OUTPUT[7 downto 3].
+    String bit;    // e.g.: s_SomePin or s_LOGISIM_HIDDEN_OUTPUT
+    int offset;    // e.g.: 0 or 3
+    int srcwidth = -1;
+    // System.out.println("Generating inline code signal for " + path);
+    PullBehavior inputPinPullDir = PullBehavior.NONE;
+    if (shadow.original.getFactory() instanceof Pin)
+      return; // Pin is not bidirectional
+    NetlistComponent.Range3 indices = shadow.getGlobalHiddenPortIndices(path);
+    if (indices == null)
+      return; // error
+    if (indices.end.in >= indices.start.in)
+      return; // input pin
+    if (indices.end.out >= indices.start.out)
+      return; // output pin
+
+    offset = indices.start.inout;
+    bit = "s_LOGISIM_HIDDEN_FPGA_BIDIR";
+    srcwidth = indices.end.inout - indices.start.inout + 1;
+    if (indices.end.inout == indices.start.inout) { // foo[5] is the only bit
+      signal = String.format(bit+out.idx, offset);
+    } else if (indices.end.inout > indices.start.inout) { // foo[8:3]
+      signal = String.format(bit+out.range, indices.end.inout, offset);
+    } else { // error
+      return;
+    }
+
+    // Sanity check: srcwidth should be positive.
+    if (srcwidth <= 0)
+      out.err.AddSevereWarning("Unexpected width for " + signal + ", expected srcwidth>0: srcwidth="+srcwidth);
+
+    // Notes for both cases below (binding entire port, or individual pins):
+    // - srcwidth, isInput, isOutput all come from the shadow's hidden ports.
+    // - src.width comes from the PinBinding dialog.
+    // - dest.io is the underlying synthetic input or physical fpga resource
+    // from the PinBinding dialog.
+
+    PinBindings.Source src = ioResources.sourceFor(path);
+    PinBindings.Dest dest = ioResources.mappings.get(src);
+    // System.out.println("src="+src);
+    // System.out.println("dest="+dest);
+    if (dest != null) { // Entire port is mapped to one BoardIO resource.
+
+      // Sanity check: src.width.in and src.width.out should be zero, because
+      // unidirectional components are handled elsewhere.
+      if (src.width.in != 0 || src.width.out != 0)
+        out.err.AddSevereWarning("Unexpected width for " + signal + ", expected in=out=0: src.width="+src.width+" srcwidth="+srcwidth);
+
+      // Sanity check: srcwidth should match src.width.inout
+      if (srcwidth != src.width.inout)
+        out.err.AddSevereWarning("Unexpected width for " + signal + ", expected srcwidth=src.width.inout: src.width="+src.width+" srcwidth="+srcwidth);
+
+      Netlist.Int3 destwidth = dest.io.getPinCounts();
+      // Sanity check: destwidth should have one non-zero component.
+      if (destwidth.isMixedDirection())
+        out.err.AddSevereWarning("Unexpected mixed direction for " + dest + ": destwidth="+destwidth);
+      // Sanity check: destwidth should be compatible with src.width.
+      if (src.width.inout > destwidth.inout)
+        out.err.AddSevereWarning("Unexpected mismatched widths for " + signal + " and " + dest + ": src.width="+src.width+" destwidth="+destwidth);
+
+      boolean invert = needTopLevelInversion(shadow.original, dest.io);
+      String maybeNot = (invert ? out.not + " " : "");
+      if (dest.io.type == BoardIO.Type.Unconnected) {
+        // If user assigned type "unconnected", do nothing. Synthesis will warn,
+        // but optimize away the signal.
+      } else if (!BoardIO.PhysicalTypes.contains(dest.io.type)) {
+        // Sanity check: only inputs can be synthetic.
+        out.err.AddSevereWarning("Conflicting synthetic input direction for " + signal);
+        // int constval = dest.io.syntheticValue;
+        // out.assign(signal, maybeNot+out.literal(constval, src.width.inout));
+      } else {
+        // Handle physical I/O device types.
+        Netlist.Int3 seqno = dest.seqno();
+        // Input half
+        // todo: support for PortIO pullup resistors?
+        // recordInputPullDirection(out, inputPinPullDir, shadow, src, dest);
+        if (useTristates) {
+          if (src.width.inout == 1) {
+            out.assign("in_"+signal, maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout);
+          } else for (int i = 0; i < src.width.inout; i++) { // TODO: verify src.width.inout instead of destwidth.inout
+            out.assign("in_"+bit, offset+i, maybeNot+"FPGA_BIDIR_PIN_"+(seqno.inout+i));
+          }
+          // Output half
+          if (src.width.inout == 1)
+            out.assignTristate("FPGA_BIDIR_PIN_"+seqno.inout, maybeNot+"out_"+signal, "en_"+signal);
+          else for (int i = 0; i < src.width.inout; i++) // TODO: verify src.width.inout instead of destwidth.inout
+            out.assignTristate("FPGA_BIDIR_PIN_"+(seqno.inout+i), maybeNot+"out_"+bit, offset+i, "en_"+bit, offset+i);
+        } else {
+          if (src.width.inout == 1) {
+            out.assign("in_"+signal, maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout+"_IN");
+            out.assign(maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout+"_OUT", "out_"+signal);
+            out.assign(maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout+"_EN", "en_"+signal);
+          } else for (int i = 0; i < src.width.inout; i++) { // TODO: verify src.width.inout instead of destwidth.inout
+            out.assign("in_"+bit, offset+i, maybeNot+"FPGA_BIDIR_PIN_"+(seqno.inout+i)+"_IN");
+            out.assign(maybeNot+"FPGA_BIDIR_PIN_"+(seqno.inout+i)+"_OUT", "out_"+bit, offset+i);
+            out.assign(maybeNot+"FPGA_BIDIR_PIN_"+(seqno.inout+i)+"_EN", "en_"+bit, offset+i);
+          }
+        }
+      }
+    } else { // Each bit of pin is assigned to a different BoardIO resource.
+      ArrayList<PinBindings.Source> srcs = ioResources.bitSourcesFor(path);
+      for (int i = 0; i < srcs.size(); i++)  {
+        src = srcs.get(i);
+        dest = ioResources.mappings.get(src);
+        // System.out.println("src["+i+"]="+src);
+        // System.out.println("dest["+i+"]="+dest);
+
+        // Individual pins are handled almost identically to the code above,
+        // with only slight changes. All the sanity checks in the above case
+        // apply as well, except src.width.inout will be 1, and srcwidth
+        // is no longer relevant.
+
+        // Sanity check: src.width.in and src.width.out should be zero, because
+        // unidirectional components are handled elsewhere.
+        if (src.width.in != 0 || src.width.out != 0)
+          out.err.AddSevereWarning("Unexpected width for " + signal + " bit " + i +", expected in=out=0: src.width="+src.width+" srcwidth="+srcwidth);
+
+        // Sanity check: srcwidth should match src.width.inout.
+        if (1 != src.width.inout)
+          out.err.AddSevereWarning("Unexpected width for " + signal + " bit " + i +", expected srcwidth=src.width.inout: src.width="+src.width+" srcwidth="+srcwidth);
+
+        Netlist.Int3 destwidth = dest.io.getPinCounts();
+        // Sanity check: destwidth should have one non-zero component.
+        if (destwidth.isMixedDirection())
+          out.err.AddSevereWarning("Unexpected mixed direction for " + dest + ": destwidth="+destwidth);
+        // Sanity check: destwidth should be compatible with src.width.
+        if (src.width.inout > destwidth.inout)
+          out.err.AddSevereWarning("Unexpected mismatched widths for " + signal + " and " + dest + ": src.width="+src.width+" destwidth="+destwidth);
+        
+        boolean invert = needTopLevelInversion(shadow.original, dest.io);
+        String maybeNot = (invert ? out.not + " " : "");
+        if (dest.io.type == BoardIO.Type.Unconnected) {
+          // If user assigned type "unconnected", do nothing. Synthesis will warn,
+          // but optimize away the signal.
+          continue;
+        } else if (!BoardIO.PhysicalTypes.contains(dest.io.type)) {
+          // Sanity check: only inputs can be synthetic.
+          out.err.AddSevereWarning("Conflicting synthetic input direction for " + signal + " bit " + i);
+          // int constval = dest.io.syntheticValue;
+          // out.assign(bit, offset+i, maybeNot+out.literal(constval, 1));
+        } else {
+          // Handle physical I/O device types.
+          Netlist.Int3 seqno = dest.seqno();
+          // Input half
+          // todo: support for PortIO pullup resistors?
+          // recordInputPullDirection(out, inputPinPullDir, shadow, src, dest);
+          if (useTristates) {
+            out.assign("in_"+bit, offset+i, maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout);
+            // Output half
+            out.assignTristate("FPGA_BIDIR_PIN_"+seqno.inout, maybeNot+"out_"+bit, offset+i, "en_"+bit, offset+i);
+          } else {
+            out.assign("in_"+bit, offset+i, maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout+"_IN");
+            out.assign(maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout+"_OUT", "out_"+bit, offset+i);
+            out.assign(maybeNot+"FPGA_BIDIR_PIN_"+seqno.inout+"_EN", "en_"+bit, offset+i);
+          }
+        }
+      }
+    }
+  }
+
   protected String[] getBidirPinAssignments(int n) {
     String[] fpgaPins = new String[n];
     // go through each hidden inout device
@@ -496,7 +685,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     // CircuitHDLGenerator to create the instance port mapping for the top-most
     // circuit under test.
     // Note: The signal being mapped is always a slice of
-    // LOGISIM_HIDDEN_FPGA_INOUT[n downto 0].
+    // LOGISIM_HIDDEN_FPGA_BIDIR[n downto 0].
     // And that signal might get mapped together to a single I/O device, or each
     // bit might be individually mapped to different I/O devices. Or to open, or
     // a constant.
@@ -511,12 +700,12 @@ public class ToplevelHDLGenerator extends HDLGenerator {
     if (indices.end.inout == indices.start.inout) {
       // foo[5] is the only bit
       offset = indices.start.inout;
-      bit = "LOGISIM_HIDDEN_FPGA_INOUT";
+      bit = "LOGISIM_HIDDEN_FPGA_BIDIR";
       signal = String.format(bit+_hdl.idx, offset);
     } else if (indices.end.inout > indices.start.inout) {
       // foo[8:3]
       offset = indices.start.inout;
-      bit = "LOGISIM_HIDDEN_FPGA_INOUT";
+      bit = "LOGISIM_HIDDEN_FPGA_BIDIR";
       signal = String.format(bit+_hdl.range, indices.end.inout, offset);
     } else {
       return; // not bidir
@@ -564,7 +753,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
       } else {
         // Handle physical I/O device types.
         for (int i = indices.start.inout; i <= indices.end.inout; i++)
-          fpgaPins[i] = "FPGA_INOUT_PIN_"+(seqno.inout++);
+          fpgaPins[i] = "FPGA_BIDIR_PIN_"+(seqno.inout++);
       }
     } else { // Each bit of port is assigned to a different BoardIO resource.
       ArrayList<PinBindings.Source> srcs = ioResources.bitSourcesFor(path);
@@ -591,7 +780,7 @@ public class ToplevelHDLGenerator extends HDLGenerator {
         } else {
           // Handle physical I/O device types.
           if (destwidth.inout == 1)
-            fpgaPins[i] = "FPGA_INOUT_PIN_"+(seqno.inout++);
+            fpgaPins[i] = "FPGA_BIDIR_PIN_"+(seqno.inout++);
         }
       }
     }
@@ -599,6 +788,10 @@ public class ToplevelHDLGenerator extends HDLGenerator {
   
   public void notifyNetlistReady() {
     circgen.notifyNetlistReady();
+  }
+
+	protected Hdl getArchitecture() {
+    return getArchitecture(useTristates);
   }
 
 }

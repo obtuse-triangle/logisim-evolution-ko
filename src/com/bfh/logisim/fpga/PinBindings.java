@@ -325,7 +325,7 @@ public class PinBindings {
     err.AddInfo("Assigning input pins");
     forEachPhysicalPin(f, w -> w.in, "FPGA_INPUT_PIN_");
     err.AddInfo("Assigning inout pins");
-    forEachPhysicalPin(f, w -> w.inout, "FPGA_INOUT_PIN_");
+    forEachPhysicalPin(f, w -> w.inout, "FPGA_BIDIR_PIN_");
     err.AddInfo("Assigning output pins");
     forEachPhysicalPin(f, w -> w.out, "FPGA_OUTPUT_PIN_");
   }

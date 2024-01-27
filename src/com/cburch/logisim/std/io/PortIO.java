@@ -270,10 +270,7 @@ public class PortIO extends InstanceFactory {
 
   @Override
   public HDLSupport getHDLSupport(HDLSupport.ComponentContext ctx) {
-    if (ctx.lang.equals("VHDL"))
-      return new PortIOHDLGenerator(ctx);
-    else
-      return null;
+    return new PortIOHDLGenerator(ctx);
   }
 
   @Override

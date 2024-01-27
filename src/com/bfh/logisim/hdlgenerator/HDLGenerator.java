@@ -257,6 +257,10 @@ public class HDLGenerator extends HDLSupport {
 
   // Generate the full HDL code for the "architecture" file.
 	protected Hdl getArchitecture() {
+    return getArchitecture(false);
+  }
+
+	protected Hdl getArchitecture(boolean useTristates) {
     Hdl out = new Hdl(_lang, _err);
     generateFileHeader(out);
 
@@ -294,7 +298,15 @@ public class HDLGenerator extends HDLSupport {
 
       ArrayList<String> portNames = new ArrayList<>();
       inPorts.forEach(p -> portNames.add(p.name));
-      inOutPorts.forEach(p -> portNames.add(p.name));
+      inOutPorts.forEach(p -> {
+        if (useTristates) {
+          portNames.add(p.name);
+        } else {
+          portNames.add(p.name+"_IN");
+          portNames.add(p.name+"_OUT");
+          portNames.add(p.name+"_EN");
+        }
+      });
       outPorts.forEach(p -> portNames.add(p.name));
       if (clockPort != null) {
         portNames.add(clockPort.ckPortName);
@@ -304,8 +316,13 @@ public class HDLGenerator extends HDLSupport {
       //   portNames.add(tickerPort.ckPortName);
       //   portNames.add(tickerPort.enPortName);
       // }
-      if (hiddenPort != null)
-        portNames.addAll(hiddenPort.labels);
+      if (hiddenPort != null) {
+        hiddenPort.labels.forEach(name -> {
+          portNames.add(name+"_in");
+          portNames.add(name+"_out");
+          portNames.add(name+"_en");
+        });
+      }
       out.stmt("module %s(\t %s );", hdlModuleName, String.join(",\n\t ", portNames));
 
       out.indent();
@@ -316,8 +333,15 @@ public class HDLGenerator extends HDLSupport {
           out.stmt("parameter %s;", p.name); // note: verilog does not include type
 			for (PortInfo p : inPorts)
 				out.stmt("input %s%s;", out.typeForWidth(p.width), p.name);
-			for (PortInfo p : inOutPorts)
-				out.stmt("inout %s%s;", out.typeForWidth(p.width), p.name);
+			for (PortInfo p : inOutPorts) {
+        if (useTristates) {
+          out.stmt("inout %s%s;", out.typeForWidth(p.width), p.name);
+        } else {
+          out.stmt("input %s%s;", out.typeForWidth(p.width), p.name+"_IN");
+          out.stmt("output %s%s;", out.typeForWidth(p.width), p.name+"_OUT");
+          out.stmt("output %s%s;", out.typeForWidth(p.width), p.name+"_EN");
+        }
+      }
 			for (PortInfo p : outPorts)
 				out.stmt("output %s%s;", out.typeForWidth(p.width), p.name);
       if (clockPort != null) {
@@ -329,8 +353,11 @@ public class HDLGenerator extends HDLSupport {
       if (hiddenPort != null) {
         for (String name : hiddenPort.inports)
           out.stmt("input %s; // special hidden port", name);
-        for (String name : hiddenPort.inoutports)
-          out.stmt("inout %s; // special hidden port", name);
+        for (String name : hiddenPort.inoutports) {
+          out.stmt("input %s_in; // special hidden bidir port", name);
+          out.stmt("output %s_out; // special hidden bidir port", name);
+          out.stmt("output %s_en; // special hidden bidir port", name);
+        }
         for (String name : hiddenPort.outports)
           out.stmt("output %s; // special hidden port", name);
       }
@@ -390,6 +417,10 @@ public class HDLGenerator extends HDLSupport {
 	}
 
 	protected void generateVhdlBlackBox(Hdl out, boolean isEntity) {
+    generateVhdlBlackBox(out, isEntity, false);
+  }
+
+	protected void generateVhdlBlackBox(Hdl out, boolean isEntity, boolean useTristates) {
     if (isEntity)
       out.stmt("entity %s is", hdlModuleName);
     else
@@ -411,8 +442,15 @@ public class HDLGenerator extends HDLSupport {
       ArrayList<String> ports = new ArrayList<>();
       for (PortInfo s: inPorts)
         ports.add(s.name + " : in " + out.typeForWidth(s.width));
-      for (PortInfo s: inOutPorts)
-        ports.add(s.name + " : inout " + out.typeForWidth(s.width));
+      for (PortInfo s: inOutPorts) {
+        if (useTristates) {
+          ports.add(s.name + " : inout " + out.typeForWidth(s.width));
+        } else {
+          ports.add(s.name + "_IN : in " + out.typeForWidth(s.width));
+          ports.add(s.name + "_OUT : out " + out.typeForWidth(s.width));
+          ports.add(s.name + "_EN : out " + out.typeForWidth(s.width));
+        }
+      }
       for (PortInfo s: outPorts)
         ports.add(s.name + " : out " + out.typeForWidth(s.width));
       if (clockPort != null) {
@@ -422,8 +460,15 @@ public class HDLGenerator extends HDLSupport {
       if (hiddenPort != null) {
         for (String name : hiddenPort.inports)
           ports.add(name + " : in " + out.typeForWidth(1));
-        for (String name : hiddenPort.inoutports)
-          ports.add(name + " : inout " + out.typeForWidth(1));
+        for (String name : hiddenPort.inoutports) {
+          if (useTristates) {
+            ports.add(name + " : inout " + out.typeForWidth(1));
+          } else {
+            ports.add(name + "_in : in " + out.typeForWidth(1));
+            ports.add(name + "_out : out " + out.typeForWidth(1));
+            ports.add(name + "_out : out " + out.typeForWidth(1));
+          }
+        }
         for (String name : hiddenPort.outports)
           ports.add(name + " : out " + out.typeForWidth(1));
       }
@@ -633,8 +678,11 @@ public class HDLGenerator extends HDLSupport {
     Netlist.Int3 id = comp.getLocalHiddenPortIndices().start;
     for (String name : hiddenPort.inports)
       map.add(name, "LOGISIM_HIDDEN_FPGA_INPUT", (id.in++));
-    for (String name : hiddenPort.inoutports)
-      map.add(name, "LOGISIM_HIDDEN_FPGA_INOUT", (id.inout++));
+    for (String name : hiddenPort.inoutports) {
+      map.add(name + "_in", "LOGISIM_HIDDEN_FPGA_BIDIR_IN", (id.inout));
+      map.add(name + "_out", "LOGISIM_HIDDEN_FPGA_BIDIR_OUT", (id.inout));
+      map.add(name + "_en", "LOGISIM_HIDDEN_FPGA_BIDIR_EN", (id.inout++));
+    }
     for (String name : hiddenPort.outports)
       map.add(name, "LOGISIM_HIDDEN_FPGA_OUTPUT", (id.out++));
   }

@@ -55,6 +55,7 @@ public class PortIOHDLGenerator extends HDLGenerator {
     }
 
     int n = _attrs.getValue(PortIO.ATTR_SIZE);
+    // note: n can be as large as 40 pins
     hiddenPort = HiddenPort.makeInOutport(n, HiddenPort.Ribbon, HiddenPort.Pin);
   }
 
@@ -99,7 +100,7 @@ public class PortIOHDLGenerator extends HDLGenerator {
   private static final String inBusName = "PIO_IN_BUS_";
   private static final String enBusName = "PIO_EN_BUS_";
   private static final String outBusName = "PIO_OUT_BUS_";
-  private static final String inOutBusName = "PIO_INOUT_BUS_";
+  // private static final String inOutBusName = "PIO_INOUT_BUS_";
 
   private static ArrayList<InOutMap> getPorts(AttributeSet attrs) {
     // Note: PortIO.INPUT yields *output* from this entity (from off-chip
@@ -139,41 +140,31 @@ public class PortIOHDLGenerator extends HDLGenerator {
 
   @Override
   protected void generateBehavior(Hdl out) {
-    if (out.isVhdl) {
-      for (InOutMap io : getPorts(_attrs)) {
-        String fpgaBus = inOutBusName + io.busNr;
-        String fpgaBusSlice;
-        if (io.size == 1)
-          fpgaBusSlice = String.format("%s(%d)", fpgaBus, io.end);
-        else
-          fpgaBusSlice = String.format("%s(%d downto %d)", fpgaBus, io.end, io.start);
+    for (InOutMap io : getPorts(_attrs)) {
+      for (int i = io.start; i <= io.end; i++) {
+        int bit = io.busNr * 32 + i;
+        String fpgaBus = hiddenPort.inoutports.get(i);
+        String enable;
         switch (io.type) {
-        case OUTPUT:
-          out.assign(io.name, fpgaBusSlice);
-          break;
-        case ALWAYSINPUT:
-          out.assign(fpgaBusSlice, io.name);
-          break;
-        case TRISTATEINPUT_1:
-          for (int i = io.end; i >= io.start; i--) {
-            String bus = String.format("%s(%d)", fpgaBus, i);
-            String enable = enBusName + 0;
-            String input = String.format("%s(%d)", io.name, i);
-            out.stmt("%s <= %s when %s = '1' else 'Z';", bus, input, enable);
-          }
-          break;
-        case TRISTATEINPUT_N:
-          for (int i = io.end; i >= io.start; i--) {
-            String bus = String.format("%s(%d)", fpgaBus, i);
-            String enable = String.format("%s%d(%d)", enBusName, io.busNr, i);
-            String input = String.format("%s(%d)", io.name, i);
-            out.stmt("%s <= %s when %s = '1' else 'Z';", bus, input, enable);
-          }
-          break;
-        // case BUS:
-        case ENABLE:
-          // nothing
-          break;
+          case OUTPUT:
+            out.assign(io.name, i, fpgaBus+"_in");
+            break;
+          case ALWAYSINPUT:
+            out.assign(fpgaBus+"_out", io.name, i);
+            out.assign(fpgaBus+"_en", out.bit(true));
+            break;
+          case TRISTATEINPUT_1:
+            out.assign(fpgaBus+"_out", io.name, i);
+            out.assign(fpgaBus+"_en", enBusName+"0");
+            break;
+          case TRISTATEINPUT_N:
+            out.assign(fpgaBus+"_out", io.name, i);
+            out.assign(fpgaBus+"_en", enBusName+io.busNr, i);
+            break;
+            // case BUS:
+          case ENABLE:
+            // nothing
+            break;
         }
       }
     }

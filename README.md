@@ -5,12 +5,11 @@ You can get the latest *stable version* of Logisim-Evolution (Holy Cross Edition
 
 [![Download for Windows](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-windows.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/Logisim-Evolution-5.0.3hc.exe)
 [![Download for Mac](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-mac.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/Logisim-Evolution-5.0.3-HC.pkg)
+[![Download for Intel Mac](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-mac-x86.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/Logisim-Evolution-5.0.3-HC-x86.pkg)
 [![Download for Linux](https://raw.githubusercontent.com/kevinawalsh/logisim-evolution/holycross/images/download-linux.jpg)](https://github.com/kevinawalsh/logisim-evolution/releases/download/v5.0.3/logisim-evolution-5.0.3hc.jar)
 
-**Older Mac Notice**: On older intel-based Macs, please use
-[Mac OS Version 4.0.4-HC](https://mathcs.holycross.edu/~kwalsh/Logisim-Evolution-4.0.4-HC.pkg),
-a slightly older version of the package. The newer 5.x version is not yet
-compiled in a format usable by older Macs.
+**Which version for Mac?**: Recent Mac systems should use the "Apple Silicon"
+version. Older Intel-based Macs should use the x86 version.
 
 **Mac Security Warning**: On some recent MacOS versions, the OS security
 gatekeeper may prevent you from opening the PKG file above directly. Instead,

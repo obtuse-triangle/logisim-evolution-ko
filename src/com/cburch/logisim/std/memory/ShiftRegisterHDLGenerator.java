@@ -65,104 +65,12 @@ public class ShiftRegisterHDLGenerator extends HDLGenerator {
 
   private static String deriveHDLName(AttributeSet attrs) {
     if (!attrs.getValue(ShiftRegister.ATTR_LOAD)) {
-      return "ShiftRegister"; // variation with 5 ports, no D/Q ports, generic in BitWidth and Stages
+      return "ShiftRegister"; // variation with clock, 4 control ports, no D/Q ports, generic in BitWidth and Stages
     } else {
       int n = attrs.getValue(ShiftRegister.ATTR_LENGTH);
-      return "ShiftRegister_"+n+"_stages"; // variation with 5 ports + 2*N D/Q ports, generic in BitWidth
+      return "ShiftRegister_"+n+"_stages"; // variation with clock, 5 control ports, 2*N D/Q ports, generic in BitWidth
     }
   }
-
-  // @Override
-	// protected Hdl getArchitecture() {
-  //   // Override this to emit our ShiftRegisterBitslice architecture in the same
-  //   // file before the regular architecture.
-  //   Hdl out = new Hdl(_lang, _err);
-  //   generateFileHeader(out);
-
-  //   if (out.isVhdl) {
-  //     out.stmt("ARCHITECTURE logisim_generated OF %s IS", sliceName());
-  //     out.stmt("   SIGNAL s_state_reg  : std_logic_vector(Stages-1 DOWNTO 0);");
-  //     out.stmt("   SIGNAL s_state_next : std_logic_vector(Stages-1 DOWNTO 0);");
-  //     out.stmt("BEGIN");
-  //     out.stmt("   Q        <= s_state_reg;");
-  //     out.stmt("   ShiftOut <= s_state_reg(Stages-1);");
-  //     out.stmt();
-  //     out.stmt("   s_state_next <= D WHEN ParLoad = '1' ELSE s_state_reg((Stages-2) DOWNTO 0)&ShiftIn;");
-  //     out.stmt();
-  //     out.stmt("   make_state : PROCESS(GlobalClock, ShiftEnable, ClockEnable, Reset, s_state_next, ParLoad)");
-  //     out.stmt("   BEGIN");
-  //     out.stmt("      IF (Reset = '1') THEN s_state_reg <= (OTHERS => '0');");
-  //     out.stmt("      ELSIF (GlobalClock'event AND (GlobalClock = '1')) THEN");
-  //     out.stmt("         IF (((ShiftEnable = '1') OR (ParLoad = '1')) AND (ClockEnable = '1')) THEN");
-  //     out.stmt("            s_state_reg <= s_state_next;");
-  //     out.stmt("         END IF;");
-  //     out.stmt("      END IF;");
-  //     out.stmt("   END PROCESS make_state;");
-  //     out.stmt("END logisim_generated;");
-  //   } else {
-  //     out.stmt("module %s ( Reset, ClockEnable, GlobalClock, ShiftEnable, ParLoad, ", sliceName());
-  //     out.stmt("                           ShiftIn, D, ShiftOut, Q );");
-  //     out.stmt("   parameter Stages = 1;");
-  //     out.stmt();
-  //     out.stmt("   input Reset;");
-  //     out.stmt("   input ClockEnable;");
-  //     out.stmt("   input GlobalClock;");
-  //     out.stmt("   input ShiftEnable;");
-  //     out.stmt("   input ParLoad;");
-  //     out.stmt("   input ShiftIn;");
-  //     out.stmt("   input[Stages:0] D;");
-  //     out.stmt("   output ShiftOut;");
-  //     out.stmt("   output[Stages:0] Q;");
-  //     out.stmt();
-  //     out.stmt("   wire[Stages:0] s_state_next;");
-  //     out.stmt("   reg[Stages:0] s_state_reg;");
-  //     out.stmt();
-  //     out.stmt("   assign Q            = s_state_reg;");
-  //     out.stmt("   assign ShiftOut     = s_state_reg[Stages-1];");
-  //     out.stmt("   assign s_state_next = (ParLoad) ? D : {s_state_reg[Stages-2:1],ShiftIn};");
-  //     out.stmt();
-  //     out.stmt("   always @(posedge GlobalClock or posedge Reset)");
-  //     out.stmt("   begin");
-  //     out.stmt("      if (Reset) s_state_reg <= 0;");
-  //     out.stmt("      else if ((ShiftEnable|ParLoad)&ClockEnable) s_state_reg <= s_state_next;");
-  //     out.stmt("   end");
-  //     out.stmt();
-  //     out.stmt("endmodule");
-  //   }
-  //   out.stmt();
-  //   out.stmt();
-  //   out.stmt();
-  //   out.addAll(super.getArchitecture());
-  //   return out;
-  // }
-  
-  // @Override
-	// protected Hdl getVhdlEntity() {
-  //   // Override to output the bitslice entity, superclass will do main entity.
-  //   Hdl out = new Hdl(_lang, _err);
-  //   generateFileHeader(out);
-  //   
-  //   if (out.isVhdl) {
-  //     generateVhdlLibraries(out);
-  //     out.stmt("ENTITY %s IS", sliceName());
-  //     out.stmt("   GENERIC ( Stages : INTEGER );");
-  //     out.stmt("   PORT ( Reset       : IN  std_logic;");
-  //     out.stmt("          ClockEnable : IN  std_logic;");
-  //     out.stmt("          GlobalClock : IN  std_logic;");
-  //     out.stmt("          ShiftEnable : IN  std_logic;");
-  //     out.stmt("          ParLoad     : IN  std_logic;");
-  //     out.stmt("          ShiftIn     : IN  std_logic;");
-  //     out.stmt("          D           : IN  std_logic_vector(Stages-1 DOWNTO 0);");
-  //     out.stmt("          ShiftOut    : OUT std_logic;");
-  //     out.stmt("          Q           : OUT std_logic_vector(Stages-1 DOWNTO 0));");
-  //     out.stmt("END %s;", sliceName());
-  //     out.stmt();
-  //     out.stmt();
-  //     out.stmt();
-  //   }
-  //   out.addAll(super.getVhdlEntity());
-  //   return out;
-  // }
 
   @Override
   protected void generateVhdlTypes(Hdl out) {
@@ -176,29 +84,6 @@ public class ShiftRegisterHDLGenerator extends HDLGenerator {
       out.stmt("   signal s_state_next : std_logic_vector((BitWidth*Stages)-1 downto 0);");
     }
   }
-
-  // @Override
-	// protected void generateComponentDeclaration(Hdl out) {
-  //   boolean parallel = _attrs.getValue(ShiftRegister.ATTR_LOAD);
-  //   if (parallel) {
-  //     int n = stages();
-  //     out.stmt("   COMPONENT ShiftRegister_%d_stages", n);
-  //     out.stmt("      GENERIC ( BitWidth : INTEGER );");
-  //     out.stmt("      PORT ( Reset       : IN  std_logic;");
-  //     out.stmt("             ClockEnable : IN  std_logic;");
-  //     out.stmt("             GlobalClock : IN  std_logic;");
-  //     out.stmt("             ShiftEnable : IN  std_logic;");
-  //     out.stmt("             ParLoad     : IN  std_logic;");
-  //     out.stmt("             ShiftIn     : IN  std_logic;");
-  //     out.stmt("             D           : IN  std_logic_vector(Stages-1 DOWNTO 0);");
-  //     out.stmt("             ShiftOut    : OUT std_logic;");
-  //     out.stmt("             Q           : OUT std_logic_vector(Stages-1 DOWNTO 0));");
-  //     out.stmt("   END COMPONENT;");
-  //   } else {
-  //     int n = stages();
-  //     ...
-  //   }
-  // }
 
   @Override
   protected void generateBehavior(Hdl out) {
@@ -234,36 +119,34 @@ public class ShiftRegisterHDLGenerator extends HDLGenerator {
       out.stmt("      end if;");
       out.stmt("   end process make_state;");
     } else {
-      // if (parallel)
-      //   out.stmt("   localparam Stages = %d;", stages());
-      // out.stmt("genvar n;");
-      // out.stmt("generate");
-      // out.stmt("   for (n = 0 ; n < BitWidth-1 ; n =n+1)");
-      // out.stmt("   begin:Bit");
-      // out.stmt("      %s #(.Stages(Stages))", sliceName());
-      // out.stmt("         OneBit (.Reset(Reset),");
-      // out.stmt("                 .ClockEnable(ClockEnable),");
-      // out.stmt("                 .GlobalClock(GlobalClock),");
-      // out.stmt("                 .ShiftEnable(ShiftEnable),");
-      // out.stmt("                 .ShiftIn(ShiftIn[n]),");
-      // out.stmt("                 .ShiftOut(ShiftOut[n]),");
-      // if (parallel) {
-      //   out.stmt("                 .ParLoad(ParLoad),");
-      //   ArrayList<String> d = new ArrayList<>();
-      //   ArrayList<String> q = new ArrayList<>();
-      //   for (int i = stages()-1; i >= 0; i--) {
-      //     d.add("D"+i+"(n)");
-      //     d.add("Q"+i+"(n)");
-      //   }
-      //   out.stmt("                 .D(%s)", String.join(",", d));
-      //   out.stmt("                 .Q(%s)", String.join(",", q));
-      // } else {
-      //   out.stmt("                 .ParLoad(0),");
-      //   out.stmt("                 .D(0),");
-      //   out.stmt("                 .Q(0);");
-      // }
-      // out.stmt("   end");
-      // out.stmt("endgenerate");
+      if (parallel) {
+        out.stmt("   localparam Stages = %d;", stages());
+        out.stmt("   wire[(Stages*BitWidth)-1:0] s_all_inputs;");
+      }
+      out.stmt("   wire[(Stages*BitWidth)-1:0] s_state_next;");
+      out.stmt("   reg[(Stages*BitWidth)-1:0] s_state_reg;");
+
+      if (parallel) {
+        String all = "D0";
+        for (int i = 0; i < n; i++) {
+          out.stmt("   assign Q"+i+" = s_state_reg[BitWidth*"+(i+1)+"-1 : BitWidth*"+(i)+"];");
+          if (i != 0) 
+            all = "D"+i + "," + all;
+        }
+        out.stmt("   assign s_all_inputs = {"+all+"};");
+        out.stmt("   assign s_state_next = (ParLoad) ? s_all_inputs : {ShiftIn, s_state_reg[(BitWidth*Stages)-1 : BitWidth]};");
+      } else {
+        out.stmt("   assign s_state_next == {ShiftIn, s_state_reg[(BitWidth*Stages)-1 : BitWidth]};");
+      }
+      out.stmt("   always @(posedge GlobalClock or posedge Reset)");
+      out.stmt("   begin");
+      out.stmt("      if (Reset) s_state_reg <= 0;");
+      if (parallel)
+        out.stmt("         else if ((ShiftEnable|ParLoad)&ClockEnable) s_state_reg <= s_state_next;");
+      else
+        out.stmt("         else if (ShiftEnable&ClockEnable) s_state_reg <= s_state_next;");
+      out.stmt("   end;");
+      out.stmt();
     }
   }
 

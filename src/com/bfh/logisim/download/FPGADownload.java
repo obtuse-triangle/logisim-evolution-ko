@@ -241,25 +241,34 @@ public abstract class FPGADownload {
   // public static final String APIO_PYVENV = "pyvenv.cfg";
   public static final String[] APIO_PROGRAMS = { BIN_APIO }; // APIO_PYVENV
 
-  public class Stage {
+  public abstract class Stage {
     public final String title, msg, errmsg;
     public Console console;
     public Thread thread;
     public int exitValue = -1;
     public boolean failed, cancelled;
 
-    ArrayList<String> cmd;
-
-    public Stage(String title, String msg, 
-        ArrayList<String> cmd, String errmsg) {
+    public Stage(String title, String msg, String errmsg) {
       this.title = title;
       this.msg = msg;
-      this.cmd = cmd;
       this.errmsg = errmsg;
     }
 
     protected boolean prep() { return true; }
     protected boolean post() { return true; }
+
+    public abstract void startAndThen(Runnable completion);
+  }
+
+  public class ProcessStage extends Stage {
+    
+    ArrayList<String> cmd;
+
+    public ProcessStage(String title, String msg, 
+        ArrayList<String> cmd, String errmsg) {
+      super(title, msg, errmsg);
+      this.cmd = cmd;
+    }
 
     public void startAndThen(Runnable completion) {
       if (!prep()) {
@@ -316,13 +325,13 @@ public abstract class FPGADownload {
     }
   }
 
-  public class RunnableStage extends Stage {
+  public abstract class RunnableStage extends Stage {
 
     public RunnableStage(String title, String msg, String errmsg) {
-      super(title, msg, null, errmsg);
+      super(title, msg, errmsg);
     }
 
-    protected boolean run() { return true; }
+    protected abstract boolean run();
 
     @Override
     public void startAndThen(Runnable completion) {
@@ -337,8 +346,10 @@ public abstract class FPGADownload {
             failed = true;
           else if (!post())
             failed = true;
-        // } catch (InterruptedException ex) {
-        //   failed = true;
+        } catch (Exception ex) {
+          failed = true;
+          try { console.printf(console.ERROR, ex.getMessage()); }
+          catch (Exception ex2) { }
         } finally {
           SwingUtilities.invokeLater(completion);
         }

@@ -113,38 +113,38 @@ public class XilinxDownload extends FPGADownload {
       ArrayList<String> tool = externalSynthesisScript();
       if (tool != null) {
         tool.add(projectPath);
-        stages.add(new Stage(
+        stages.add(new ProcessStage(
               "synthesis", "Synthesizing (may take a while)",
               tool, "Failed to synthesize design, cannot download"));
       } else {
         String script = scriptPath.replace(projectPath, "../") + script_file;
-        stages.add(new Stage(
+        stages.add(new ProcessStage(
               "synthesize", "Synthesizing (may take a while)",
               cmd(XILINX_XST, "-ifn", script, "-ofn", "logisim.log"),
               "Failed to synthesize Xilinx project, cannot download"));
         String ucf = ucfPath.replace(projectPath, "../") + ucf_file;
-        stages.add(new Stage(
+        stages.add(new ProcessStage(
               "constrain", "Adding Constraints",
               cmd(XILINX_NGDBUILD, "-intstyle", "ise", "-uc", ucf, "logisim.ngc", "logisim.ngd"),
               "Failed to add Xilinx constraints, cannot download"));
         if (!isCPLD(board.fpga)) {
-          stages.add(new Stage(
+          stages.add(new ProcessStage(
                 "mapping", "Mapping Design (may take a while)",
                 cmd(XILINX_MAP, "-intstyle", "ise", "-o", "logisim_map", "logisim.ngd"),
                 "Failed to map design, cannot download"));
-          stages.add(new Stage(
+          stages.add(new ProcessStage(
                 "place & route", "Place & Route Design (may take a while)",
                 cmd(XILINX_PAR, "-w", "-intstyle", "ise", "-ol", "high", "logisim_map", "logisim_par", "logisim_map.pcf"),
                 "Failed to place & route design, cannot download"));
           PullBehavior dir = board.fpga.UnusedPinsBehavior;
           if (dir == PullBehavior.PULL_UP || dir == PullBehavior.PULL_DOWN) {
-            stages.add(new Stage(
+            stages.add(new ProcessStage(
                   "generate", "Generating Bitfile",
                   cmd(XILINX_BITGEN, "-w", "-g", "UnusedPin:"+dir.xilinx.toUpperCase(),
                     "-g", "StartupClk:CCLK", "logisim_par", TOP_HDL + ".bit"),
                   "Failed to place & route design, cannot download"));
           } else {
-            stages.add(new Stage(
+            stages.add(new ProcessStage(
                   "generate", "Generating Bitfile",
                   cmd(XILINX_BITGEN, "-w", "-g", "StartupClk:CCLK", "logisim_par", TOP_HDL + ".bit"),
                   "Failed to generate bitfile, cannot download"));
@@ -153,13 +153,13 @@ public class XilinxDownload extends FPGADownload {
           String part = board.fpga.Part.toUpperCase() + "-"
             + board.fpga.SpeedGrade + "-"
             + board.fpga.Package.toUpperCase();
-          stages.add(new Stage(
+          stages.add(new ProcessStage(
                 "CPLD fit", "Fit CPLD Design (may take a while)",
                 cmd(XILINX_CPLDFIT, "-p", part, "-intstyle", "ise",
                   "-terminate", board.fpga.UnusedPinsBehavior.xilinx, // TODO: do correct termination type
                   "-loc", "on", "-log", "logisim_cpldfit.log", "logisim.ngd"),
                 "Failed to fit CPLD design, cannot download"));
-          stages.add(new Stage(
+          stages.add(new ProcessStage(
                 "generate", "Generating Bitfile",
                 cmd(XILINX_HPREP6, "-i", "logisim.vm6"),
                 "Failed to generate bitfile, cannot download"));
@@ -169,7 +169,7 @@ public class XilinxDownload extends FPGADownload {
 
     if (!board.fpga.USBTMCDownload) {
 				String download = scriptPath.replace(projectPath, "../") + download_file;
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "download", "Downloading to FPGA",
             cmd(XILINX_IMPACT, "-batch", download),
             "Failed to download design; did you connect the board?") {
@@ -183,33 +183,30 @@ public class XilinxDownload extends FPGADownload {
         }
       });
     } else {
-      stages.add(new Stage(
-            "download", "Downloading to FPGA", null,
+      stages.add(new RunnableStage(
+            "download", "Downloading to FPGA", 
             "Failed to download design; did you connect the board?") {
+        File usbtmc;
         @Override
-        public void startAndThen(Runnable completion) {
+        protected boolean prep() {
           if (!cmdr.confirmDownload()) {
             failed = true;
             cancelled = true;
-            completion.run();
-            return;
+            return false;
           }
           File usbtmc = new File("/dev/usbtmc0");
           if (!usbtmc.exists()) {
             console.printf(console.ERROR, "Could not find usbtmc device: /dev/usbtmc0 not found.");
             failed = true;
-            return;
+            return false;
           }
+          return true;
+        }
+        @Override
+        protected boolean run() {
           String bitFileExt = isCPLD(board.fpga) ? ".jed" : ".bit";
           File bitfile = new File(sandboxPath + TOP_HDL + bitFileExt);
-          thread = new Thread(() -> {
-            try {
-              failed = !copyFile(console, usbtmc, bitfile);
-            } finally {
-              SwingUtilities.invokeLater(completion);
-            }
-          });
-          thread.start();
+          return copyFile(console, usbtmc, bitfile);
         }
       });
     }

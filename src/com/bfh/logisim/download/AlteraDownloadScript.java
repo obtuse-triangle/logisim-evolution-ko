@@ -63,14 +63,14 @@ public class AlteraDownloadScript extends AlteraDownload {
         tool = script("--synthesize", "--flash", board.fpga.FlashName, projectPath);
       else
         tool = script("--synthesize", projectPath);
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "synthesis", "Synthesizing (may take a while)",
             tool, "Failed to synthesize design, cannot download"));
     }
 
     // list-cables
     ArrayList<String> scan = script("--list-cables");
-    stages.add(new Stage(
+    stages.add(new ProcessStage(
           "scan", "Searching for FPGA Devices",
           scan,
           "Could not find any FPGA devices. Did you connect the FPGA board?") {
@@ -89,8 +89,8 @@ public class AlteraDownloadScript extends AlteraDownload {
     });
 
     // program
-    stages.add(new Stage(
-          "download", "Downloading to FPGA", null,
+    stages.add(new ProcessStage(
+          "download", "Downloading to FPGA", null /* will be assigned in prep() */,
           "Failed to download design; did you connect the board?") {
       @Override
       protected boolean prep() {

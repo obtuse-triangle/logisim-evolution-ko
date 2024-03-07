@@ -288,14 +288,14 @@ public class ApioDownload extends FPGADownload {
 
     // synthesize
     if (!readyForDownload()) {
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "synthesis", "Synthesizing (may take a while)",
             apio("build","--top-module", "LogisimToplevelApioShell"),
             "Failed to synthesize design, cannot download"));
     }
 
     // upload
-    stages.add(new Stage(
+    stages.add(new ProcessStage(
           "upload", "Uploading to FPGA", 
            apio("upload"),
           "Failed to upload design; did you connect the board?") {

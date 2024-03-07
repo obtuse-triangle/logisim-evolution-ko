@@ -55,20 +55,20 @@ public class AlteraDownloadLocal extends AlteraDownload {
 
     if (!readyForDownload()) {
       String script = scriptPath.replace(projectPath, ".." + File.separator) + "AlteraDownload.tcl";
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "init", "Creating Quartus Project",
             cmd(ALTERA_QUARTUS_SH, "-t", script),
             "Failed to create Quartus project, cannot download"));
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "optimize", "Optimizing for Minimal Area",
             cmd(ALTERA_QUARTUS_MAP, TOP_HDL, "--optimize=area"),
             "Failed to optimize design, cannot download"));
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "synthesize", "Synthesizing (may take a while)",
             cmd(ALTERA_QUARTUS_SH, "--flow", "compile", TOP_HDL),
             "Failed to synthesize design, cannot download"));
       if (board.fpga.FlashDefined) { // do this even if flash wasn't requested, it's quick
-        stages.add(new Stage(
+        stages.add(new ProcessStage(
               "convert", "Convert JTAG bitstream (.sof) to Flash file (.pof) format",
               cmd(ALTERA_QUARTUS_CPF, "-c", "-d", board.fpga.FlashName,
                 sandboxPath + TOP_HDL + ".sof",
@@ -77,7 +77,7 @@ public class AlteraDownloadLocal extends AlteraDownload {
       }
     }
 
-    stages.add(new Stage(
+    stages.add(new ProcessStage(
           "scan", "Searching for FPGA Devices",
           cmd(ALTERA_QUARTUS_PGM, "--list"),
           "Could not find any FPGA devices. Did you connect the FPGA board?") {
@@ -96,8 +96,8 @@ public class AlteraDownloadLocal extends AlteraDownload {
       }
     });
 
-    stages.add(new Stage(
-          "download", "Downloading to FPGA", null,
+    stages.add(new ProcessStage(
+          "download", "Downloading to FPGA", null /* will be assigned in prep() */,
           "Failed to download design; did you connect the board?") {
       @Override
       protected boolean prep() {

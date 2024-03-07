@@ -13,6 +13,14 @@ define('URIBASE', '/quartus/');
 header("Content-Type: text/plain");
 set_time_limit(240);
 
+function str_endsWith( $haystack, $needle ) {
+    $length = strlen( $needle );
+    if( !$length ) {
+        return true;
+    }
+    return substr( $haystack, -$length ) === $needle;
+}
+
 /**
  * Creates a random unique temporary directory, with specified parameters,
  * that does not already exist (like tempnam(), but for dirs).
@@ -143,21 +151,35 @@ if (isset($_POST['operation']) && $_POST['operation'] == "list-cables") {
   run_quartus_cmd("Scanning for Attached Devices", "quartus_pgm", "--list");
 
 } else if (isset($_POST['operation']) && $_POST['operation'] == "program") {
+  #echo "0 in program...";
+  #ob_flush(); flush();
   $uploadfile = $_FILES["bitfile"]["tmp_name"];
+  #echo "a in program...";
+  #ob_flush(); flush();
   $bitfile = tempnam(sys_get_temp_dir(), "bitfile_");
-  if (str_ends_with($_FILES["bitfile"]["name"], ".sof")) {
+  #echo "b in program...";
+  #ob_flush(); flush();
+  if (str_endsWith($_FILES["bitfile"]["name"], ".sof")) {
+  #echo "1 in program...";
+  #ob_flush(); flush();
     rename($uploadfile, $bitfile .= '.sof');
-  } else if (str_ends_with($_FILES["bitfile"]["name"], ".pof")) {
+  } else if (str_endsWith($_FILES["bitfile"]["name"], ".pof")) {
+  #echo "2 in program...";
+  #ob_flush(); flush();
     rename($uploadfile, $bitfile .= '.pof');
   } else {
+  #echo "3 in program...";
+  #ob_flush(); flush();
     exit("error: unrecognized file name\n");
   }
 
   $cablename = $_POST['cable'];
 
   if (isset($_POST['mode']) && ($_POST['mode'] == "as" || $_POST['mode'] == "jtag")) {
-    run_quartus_cmd("Downloading Bitstream", "quartus_pgm", "-c $cablename -m $mode -o P;$bitfile")
+      $mode = $_POST['mode'];
+    run_quartus_cmd("Downloading Bitstream", "quartus_pgm", "-c '$cablename' -m '$mode' -o 'P;$bitfile'")
       or exit_cleanup($bitfile, "bitstream programming failed");
+    exit("success");
   } else {
     exit("error: unrecognized mode\n");
   }

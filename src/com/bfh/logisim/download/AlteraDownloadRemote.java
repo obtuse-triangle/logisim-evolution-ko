@@ -137,11 +137,11 @@ public class AlteraDownloadRemote extends AlteraDownload {
       }
     });
 
-    stages.add(new Stage(
-          "download", "Downloading to FPGA", null,
+    stages.add(new RunnableStage(
+          "download", "Downloading to FPGA", 
           "Failed to download design; did you connect the board?") {
       @Override
-      protected boolean prep() {
+      protected boolean run() {
         if (writeToFlash)
           return HTTP.post(console, url, "operation", "program", 
               "use64bit", use64bit,
@@ -150,6 +150,11 @@ public class AlteraDownloadRemote extends AlteraDownload {
           return HTTP.post(console, url, "operation", "program",
               "use64bit", use64bit,
               "mode", "jtag", "cable", cablename, "bitfile", new File(sandboxPath+bitfile));
+      }
+      @Override
+      protected boolean post() {
+        String lastline = console.getText().get(console.getText().size()-1);
+        return lastline.startsWith("success");
       }
     });
     return stages;

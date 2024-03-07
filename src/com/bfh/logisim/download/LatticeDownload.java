@@ -187,7 +187,7 @@ public class LatticeDownload extends FPGADownload {
 	  	
       String script = getRelativePath(scriptPath,synthFile);
       //String log = script.subSequence(0, script.lastIndexOf('.'))+".log"; 
-      stages.add(new Stage(
+      stages.add(new ProcessStage(
             "synthesize", "Synthesizing (may take a while)",
             //cmd(script, ">", log),
             cmd(script),
@@ -209,7 +209,7 @@ public class LatticeDownload extends FPGADownload {
 	}
 	downloadFile = getRelativePath(scriptPath,downloadFile);
 	
-	stages.add(new Stage("download", "Downloading to FPGA", cmd(downloadFile),
+	stages.add(new ProcessStage("download", "Downloading to FPGA", cmd(downloadFile),
 	  "Failed to download design; did you connect the board?") {
 	    @Override
 		protected boolean prep() {

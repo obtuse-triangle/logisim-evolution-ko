@@ -516,6 +516,21 @@ public class XmlProjectReader extends XmlReader {
       repairForAnalogLibrary(doc, root);
     }
 
+    for (Element compElt : XmlIterator.forDescendantElements(root, "comp"))
+      setDefaultForMissingConstantValues(doc, compElt, wiringLibName);
+  }
+  
+  private void setDefaultForMissingConstantValues(Document doc, Element elt, String wiringLibName) {
+    String lib = elt.getAttribute("lib");
+    String name = elt.getAttribute("name");
+    if (name == null || lib == null || !name.equals("Constant") || !lib.equals(wiringLibName))
+      return;
+    for (Element attrElt : XmlIterator.forChildElements(elt, "a")) {
+      String aname = attrElt.getAttribute("name");
+      if ("value".equalsIgnoreCase(aname))
+        return;
+    }
+    appendChildAttribute(doc, elt, "value", "0x1");
   }
 
   private void convertObsoletePinAttributes(Document doc, Element elt, String wiringLibName) {

@@ -90,6 +90,7 @@ public class Startup {
     options.put("-version", HEADLESS);
     options.put("-help", HEADLESS);
     options.put("-list", HEADLESS | NEEDFILE);
+    options.put("-pretty", 0);
     options.put("-png", HEADLESS | ONEPARAM | NEEDFILE);
     options.put("-tty", HEADLESS | ONEPARAM | NEEDFILE);
     options.put("-circuit", HEADLESS | ONEPARAM);
@@ -199,11 +200,17 @@ public class Startup {
           fail(S.get("ttyFormatError"));
         for (int j = 0; j < fmts.length; j++) {
           String fmt = fmts[j].trim();
-          if (fmt.equals("table"))
-            ret.ttyFormat |= TtyInterface.FORMAT_TABLE;
-          else if (fmt.startsWith("rows:")) {
-            TtyInterface.turingMaxSteps = Integer.parseInt(fmt.substring(5));
+          if (fmt.equals("pretty")) {
+            ret.ttyFormat |= TtyInterface.FORMAT_PRETTY;
+            ret.headlessPretty = true;
           }
+          else if (fmt.equals("png")) {
+            ret.ttyFormat |= TtyInterface.FORMAT_INCLUDE_PNG;
+          }
+          else if (fmt.equals("table"))
+            ret.ttyFormat |= TtyInterface.FORMAT_TABLE;
+          else if (fmt.startsWith("rows:"))
+            TtyInterface.turingMaxSteps = Integer.parseInt(fmt.substring(5));
           else if (fmt.startsWith("turing:")) {
             ret.ttyFormat |= TtyInterface.FORMAT_TURING;
             TtyInterface.turingInitialTape = fmt.substring(7);
@@ -260,6 +267,8 @@ public class Startup {
         ret.headlessPngCircuits = circuits;
       } else if (arg.equals("-list")) {
         ret.headlessList = true;
+      } else if (arg.equals("-pretty")) {
+        ret.headlessPretty = true;
       } else if (arg.equals("-sub")) {
         if (ret.substitutions.containsKey(param0))
           fail(S.get("argDuplicateSubstitutionError"));
@@ -486,7 +495,7 @@ public class Startup {
   }
 
   // based on command line
-  boolean headlessTty, headlessPng, headlessList;
+  boolean headlessTty, headlessPng, headlessList, headlessPretty;
   String headlessPngCircuits[];
   private File templFile = null;
   private boolean templEmpty = false;

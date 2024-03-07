@@ -186,7 +186,7 @@ public class TtyInterface {
   }
 
   private static boolean displayTableRow(boolean showHeader, ArrayList<Object> prevOutputs,
-      ArrayList<Object> curOutputs, ArrayList<String> headers, ArrayList<String> formats, int format) {
+      ArrayList<Object> curOutputs, ArrayList<String> headers, ArrayList<String> formats, int format, int numOutputs) {
     boolean shouldPrint = false;
     if (prevOutputs == null) {
       shouldPrint = true;
@@ -210,24 +210,34 @@ public class TtyInterface {
         sep = " ";
       if (showHeader) {
         for (int i = 0; i < headers.size(); i++) {
+          String brk = "";
+          if ((format & FORMAT_PRETTY) != 0 && i > 0  && i == headers.size() - numOutputs)
+            brk = "| ";
           if ((format & FORMAT_TABLE_TABBED) != 0)
-            formats.add("%s");
+            formats.add(brk+"%s");
           else if ((format & FORMAT_TABLE_CSV) != 0)
-            formats.add("%s");
+            formats.add(brk+"%s");
           else { // if ((format & FORMAT_TABLE_PRETTY) != 0)
             int w = headers.get(i).length();
             Object o = curOutputs.get(i);
             w = Math.max(w, valueFormat(curOutputs.get(i), format).length());
-            formats.add("%" + w + "s");
+            formats.add(brk+"%" + w + "s");
           }
         }
+        String hdr = "";
+        if ((format & FORMAT_PRETTY) != 0)
+          hdr += "    ";
         for (int i = 0; i < headers.size(); i++) {
           if (i != 0)
-            System.out.print(sep); // OK
-          System.out.printf(formats.get(i), headers.get(i)); // OK
+            hdr += sep;
+          hdr += String.format(formats.get(i), headers.get(i));
         }
-        System.out.println(); // OK
+        System.out.println(hdr); // OK
+        if ((format & FORMAT_PRETTY) != 0)
+          System.out.println("    " + ("~".repeat(hdr.length()-4)));
       }
+      if ((format & FORMAT_PRETTY) != 0)
+          System.out.print("    ");
       for (int i = 0; i < curOutputs.size(); i++) {
         if (i != 0)
           System.out.print(sep); // OK
@@ -335,21 +345,31 @@ public class TtyInterface {
 
     int ret = 0;
     if (args.headlessList) {
-      ret = doList(file);
-    }
-    if (ret == 0 && args.headlessPng) {
-      ret = doPng(args.headlessPngCircuits, file);
+      ret = doList(file, fileToOpen.getName(), args);
     }
     if (ret == 0 && args.headlessTty) {
       ret = doTty(args.getTtyFormat(), args.getLoadFile(), file, args.getCircuitToTest(),
           args.getTtyRandomHead(), args.getTtyRandomBody(), args.getTtyRandomTail());
+      if ((args.getTtyFormat() & FORMAT_INCLUDE_PNG) != 0)
+        ret |= doPng(new String[] { args.getCircuitToTest() }, file, args.headlessPretty);
+    }
+    if (ret == 0 && args.headlessPng) {
+      ret = doPng(args.headlessPngCircuits, file, args.headlessPretty);
     }
     System.exit(ret);
   }
 
-  static int doList(LogisimFile.FileWithSimulations file) {
+  static int doList(LogisimFile.FileWithSimulations file, String fileName, Startup args) {
+    if (args.headlessPretty) {
+      int n = file.file.getCircuits().size();
+      if (n == 0)
+        System.out.printf("*  Project '%s' contains 0 circuits.\n", fileName);
+      else
+        System.out.printf("*  Project '%s' contains %d circuits.\n", fileName, n);
+    }
+    File fileToOpen = args.getFilesToOpen().get(0);
     for (Circuit c : file.file.getCircuits()) {
-      System.out.println(c);
+      System.out.println((args.headlessPretty ? "   - " : "") + c);
     }
     return 0;
   }
@@ -361,7 +381,7 @@ public class TtyInterface {
 		return filename + ext;
 	}
 
-  static int doPng(String names[], LogisimFile.FileWithSimulations file) {
+  static int doPng(String names[], LogisimFile.FileWithSimulations file, boolean headlessPretty) {
     double scale = 1.0;
     String format = ExportImage.FORMAT_PNG;
     Project proj = new Project(file);
@@ -372,11 +392,14 @@ public class TtyInterface {
         if (!n.trim().equals("*") && !n.trim().equals(c.toString()))
           continue;
         File dest = new File(sanitize(c.toString(), ".png"));
-        System.out.println("Exporting " + c + " as " + dest);
+        if (!headlessPretty)
+          System.out.println("Exporting " + c + " as " + dest);
         String msg = ExportImage.exportImage(canvas, c, scale, true, dest, format, null);
         if (msg != null) {
           System.err.println(msg);
           err = 1;
+        } else if (headlessPretty) {
+          System.out.printf("\n[](%s)\n", dest);
         }
       }
     }
@@ -393,6 +416,11 @@ public class TtyInterface {
       System.exit(0);
     }
 
+    if ((format & FORMAT_PRETTY) != 0) {
+      System.out.printf("# %s\n\n", circuitToTest);
+      System.out.printf("*  Testing '%s' with various possible inputs\n\n", circuitToTest);
+    }
+
     Project proj = new Project(file);
     Circuit circuit;
     if (circuitToTest == null || circuitToTest.length() == 0) {
@@ -401,7 +429,10 @@ public class TtyInterface {
       circuit = file.file.getCircuit(circuitToTest);
     }
     if (circuit == null) {
-        System.out.println("Could not find circuit '" + circuitToTest+"'");
+        if ((format & FORMAT_PRETTY) != 0)
+          System.out.println("  (no circuit found)");
+        else
+          System.out.println("Could not find circuit '" + circuitToTest+"'");
         System.exit(1);
     }
     Map<Instance, String> pinNames = Analyze.getPinLabels(circuit);
@@ -482,6 +513,7 @@ public class TtyInterface {
       circState.getPropagator().propagate();
     }
     int simCode = runSimulation(circState, outputPins, pinNames, haltPin, sreg, tape, format);
+
     return simCode;
   }
 
@@ -570,7 +602,7 @@ public class TtyInterface {
         // halted |= p.isHalted(val, vals);
       }
       if (showTable) {
-        if (displayTableRow(needTableHeader, prevOutputs, curOutputs, headers, formats, format)) {
+        if (displayTableRow(needTableHeader, prevOutputs, curOutputs, headers, formats, format, curOutputs.size())) {
           needTableHeader = false;
           ndup = 0;
           nrows++;
@@ -704,12 +736,14 @@ public class TtyInterface {
       }
     }
     /* output pins last */
+    int numOutputs = 0;
     for (Map.Entry<Instance, String> entry : pinLabels.entrySet()) {
       Instance pin = entry.getKey();
       String pinName = entry.getValue();
       if (!Pin.FACTORY.isInputPin(pin)) {
         headers.add(pinName);
         pinList.add(pin);
+        numOutputs++;
       }
     }
 
@@ -754,7 +788,7 @@ public class TtyInterface {
     for (ii = 0; ii < allidx.length; ii++) {
       int i = allidx[ii];
       if (ii == head || i == rowCount-tail)
-        System.out.println("...");
+        System.out.println((format & FORMAT_PRETTY) != 0 ? "    ...." : "...");
       valueMap.clear();
       CircuitState circuitState = CircuitState.createRootState(proj, circuit);
       int incol = 0;
@@ -795,7 +829,7 @@ public class TtyInterface {
       for (Instance pin : pinList) {
         currValues.add(valueMap.get(pin));
       }
-      displayTableRow(needTableHeader, null, currValues, headers, formats, format);
+      displayTableRow(needTableHeader, null, currValues, headers, formats, format, numOutputs);
       needTableHeader = false;
     }
 
@@ -823,6 +857,9 @@ public class TtyInterface {
   public static final int FORMAT_TURING =       1 << 12;
   public static String turingInitialTape = "";
   public static int turingMaxSteps = -1;
+
+  public static final int FORMAT_PRETTY = 1 << 13;
+  public static final int FORMAT_INCLUDE_PNG = 1 << 14;
 
   private static boolean lastIsNewline = true;
 }

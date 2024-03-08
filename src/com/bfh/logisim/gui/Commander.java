@@ -131,6 +131,7 @@ public class Commander extends JFrame
   private final JPopupMenu actionPopup = new JPopupMenu("Options");
   private final HashMap<String, JCheckBoxMenuItem> actionItems = new HashMap<>();
   private final JCheckBox writeToFlash = new JCheckBox("Flash?");
+  private final JCheckBox remoteJTAG = new JCheckBox("Remote JTAG?");
 
   private final ComboBox<String> boardsList = new ComboBox<>();
   private final ComboBox<Circuit> circuitsList = new ComboBox<>();
@@ -270,6 +271,7 @@ public class Commander extends JFrame
     buttons.add(annotateButton);
     buttons.add(new JDropdownButton(actionButton, actionPopup, getIcon("dropdown.png")));
     buttons.add(writeToFlash);
+    buttons.add(remoteJTAG);
 
     // layout board options
     JPanel boardOptions = new JPanel();
@@ -967,6 +969,7 @@ public class Commander extends JFrame
     tools.sandboxPath = circdir + SANDBOX_DIR;
     tools.ucfPath = circdir + UCF_DIR;
     tools.writeToFlash = writeToFlash.isSelected() && board.fpga.FlashDefined;
+    tools.remoteJTAG = remoteJTAG.isSelected();
     return tools;
   }
 
@@ -1008,6 +1011,7 @@ public class Commander extends JFrame
     actionButton.setEnabled(!dl && board != null);
     writeToFlash.setEnabled(!dl && board != null && board.fpga.FlashDefined
         && !actionItems.get(HDL_GEN_ONLY).isSelected());
+    remoteJTAG.setEnabled(true);
     boardsList.setEnabled(!dl);
     circuitsList.setEnabled(!dl);
     clockOption.setEnabled(!dl);
@@ -1103,6 +1107,7 @@ public class Commander extends JFrame
     clearConsoles();
     actionButton.setEnabled(board != null);
     boolean toolchainReady = false;
+    boolean toolchainSupportsRemoteJTAG = false;
     if (board == null) {
         eprintf("Please select an FPGA board.");
     } else {
@@ -1117,6 +1122,7 @@ public class Commander extends JFrame
             + " and " + board.fpga.VendorName + " FPGA synthesis.");
       } else {
         toolchainReady = true;
+        toolchainSupportsRemoteJTAG = tools.supportsRemoteJTAG;
       }
     }
     if (!toolchainReady) {
@@ -1138,6 +1144,11 @@ public class Commander extends JFrame
       writeToFlash.setToolTipText("Download bitstream to FPGA board flash device?");
     else
       writeToFlash.setToolTipText("Selected FPGA board does not support downloading to flash device.");
+    remoteJTAG.setEnabled(toolchainSupportsRemoteJTAG);
+    if (toolchainSupportsRemoteJTAG)
+      remoteJTAG.setToolTipText("Download bitstream to remotely-connected FPGA device?");
+    else
+      remoteJTAG.setToolTipText("Selected toolchain does not support remotely-connected FPGA devices.");
   }
 
   // private void setAnnotate(String choice) {

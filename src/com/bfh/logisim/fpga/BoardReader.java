@@ -68,7 +68,7 @@ public class BoardReader {
       if (name.toLowerCase().endsWith(".xml"))
         name = name.substring(0, name.length()-4);
 
-			Board b = new Board(name, parseApioName(doc), parseChipset(doc), parsePicture(doc));
+			Board b = new Board(name, parseApioName(doc), parseOpenFPGALoaderName(doc), parseChipset(doc), parsePicture(doc));
       parseComponents(doc, "PinsInformation", b); // backwards compatability	
 			parseComponents(doc, "ButtonsInformation", b); // backwards compatability	
 			parseComponents(doc, "LEDsInformation", b); // backwards compatability	
@@ -150,6 +150,18 @@ public class BoardReader {
     if (apio_name != null && apio_name.equals(""))
       apio_name = null;
     return apio_name;
+  }
+
+  private static String parseOpenFPGALoaderName(Document doc) throws Exception {
+    NodeList xml = getSection(doc, "BoardInformation");
+    if (xml == null)
+      return null;
+    String openFPGALoader_name = xmlToMap(xml).get("openFPGAloader/Name");
+    if (openFPGALoader_name != null)
+      openFPGALoader_name = openFPGALoader_name.trim();
+    if (openFPGALoader_name != null && openFPGALoader_name.equals(""))
+      openFPGALoader_name = null;
+    return openFPGALoader_name;
   }
 
   private static void parseComponents(Document doc, String section, Board board)

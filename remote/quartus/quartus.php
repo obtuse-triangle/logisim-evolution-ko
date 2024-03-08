@@ -240,6 +240,35 @@ if (isset($_POST['operation']) && $_POST['operation'] == "list-cables") {
       "quartus_cpf", "-c -d $flashname LogisimToplevelShell.sof LogisimToplevelShell.pof")
       or exit_cleanup($qdir, "bitstream conversion failed");
   }
+  if (isset($_POST['format'])) {
+      if ($_POST['format'] == "svf") { // for openFPGAloader using Serial Vector Format / Altera STAPL
+          run_quartus_cmd("Converting JTAG (.sof) to Serial Vector Format (.svf) bitstream format",
+              "quartus_cpf", "-c -q 24.0MHz -g 3.3 -n p LogisimToplevelShell.sof LogisimToplevelShell.svf")
+              or exit_cleanup($qdir, "bitstream conversion failed");
+          // Note: The openFPGAloader example usage specifies 12.0MHz, but jtag
+          // TCK frequency for usb-blaster default is 24MHz, and cable says it
+          // supports 16MHz and 6Mhz. 
+          // Note: Voltage 3.3 matches openFPGAloader example usage, and best
+          // guess for DE0 board.
+          // Note: -n p specifies "program" operation, -n v is verify, -n pb is program-and-blank-check.
+      } else if ($_POST['format'] == "rpd") { // for openFPGAloader using Raw Programming Data file
+          run_quartus_cmd("Converting JTAG (.sof) to Raw Programming Data (.rpd) bitstream format",
+              "quartus_cpf", "-c LogisimToplevelShell.sof LogisimToplevelShell.rpd")
+              or exit_cleanup($qdir, "bitstream conversion failed");
+          // Note: The openFPGAloader example usage specifies other options, but this seems to work.
+      } else if ($_POST['format'] == "rbf") { // for openFPGAloader using Raw Binary File
+          run_quartus_cmd("Converting JTAG (.sof) to Raw Binary File (.rbf) bitstream format",
+              "quartus_cpf", "--option=bitstream_compression=off -c LogisimToplevelShell.sof LogisimToplevelShell.rbf")
+              or exit_cleanup($qdir, "bitstream conversion failed");
+      } else if ($_POST['format'] == "pof") {
+          if (!isset($_POST['flashname'])) {
+              exit_cleanup($qdir, "Flash bitstream format requires flashname option.");
+          }
+      } else if ($_POST['format'] == "sof") {
+      } else {
+          exit_cleanup($qdir, "unrecognized bitstream format");
+      }
+  }
 
   echo "===============================================\n";
   echo "Preparing Results\n";

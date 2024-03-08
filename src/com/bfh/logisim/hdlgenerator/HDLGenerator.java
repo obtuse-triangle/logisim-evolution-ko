@@ -466,7 +466,7 @@ public class HDLGenerator extends HDLSupport {
           } else {
             ports.add(name + "_in : in " + out.typeForWidth(1));
             ports.add(name + "_out : out " + out.typeForWidth(1));
-            ports.add(name + "_out : out " + out.typeForWidth(1));
+            ports.add(name + "_en : out " + out.typeForWidth(1));
           }
         }
         for (String name : hiddenPort.outports)

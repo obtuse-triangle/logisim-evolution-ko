@@ -81,6 +81,8 @@ public class Settings {
   private static final String Altera64Bit = "Altera64Bit";
   private static final String LatticeToolsPath = "LatticeToolsPath";
   private static final String ApioToolsPath = "ApioToolsPath";
+  private static final String OpenFPGAloaderPath = "openFPGAloaderPath";
+  private static final String RawBinaryFormat = "RawBinaryFormat";
   private static final String HDLTypeToGenerate = "HDLTypeToGenerate";
   private static final String FPGABoards = "FPGABoards";
   private static final String SelectedBoard = "SelectedBoard";
@@ -235,6 +237,11 @@ public class Settings {
     return normalizePath(s);
   }
 
+  public String GetOpenFPGALoaderPath() {
+    String s = getAttribute(WorkSpace, OpenFPGAloaderPath, "");
+    return normalizePath(s);
+  }
+
   public boolean SetAlteraToolPath(String path) {
     path = normalizePath(path);
     if (!validAlteraToolPath(path))
@@ -293,6 +300,29 @@ public class Settings {
     path = normalizePath(path);
     return path == null
       || allToolsPresent(path, FPGADownload.APIO_PROGRAMS);
+  }
+
+  public boolean SetOpenFPGAloaderPath(String path) {
+    path = normalizePath(path);
+    if (!validOpenFPGAloaderPath(path))
+      return false;
+    setAttribute(WorkSpace, OpenFPGAloaderPath, path);
+    return true;
+  }
+
+  public boolean validOpenFPGAloaderPath(String path) {
+    path = normalizePath(path);
+    return path == null
+      || isExecutableScript(path);
+  }
+
+  public boolean GetUseRBF() {
+    String s = getAttribute(WorkSpace, RawBinaryFormat, "false");
+    return "true".equalsIgnoreCase(s);
+  }
+
+  public void SetUseRBF(boolean enable) {
+    setAttribute(WorkSpace, RawBinaryFormat, ""+enable);
   }
 
   public Collection<String> GetBoardNames() {

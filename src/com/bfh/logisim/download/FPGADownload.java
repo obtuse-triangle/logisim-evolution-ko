@@ -55,6 +55,8 @@ public abstract class FPGADownload {
 
   public final String name;
 
+  public Settings settings;
+
   public FPGADownload(String name) {
     this.name = name;
   }
@@ -93,13 +95,13 @@ public abstract class FPGADownload {
   public FPGAReport err;
   public String lang;
   public Board board;
-  public Settings settings;
   public String projectPath;
   public String circuitPath;
   public String scriptPath;
   public String sandboxPath;
   public String ucfPath;
   public boolean writeToFlash;
+  public boolean remoteJTAG, supportsRemoteJTAG = false;
 
   public abstract boolean toolchainIsInstalled(Settings settings, FPGAReport err);
 

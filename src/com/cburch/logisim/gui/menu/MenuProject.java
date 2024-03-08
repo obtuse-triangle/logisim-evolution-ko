@@ -33,9 +33,12 @@ import static com.cburch.logisim.gui.menu.Strings.S;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import com.cburch.logisim.proj.Project;
 
@@ -108,6 +111,10 @@ class MenuProject extends Menu {
     menubar.registerItem(LogisimMenuBar.ANALYZE_CIRCUIT, analyze);
     menubar.registerItem(LogisimMenuBar.CIRCUIT_STATS, stats);
     options.addActionListener(myListener);
+
+    int menuMask = getToolkit().getMenuShortcutKeyMaskEx();
+    addCircuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, menuMask
+          | InputEvent.SHIFT_DOWN_MASK));
 
     loadLibrary.add(loadBuiltin);
     loadLibrary.add(loadLogisim);

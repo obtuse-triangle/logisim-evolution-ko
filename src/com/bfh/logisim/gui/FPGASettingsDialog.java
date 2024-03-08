@@ -60,8 +60,8 @@ public class FPGASettingsDialog implements ActionListener {
 
 	private JDialog panel;
 	private Settings settings;
-	private JTextField alteraPath, xilinxPath, latticePath, apioPath, workPath;
-	private JRadioButton altera32Choice, altera64Choice;
+	private JTextField alteraPath, xilinxPath, latticePath, apioPath, openFPGAloaderPath, workPath;
+	private JRadioButton altera32Choice, altera64Choice, svfChoice, rbfChoice;
 
 	public FPGASettingsDialog(JFrame parentFrame, Settings settings) {
 		this.settings = settings;
@@ -83,6 +83,8 @@ public class FPGASettingsDialog implements ActionListener {
 		if (lpath == null) lpath = "";
 		String ppath = settings.GetApioToolPath();
 		if (ppath == null) ppath = "";
+		String fpath = settings.GetOpenFPGALoaderPath();
+		if (fpath == null) ppath = "";
 		String wpath = settings.GetStaticWorkspacePath();
 		if (wpath == null) wpath = "";
 
@@ -91,6 +93,7 @@ public class FPGASettingsDialog implements ActionListener {
 		JLabel xilinxSection = new JLabel("Xilinx Settings");
 		JLabel latticeSection = new JLabel("Lattice Settings");
 		JLabel apioSection = new JLabel("Apio Settings");
+		JLabel openFPGAloaderSection = new JLabel("openFPGAloader Settings");
 		Font font = globalSection.getFont();
 		Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
 		globalSection.setFont(boldFont);
@@ -98,6 +101,7 @@ public class FPGASettingsDialog implements ActionListener {
 		xilinxSection.setFont(boldFont);
 		latticeSection.setFont(boldFont);
 		apioSection.setFont(boldFont);
+		openFPGAloaderSection.setFont(boldFont);
 
 		JLabel workLabel = new JLabel("Temporary directory for compilation:");
 		workPath = new JTextField(wpath);
@@ -148,6 +152,24 @@ public class FPGASettingsDialog implements ActionListener {
 		JButton apioPicker = new JButton("Choose");
 		apioPicker.setActionCommand("apioPicker");
 		apioPicker.addActionListener(this);
+
+		JLabel openFPGAloaderLabel = new JLabel("openFPGAloader tools path (path to executable, or blank to use system):");
+		openFPGAloaderPath = new JTextField(ppath);
+		openFPGAloaderPath.setPreferredSize(new Dimension(450, 10));
+		openFPGAloaderPath.setToolTipText("Path to openFPGAloader executable, or leave blank to use system");
+		JButton openFPGAloaderPicker = new JButton("Choose");
+		openFPGAloaderPicker.setActionCommand("openFPGAloaderPicker");
+		openFPGAloaderPicker.addActionListener(this);
+
+		svfChoice = new JRadioButton("svf (Serial Vector Format)");
+		rbfChoice = new JRadioButton("rbf (Raw Binary File)");
+		ButtonGroup group2 = new ButtonGroup();
+		group2.add(svfChoice);
+		group2.add(rbfChoice);
+		if (settings.GetUseRBF())
+			rbfChoice.setSelected(true);
+		else
+			svfChoice.setSelected(true);
 
 		JButton ok = new JButton("OK");
 		ok.setActionCommand("OK");
@@ -217,6 +239,20 @@ public class FPGASettingsDialog implements ActionListener {
 		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
 		panel.add(apioPicker, c);
 
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(10, 10, 5, 0);
+		panel.add(openFPGAloaderSection, c);
+
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
+		panel.add(openFPGAloaderLabel, c);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
+		panel.add(openFPGAloaderPath, c);
+		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.fill = GridBagConstraints.NONE; c.insets = new Insets(2, 5, 0, 0);
+		panel.add(openFPGAloaderPicker, c);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 20, 0, 0);
+		panel.add(svfChoice, c);
+		c.gridx = 0; c.gridy = ++y; c.gridwidth = 2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(2, 20, 0, 0);
+		panel.add(rbfChoice, c);
+
 		c.gridx = 0; c.gridy = ++y; c.gridwidth = 1; c.anchor = GridBagConstraints.EAST; c.insets = new Insets(20, 50, 20, 20);
 		panel.add(cancel, c);
 		c.gridx = 1; c.gridy = y; c.gridwidth = 1; c.anchor = GridBagConstraints.WEST; c.insets = new Insets(20, 0, 20, 20);
@@ -247,6 +283,8 @@ public class FPGASettingsDialog implements ActionListener {
 			pick("Lattice", latticePath.getText(), false);
 		} else if (e.getActionCommand().equals("apioPicker")) {
 			pick("Apio", apioPath.getText(), false);
+		} else if (e.getActionCommand().equals("openFPGAloaderPicker")) {
+			pick("openFPGAloader", openFPGAloaderPath.getText(), false);
 		} else if (e.getActionCommand().equals("Cancel")) {
 			panel.setVisible(false);
 		} else if (e.getActionCommand().equals("OK")) {
@@ -294,6 +332,13 @@ public class FPGASettingsDialog implements ActionListener {
 					"Invalid python virtualenv directory.\n" +
 					"Please select a directory containing " + names + ".");
 		}
+		String fpath = openFPGAloaderPath.getText();
+		if (!settings.SetOpenFPGAloaderPath(fpath)) {
+			JOptionPane.showMessageDialog(null,
+					"Invalid setting for openFPGAloader path.\n" +
+					"Please select eecutable or a directory containing openFPGAloader.");
+		}
+		settings.SetUseRBF(rbfChoice.isSelected());
 		settings.SetStaticWorkspacePath(workPath.getText());
 		settings.UpdateSettingsFile();
 		settings.notifyListeners();
@@ -348,6 +393,13 @@ public class FPGASettingsDialog implements ActionListener {
 				JOptionPane.showMessageDialog(null,
 						"Invalid python virtualenv directory.\n" +
 						"Please select a directory containing " + names + ".");
+			}
+		} else if ("openFPGAloader".equals(vendor)) {
+			openFPGAloaderPath.setText(path);
+			if (!settings.validOpenFPGAloaderPath(path)) {
+				JOptionPane.showMessageDialog(null,
+						"Invalid setting for openFPGAloader path.\n" +
+						"Please select executable or a directory containing openFPGAloader.");
 			}
 		} else {
 			workPath.setText(path);

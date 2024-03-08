@@ -32,10 +32,12 @@ package com.bfh.logisim.menu;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 
 import com.bfh.logisim.fpga.BoardEditor;
 import com.bfh.logisim.gui.Commander;
@@ -60,6 +62,9 @@ public class MenuFPGA extends JMenu implements ActionListener {
 		editorMenu.addActionListener(this);
 		commanderMenu.addActionListener(this);
 		settingsMenu.addActionListener(this);
+
+    int menuMask = getToolkit().getMenuShortcutKeyMaskEx();
+    commanderMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, menuMask));
 
 		add(editorMenu);
 		add(commanderMenu);

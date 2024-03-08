@@ -144,7 +144,7 @@ public class BoardEditor extends JFrame {
           + "Before saving, you may want to draw rectangles on the image\n"
           + "to specify I/O resources for this FPGA board.");
     }
-    Board board = new Board(name.getText(), null, fpga, image.getImage());
+    Board board = new Board(name.getText(), null, null, fpga, image.getImage());
     board.addComponents(ioComponents);
     String dir = getSaveDirectory();
     if (dir == null)

@@ -127,14 +127,25 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("  -- entry mode set command");
       out.add("  -- display on/off command");
       out.add("  -- clear display");
-      out.add("  type config_ops_t is array(0 to 5) of op_t;");
-      out.add("  constant config_ops : config_ops_t");
-      out.add("  := (5 => (rs => '0', data => X\"33\", delay_h => DELAY_4100_US, delay_l => DELAY_100_US),");
-      out.add("  4 => (rs => '0', data => X\"32\", delay_h => DELAY_40_US, delay_l => DELAY_40_US),");
-      out.add("  3 => (rs => '0', data => X\"28\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),");
-      out.add("  2 => (rs => '0', data => X\"06\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),");
-      out.add("  1 => (rs => '0', data => X\"0C\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),");
-      out.add("  0 => (rs => '0', data => X\"01\", delay_h => DELAY_NIBBLE, delay_l => DELAY_1640_US));");
+      out.add("  type config_ops_t is array(0 to 14) of op_t;");
+      out.add("  constant config_ops : config_ops_t := (");
+      out.add("  14 => (rs => '0', data => X\"33\", delay_h => DELAY_4100_US, delay_l => DELAY_100_US),"); // 0x33... Function Set: ???
+      out.add("  13 => (rs => '0', data => X\"32\", delay_h => DELAY_40_US, delay_l => DELAY_40_US),");// 0x32... Function Set: ???
+      out.add("  12 => (rs => '0', data => X\"28\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x28... Function Set: DL = 8bit bus width, lines N = 1line, font F = 5x11 dots
+      out.add("  11 => (rs => '0', data => X\"06\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x06... Entry Mode Set: Increment Cursor, No Display Shift
+      out.add("  10 => (rs => '0', data => X\"0C\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x0C... Display On/Off Control: Display On, Cursor Off, Blinking Off
+      
+      out.add("  9 => (rs => '0', data => X\"48\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x48... Set CGRAM Address Counter: AC = 08
+      out.add("  8 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
+      out.add("  7 => (rs => '1', data => X\"AA\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx_#_#_
+      out.add("  6 => (rs => '1', data => X\"55\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#_#_#
+      out.add("  5 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
+      out.add("  4 => (rs => '1', data => X\"0E\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx_###_
+      out.add("  3 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
+      out.add("  2 => (rs => '1', data => X\"0E\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx_###_
+      out.add("  1 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
+     
+      out.add("  0 => (rs => '0', data => X\"01\", delay_h => DELAY_NIBBLE, delay_l => DELAY_1640_US));"); // 0x01... Clear Display
       out.add("");
       out.add("  signal this_op : op_t;");
       out.add("");
@@ -186,16 +197,25 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("");
       out.add("  clk <= FPGAClock;");
       out.add("  rst <= Clear;");
-      out.add("  lcd_bl <= '1';");
+      out.add("  lcd_bl_out <= '1';");
+      out.add("  lcd_bl_en <= '1';");
       // out.add("  lcd_rs_rw_en_db_bl <= lcd_rs & lcd_rw & lcd_en & lcd_db & lcd_bl;");
-      out.add("  lcd_db0 <= lcd_db(0);");
-      out.add("  lcd_db1 <= lcd_db(1);");
-      out.add("  lcd_db2 <= lcd_db(2);");
-      out.add("  lcd_db3 <= lcd_db(3);");
-      out.add("  lcd_db4 <= lcd_db(4);");
-      out.add("  lcd_db5 <= lcd_db(5);");
-      out.add("  lcd_db6 <= lcd_db(6);");
-      out.add("  lcd_db7 <= lcd_db(7);");
+      out.add("  lcd_db0_out <= lcd_db(0);");
+      out.add("  lcd_db1_out <= lcd_db(1);");
+      out.add("  lcd_db2_out <= lcd_db(2);");
+      out.add("  lcd_db3_out <= lcd_db(3);");
+      out.add("  lcd_db4_out <= lcd_db(4);");
+      out.add("  lcd_db5_out <= lcd_db(5);");
+      out.add("  lcd_db6_out <= lcd_db(6);");
+      out.add("  lcd_db7_out <= lcd_db(7);");
+      out.add("  lcd_db0_en <= '1';");
+      out.add("  lcd_db1_en <= '1';");
+      out.add("  lcd_db2_en <= '1';");
+      out.add("  lcd_db3_en <= '1';");
+      out.add("  lcd_db4_en <= '1';");
+      out.add("  lcd_db5_en <= '1';");
+      out.add("  lcd_db6_en <= '1';");
+      out.add("  lcd_db7_en <= '1';");
       out.add("  push <= SlowClockEnable and Enable;");
       out.add("  ascii <= std_logic_vector(resize(unsigned(Data), 8));");
       out.add("");
@@ -303,7 +323,7 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("      when WRITE_LINE1 =>");
       out.add("        this_op      <= default_op;");
       out.add("        if line1(15 - ptr) = X\"00\" then");
-      out.add("          this_op.data <= X\"20\";");
+      out.add("          this_op.data <= X\"20\";"); // ascii space
       out.add("        else");
       out.add("          this_op.data <= line1(15 - ptr);");
       out.add("        end if;");
@@ -358,22 +378,26 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("  end process reg_state;");
       out.add("");
       out.add("  -- we never read from the lcd");
-      out.add("  lcd_rw <= '0';");
+      out.add("  lcd_rw_out <= '0';");
+      out.add("  lcd_rw_en <= '1';");
+      out.add("  -- enable and rs are always outputs");
+      out.add("  lcd_rs_en <= '1';");
+      out.add("  lcd_en_en <= '1';");
       out.add("");
       out.add("  proc_op_state : process(op_state, cnt, this_op) is");
       out.add("  begin");
       out.add("    case op_state is");
       out.add("      when IDLE =>");
       out.add("        lcd_db        <= (others => '0');");
-      out.add("        lcd_rs        <= '0';");
-      out.add("        lcd_en        <= '0';");
+      out.add("        lcd_rs_out    <= '0';");
+      out.add("        lcd_en_out    <= '0';");
       out.add("        next_op_state <= WAIT_SETUP_H;");
       out.add("        next_cnt      <= DELAY_SETUP_HOLD;");
       out.add("");
       out.add("      when WAIT_SETUP_H =>");
-      out.add("        lcd_db <= this_op.data(7 downto 4) & X\"0\";");
-      out.add("        lcd_rs <= this_op.rs;");
-      out.add("        lcd_en <= '0';");
+      out.add("        lcd_db     <= this_op.data(7 downto 4) & X\"0\";");
+      out.add("        lcd_rs_out <= this_op.rs;");
+      out.add("        lcd_en_out <= '0';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= ENABLE_H;");
       out.add("          next_cnt      <= DELAY_LCD_E;");
@@ -383,9 +407,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when ENABLE_H =>");
-      out.add("        lcd_db <= this_op.data(7 downto 4) & X\"0\";");
-      out.add("        lcd_rs <= this_op.rs;");
-      out.add("        lcd_en <= '1';");
+      out.add("        lcd_db     <= this_op.data(7 downto 4) & X\"0\";");
+      out.add("        lcd_rs_out <= this_op.rs;");
+      out.add("        lcd_en_out <= '1';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= WAIT_HOLD_H;");
       out.add("          next_cnt      <= DELAY_SETUP_HOLD;");
@@ -395,9 +419,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when WAIT_HOLD_H =>");
-      out.add("        lcd_db <= this_op.data(7 downto 4) & X\"0\";");
-      out.add("        lcd_rs <= this_op.rs;");
-      out.add("        lcd_en <= '0';");
+      out.add("        lcd_db     <= this_op.data(7 downto 4) & X\"0\";");
+      out.add("        lcd_rs_out <= this_op.rs;");
+      out.add("        lcd_en_out <= '0';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= WAIT_DELAY_H;");
       out.add("          next_cnt      <= this_op.delay_h;");
@@ -407,9 +431,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when WAIT_DELAY_H =>");
-      out.add("        lcd_db <= (others => '0');");
-      out.add("        lcd_rs <= '0';");
-      out.add("        lcd_en <= '0';");
+      out.add("        lcd_db     <= (others => '0');");
+      out.add("        lcd_rs_out <= '0';");
+      out.add("        lcd_en_out <= '0';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= WAIT_SETUP_L;");
       out.add("          next_cnt      <= DELAY_SETUP_HOLD;");
@@ -419,9 +443,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when WAIT_SETUP_L =>");
-      out.add("        lcd_db <= this_op.data(3 downto 0) & X\"0\";");
-      out.add("        lcd_rs <= this_op.rs;");
-      out.add("        lcd_en <= '0';");
+      out.add("        lcd_db     <= this_op.data(3 downto 0) & X\"0\";");
+      out.add("        lcd_rs_out <= this_op.rs;");
+      out.add("        lcd_en_out <= '0';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= ENABLE_L;");
       out.add("          next_cnt      <= DELAY_LCD_E;");
@@ -431,9 +455,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when ENABLE_L =>");
-      out.add("        lcd_db <= this_op.data(3 downto 0) & X\"0\";");
-      out.add("        lcd_rs <= this_op.rs;");
-      out.add("        lcd_en <= '1';");
+      out.add("        lcd_db     <= this_op.data(3 downto 0) & X\"0\";");
+      out.add("        lcd_rs_out <= this_op.rs;");
+      out.add("        lcd_en_out <= '1';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= WAIT_HOLD_L;");
       out.add("          next_cnt      <= DELAY_SETUP_HOLD;");
@@ -443,9 +467,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when WAIT_HOLD_L =>");
-      out.add("        lcd_db <= this_op.data(3 downto 0) & X\"0\";");
-      out.add("        lcd_rs <= this_op.rs;");
-      out.add("        lcd_en <= '0';");
+      out.add("        lcd_db     <= this_op.data(3 downto 0) & X\"0\";");
+      out.add("        lcd_rs_out <= this_op.rs;");
+      out.add("        lcd_en_out <= '0';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= WAIT_DELAY_L;");
       out.add("          next_cnt      <= this_op.delay_l;");
@@ -455,9 +479,9 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("        end if;");
       out.add("");
       out.add("      when WAIT_DELAY_L =>");
-      out.add("        lcd_db <= (others => '0');");
-      out.add("        lcd_rs <= '0';");
-      out.add("        lcd_en <= '0';");
+      out.add("        lcd_db     <= (others => '0');");
+      out.add("        lcd_rs_out <= '0';");
+      out.add("        lcd_en_out <= '0';");
       out.add("        if cnt = 0 then");
       out.add("          next_op_state <= DONE;");
       out.add("          next_cnt      <= 0;");
@@ -468,8 +492,8 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("");
       out.add("      when DONE =>");
       out.add("        lcd_db        <= (others => '0');");
-      out.add("        lcd_rs        <= '0';");
-      out.add("        lcd_en        <= '0';");
+      out.add("        lcd_rs_out    <= '0';");
+      out.add("        lcd_en_out    <= '0';");
       out.add("        next_op_state <= IDLE;");
       out.add("        next_cnt      <= 0;");
       out.add("");

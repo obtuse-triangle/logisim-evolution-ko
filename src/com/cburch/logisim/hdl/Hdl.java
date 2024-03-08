@@ -84,7 +84,7 @@ public class Hdl extends ArrayList<String> {
       assnRange = "%s \t<= %s(%d downto %d);";
       bitAssnBit = "%s(%d) \t<= %s(%d);";
       assnTristate = "%s \t<= %s when (%s = '1') else 'Z';";
-      assnTristateBit = "%s \t<= %s(%d) when (%s(%d) = '1') else 'Z'";
+      assnTristateBit = "%s \t<= %s(%d) when (%s(%d) = '1') else 'Z';";
       idx = "(%d)";
       range = "(%d downto %d)";
       zero = "'0'";

@@ -449,7 +449,7 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     rightPanel.add(rightRegion, BorderLayout.CENTER);
 
     mainRegion = new VerticalSplitPane(leftRegion, rightPanel,
-        AppPreferences.WINDOW_MAIN_SPLIT.get());
+        clamp(AppPreferences.WINDOW_MAIN_SPLIT.get(), 0.05, 0.80));
 
     getContentPane().add(mainRegion, BorderLayout.CENTER);
 
@@ -599,7 +599,7 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
 
     // if (rightRegion.getFraction() < 1.0)
     //   AppPreferences.WINDOW_RIGHT_SPLIT.set(rightRegion.getFraction());
-    AppPreferences.WINDOW_MAIN_SPLIT.set(mainRegion.getFraction());
+    AppPreferences.WINDOW_MAIN_SPLIT.set(clamp(mainRegion.getFraction(), 0.05, 0.80));
     AppPreferences.DIALOG_DIRECTORY.set(JFileChoosers.getCurrentDirectory());
   }
 
@@ -758,4 +758,9 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     return hdlEditor;
   }
 
+  public double clamp(double val, double min, double max) {
+    if (val < min || val > max)
+      System.out.printf("Value %f is outside acceptable range (%f to %f).\n", val, min, max);
+    return Math.min(Math.max(val, min), max);
+  }
 }

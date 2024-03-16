@@ -47,6 +47,7 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -399,6 +400,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     bottomTab.setFont(new Font("Dialog", Font.BOLD, 9));
     bottomTab.addTab("Properties", attrTable = new AttrTable(this));
     bottomTab.addTab("State", regPanel = new RegTabContent(this));
+    if (Main.MacOS) // adjust space above/below
+      bottomTab.setBorder(BorderFactory.createEmptyBorder(5, 0, -5, 0));
 
     // vhdlSimState = new VhdlSimState();
     // vhdlSimState.stateChanged();
@@ -429,6 +432,8 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
     topTab.add("Design", explPanel); // index=0 
     topTab.add("Simulate", simPanel); // index=1 (see ACTION_SET_STATE below)
     // FIXME: on mac, JTabbedPane leaves too much whitespace here
+    if (Main.MacOS) // adjust space above/below
+      topTab.setBorder(BorderFactory.createEmptyBorder(5, 0, -5, 0));
 
     JPanel attrFooter = new JPanel(new BorderLayout());
     attrFooter.add(zoom);

@@ -106,7 +106,7 @@ public class RamHDLGenerator extends HDLGenerator {
 
 			out.stmt("architecture logisim_generated of " + hdlModuleName + " is ");
       out.indent();
-      out.stmt("type MEMORY_ARRAY is array (%d downto 0) of std_logic_vector(%d downto 0);", rows-1, wd-1);
+      out.stmt("type MEMORY_ARRAY is array (%d downto 0) of %s;", rows-1, out.typeForWidth(wd));
 
       out.comment("memory definitions");
       for (int i = 0; i < n; i++)

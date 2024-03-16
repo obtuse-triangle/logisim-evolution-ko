@@ -50,7 +50,7 @@ public class ShiftRegisterHDLGenerator extends HDLGenerator {
     clockPort = new ClockPortInfo("GlobalClock", "ClockEnable", ShiftRegister.CK);
 
     inPorts.add("Reset", 1, ShiftRegister.CLR, false);
-    inPorts.add("ShiftEnable", 1, ShiftRegister.SH, false);
+    inPorts.add("ShiftEnable", 1, ShiftRegister.SH, true);
     inPorts.add("ShiftIn", "BitWidth", ShiftRegister.IN, false);
     outPorts.add("ShiftOut", "BitWidth", ShiftRegister.OUT, null);
     if (parallel) {

@@ -127,25 +127,101 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("  -- entry mode set command");
       out.add("  -- display on/off command");
       out.add("  -- clear display");
-      out.add("  type config_ops_t is array(0 to 14) of op_t;");
+      out.add("  type config_ops_t is array(0 to 70) of op_t;");
       out.add("  constant config_ops : config_ops_t := (");
-      out.add("  14 => (rs => '0', data => X\"33\", delay_h => DELAY_4100_US, delay_l => DELAY_100_US),"); // 0x33... Function Set: ???
-      out.add("  13 => (rs => '0', data => X\"32\", delay_h => DELAY_40_US, delay_l => DELAY_40_US),");// 0x32... Function Set: ???
-      out.add("  12 => (rs => '0', data => X\"28\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x28... Function Set: DL = 8bit bus width, lines N = 1line, font F = 5x11 dots
-      out.add("  11 => (rs => '0', data => X\"06\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x06... Entry Mode Set: Increment Cursor, No Display Shift
-      out.add("  10 => (rs => '0', data => X\"0C\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x0C... Display On/Off Control: Display On, Cursor Off, Blinking Off
-      
-      out.add("  9 => (rs => '0', data => X\"48\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x48... Set CGRAM Address Counter: AC = 08
-      out.add("  8 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
-      out.add("  7 => (rs => '1', data => X\"AA\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx_#_#_
-      out.add("  6 => (rs => '1', data => X\"55\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#_#_#
-      out.add("  5 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
-      out.add("  4 => (rs => '1', data => X\"0E\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx_###_
-      out.add("  3 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
-      out.add("  2 => (rs => '1', data => X\"0E\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx_###_
-      out.add("  1 => (rs => '1', data => X\"FF\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: xxx#####
+      out.add("  70 => (rs => '0', data => X\"33\", delay_h => DELAY_4100_US, delay_l => DELAY_100_US),"); // 0x33... Function Set: ???
+      out.add("  69 => (rs => '0', data => X\"32\", delay_h => DELAY_40_US, delay_l => DELAY_40_US),");// 0x32... Function Set: ???
+      out.add("  68 => (rs => '0', data => X\"28\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x28... Function Set: DL = 8bit bus width, lines N = 1line, font F = 5x11 dots
+      out.add("  67 => (rs => '0', data => X\"06\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x06... Entry Mode Set: Increment Cursor, No Display Shift
+      out.add("  66 => (rs => '0', data => X\"0C\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x0C... Display On/Off Control: Display On, Cursor Off, Blinking Off
      
-      out.add("  0 => (rs => '0', data => X\"01\", delay_h => DELAY_NIBBLE, delay_l => DELAY_1640_US));"); // 0x01... Clear Display
+      // Character 0 is remapped to ascii 0x20 (space).
+      // Characters 1 through 8 (mod 8) are custom patterns.
+      // This allows 0 through 8 to be used for making dot pictures.
+      out.add("  65 => (rs => '0', data => X\"40\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // 0x40... Set CGRAM Address Counter: AC = 00
+
+      // character 8 (mod 8)
+      out.add("  64 => (rs => '1', data => X\"1B\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ # #
+      out.add("  63 => (rs => '1', data => X\"1B\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ # #
+      out.add("  62 => (rs => '1', data => X\"1B\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ # #
+      out.add("  61 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  60 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  59 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  58 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  57 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 1
+      out.add("  56 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  55 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  54 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  53 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  52 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  51 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  50 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  49 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 2
+      out.add("  48 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  47 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  46 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  45 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  44 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  43 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  42 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  41 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 3
+      out.add("  40 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  39 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  38 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  37 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  36 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  35 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  34 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  33 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 4
+      out.add("  32 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  31 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  30 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  29 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  28 => (rs => '1', data => X\"1B\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ # #
+      out.add("  27 => (rs => '1', data => X\"1B\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ # #
+      out.add("  26 => (rs => '1', data => X\"1B\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ # #
+      out.add("  25 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 5
+      out.add("  24 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  23 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  22 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("  21 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  20 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  19 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  18 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  17 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 6
+      out.add("  16 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  15 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  14 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("  13 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  12 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  11 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("  10 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("   9 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      // character 7
+      out.add("   8 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("   7 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("   6 => (rs => '1', data => X\"03\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ # #
+      out.add("   5 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+      out.add("   4 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("   3 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("   2 => (rs => '1', data => X\"18\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . # # _ _ _
+      out.add("   1 => (rs => '1', data => X\"00\", delay_h => DELAY_NIBBLE, delay_l => DELAY_40_US),"); // Set CGRAM Data: . . . _ _ _ _ _
+
+      out.add("   0 => (rs => '0', data => X\"01\", delay_h => DELAY_NIBBLE, delay_l => DELAY_1640_US));"); // 0x01... Clear Display
+
       out.add("");
       out.add("  signal this_op : op_t;");
       out.add("");
@@ -174,8 +250,8 @@ public class TtyHDLGenerator extends HDLGenerator {
       out.add("");
       out.add("  signal state      : state_t               := RESET;");
       out.add("  signal next_state : state_t;");
-      out.add("  signal ptr        : natural range 0 to 15 := 0;");
-      out.add("  signal next_ptr   : natural range 0 to 15;");
+      out.add("  signal ptr        : natural range 0 to 127 := 0;");
+      out.add("  signal next_ptr   : natural range 0 to 127;");
       out.add("");
       out.add("  signal ascii : std_logic_vector(7 downto 0);");
       out.add("  signal push : std_logic;");

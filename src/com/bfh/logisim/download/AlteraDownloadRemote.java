@@ -201,6 +201,8 @@ public class AlteraDownloadRemote extends AlteraDownload {
           cmd.add(bitfile);
           return ok;
         }
+        int retrycount = 0;
+        protected boolean retry(int exitval) { return retrycount++ < 2; }
       });
     }
     return stages;

@@ -272,6 +272,8 @@ public abstract class FPGADownload {
       this.cmd = cmd;
     }
 
+    protected boolean retry(int exitval) { return false; }
+
     public void startAndThen(Runnable completion) {
       if (!prep()) {
         failed = true;
@@ -299,6 +301,7 @@ public abstract class FPGADownload {
       Thread t1 = console.copyFrom(console.INFO, stdout);
       Thread t2 = console.copyFrom(console.WARNING, stderr);
       thread = new Thread(() -> {
+        boolean needRetry = false;
         try {
           process.waitFor();
           t1.join(500);
@@ -314,13 +317,21 @@ public abstract class FPGADownload {
             t2.join();
           }
           exitValue = process.exitValue();
-          if (exitValue != 0 || !post())
+          if (exitValue != 0 && retry(exitValue)) {
+            console.printf(console.INFO, "Command failed, retrying...");
+            needRetry = true;
+          } else if (exitValue != 0 || !post()) {
             failed = true;
+          }
         } catch (InterruptedException ex) {
           process.destroyForcibly();
+          needRetry = false;
           failed = true;
         } finally {
-          SwingUtilities.invokeLater(completion);
+          if (needRetry)
+            SwingUtilities.invokeLater(() -> { startAndThen(completion); });
+          else
+            SwingUtilities.invokeLater(completion);
         }
       });
       thread.start();

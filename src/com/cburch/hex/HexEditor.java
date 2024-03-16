@@ -191,8 +191,8 @@ public class HexEditor extends JComponent implements Scrollable {
 		long xaddr1 = measures.toAddress(getWidth(), clip.y + clip.height) + 1;
 		highlighter.paint(g, xaddr0, xaddr1);
 
-		g.setColor(getForeground());
-		Font baseFont = g.getFont();
+    g.setColor(getForeground());
+    Font baseFont = g.getFont();
 		FontMetrics baseFm = g.getFontMetrics(baseFont);
 		Font labelFont = baseFont.deriveFont(Font.ITALIC);
 		FontMetrics labelFm = g.getFontMetrics(labelFont);
@@ -205,8 +205,10 @@ public class HexEditor extends JComponent implements Scrollable {
 		int labelChars = measures.getLabelChars();
 		int cellWidth = measures.getCellWidth();
 		int cellChars = measures.getCellChars();
+    g.drawLine(baseX, clip.y, baseX, clip.y + clip.height);
 		for (long a = xaddr0; a < xaddr1; a += cols, baseY += dy) {
 			String label = toHex(a, labelChars);
+      g.setColor(Color.BLUE);
 			g.setFont(labelFont);
 			g.drawString(
 					label,
@@ -214,6 +216,7 @@ public class HexEditor extends JComponent implements Scrollable {
 							+ (labelWidth - labelFm.stringWidth(label)) / 2,
 					baseY);
 			g.setFont(baseFont);
+      g.setColor(getForeground());
 			long b = a;
 			for (int j = 0; j < cols; j++, b++) {
 				if (b >= addr0 && b <= addr1) {

@@ -764,8 +764,6 @@ public class Frame extends LFrame.MainWindow implements LocaleListener {
   }
 
   public double clamp(double val, double min, double max) {
-    if (val < min || val > max)
-      System.out.printf("Value %f is outside acceptable range (%f to %f).\n", val, min, max);
     return Math.min(Math.max(val, min), max);
   }
 }

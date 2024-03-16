@@ -102,7 +102,7 @@ public class HorizontalSplitPane extends JPanel {
       if (dragging) {
         g.setColor(DRAG_COLOR);
         g.fillRect(0, 0, getWidth(), getHeight());
-      }
+      } 
     }
 
     abstract void setDragValue(int value);
@@ -220,10 +220,7 @@ public class HorizontalSplitPane extends JPanel {
   }
 
   public void setFraction(double value) {
-    if (value < 0.0)
-      value = 0.0;
-    if (value > 1.0)
-      value = 1.0;
+    value = Math.min(Math.max(value, 0.05), 0.95);
     if (fraction != value) {
       fraction = value;
       revalidate();

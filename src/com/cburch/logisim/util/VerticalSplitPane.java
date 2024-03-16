@@ -147,10 +147,7 @@ public class VerticalSplitPane extends JPanel {
   }
 
   public void setFraction(double value) {
-    if (value < 0.0)
-      value = 0.0;
-    if (value > 1.0)
-      value = 1.0;
+    value = Math.min(Math.max(value, 0.05), 0.95);
     if (fraction != value) {
       fraction = value;
       revalidate();
